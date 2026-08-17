@@ -1,0 +1,68 @@
+import type {Transaction} from "@/types/wallet";
+
+export const TRANSACTIONS: Transaction[] = [
+  {
+    id: "1",
+    type: "withdrawal",
+    description: "Withdrawal to GTBank 092871..",
+    timeAgo: "1 hour ago",
+    amount: -540000,
+    amountType: "debit",
+  },
+  {
+    id: "2",
+    type: "fee",
+    description: "Platform Fee – Chair Swap",
+    timeAgo: "30 minutes ago",
+    amount: 200,
+    amountType: "credit",
+  },
+  {
+    id: "3",
+    type: "payment",
+    description: "Payment Received –  Bicycle",
+    timeAgo: "15 minutes ago",
+    amount: 34800,
+    amountType: "credit",
+  },
+  {
+    id: "4",
+    type: "refund",
+    description: "Deposit Refund – Mac Book Pro",
+    timeAgo: "2 hours ago",
+    amount: 5000,
+    amountType: "credit",
+  },
+  {
+    id: "5",
+    type: "fee",
+    description: "Platform Fee – Chair Swap",
+    timeAgo: "30 minutes ago",
+    amount: 200,
+    amountType: "credit",
+  },
+  {
+    id: "6",
+    type: "escrow",
+    description: "Escrow Deposit – Mac Book Pro",
+    timeAgo: "2 hours ago",
+    amount: 5000,
+    amountType: "neutral",
+  },
+  {
+    id: "7",
+    type: "withdrawal",
+    description: "Withdrawal to GTBank 092871..",
+    timeAgo: "1 hour ago",
+    amount: -350000,
+    amountType: "debit",
+  },
+  {
+    id: "8",
+    type: "refund",
+    description: "Deposit Refund – Mac Book Pro",
+    timeAgo: "2 hours ago",
+    amount: 555000,
+    amountType: "credit",
+  },
+];

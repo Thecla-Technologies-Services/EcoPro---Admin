@@ -1,0 +1,40 @@
+import { ChatRole } from "@/components/dashboard/disputes/chat-history";
+
+export interface DisputeParty {
+  name: string;
+  avatar?: string;
+}
+
+export interface DisputeEvidence {
+  label: string;
+  url: string;
+}
+
+export type DisputeStatus = "Open" | "Closed" | "Resolved" | "In Progress";
+export type DisputeRaisedBy = "buyer" | "seller";
+
+export interface Dispute {
+  id: string;
+  title: string;
+  transactionId: string;
+  raisedBy: DisputeRaisedBy;
+  reason: string;
+  date: string;         
+  fullDate: string;     // full datetime e.g. "Feb 7, 2026 11:12 PM"
+  status: DisputeStatus;
+  amount: string;       // formatted e.g. "₦180,000"
+  buyer: DisputeParty;
+  seller: DisputeParty;
+  evidence: DisputeEvidence[];
+  note?: string;
+  messages?: ChatMessage[];
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  avatarUrl?: string;
+  role: ChatRole;
+  message: string;
+  timestamp: Date | string;
+}

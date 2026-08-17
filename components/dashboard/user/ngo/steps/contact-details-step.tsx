@@ -1,0 +1,121 @@
+"use client";
+
+import { Camera } from "lucide-react";
+import Image from "next/image";
+import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import type { NgoFormValues } from "@/types/user";
+import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingPhoneInput } from "@/components/shared/floating-phone-input";
+
+interface ContactDetailsStepProps {
+  control: Control<NgoFormValues>;
+  errors: FieldErrors<NgoFormValues>;
+  existingImageUrl?: string;
+}
+
+export function NGOContactDetailsStep({
+  control,
+  errors,
+  existingImageUrl,
+}: ContactDetailsStepProps) {
+  return (
+    <div className="space-y-5">
+      <Controller
+        control={control}
+        name="profileImage"
+        render={({ field }) => {
+          const previewUrl = field.value
+            ? URL.createObjectURL(field.value as File)
+            : existingImageUrl;
+          return (
+            <label className="flex cursor-pointer items-center gap-3">
+              <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-neutral-100">
+                {previewUrl ? (
+                  <Image
+                    src={previewUrl}
+                    alt="Profile"
+                    fill
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Camera className="h-5 w-5 text-neutral-400" />
+                )}
+              </div>
+              <span className="text-sm text-neutral-400">
+                Profile Image (Optional)
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) =>
+                  field.onChange(event.target.files?.[0] ?? null)
+                }
+              />
+            </label>
+          );
+        }}
+      />
+
+      <Controller
+        control={control}
+        name="organisationName"
+        render={({ field }) => (
+          <FloatingLabelInput
+            label="Organisation Name"
+            error={errors.organisationName?.message}
+            {...field}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="contactPersonName"
+        render={({ field }) => (
+          <FloatingLabelInput
+            label="Contact Person Name"
+            error={errors.contactPersonName?.message}
+            {...field}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="contactEmail"
+        render={({ field }) => (
+          <FloatingLabelInput
+            label="Contact Email Address"
+            error={errors.contactEmail?.message}
+            {...field}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="contactPhone"
+        render={({ field }) => (
+          <FloatingPhoneInput
+            label="Contact Phone Number"
+            error={errors.contactPhone?.message}
+            {...field}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="contactPhone"
+        render={({ field }) => (
+          <FloatingPhoneInput
+            label="Contact Phone Number"
+            error={errors.contactPhone?.message}
+            {...field}
+          />
+        )}
+      />
+    </div>
+  );
+}

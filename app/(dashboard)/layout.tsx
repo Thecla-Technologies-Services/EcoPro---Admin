@@ -1,0 +1,31 @@
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/shared/side-bar'
+import { Header } from '@/components/shared/header'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth/session'
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const session = await getSession()
+
+  // The proxy gate is optimistic and matcher-scoped; this is the authoritative
+  // check, so a route it happens not to cover still can't render the dashboard.
+  if (!session) {
+    redirect('/')
+  }
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className='overflow-x-hidden!'>
+        <Header session={session} />
+        <main className="flex-1 min-h-0 overflow-y-auto font-dm! overflow-auto text-[#4F4F4F] p-4 md:p-6 lg:p-8 bg-white">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
