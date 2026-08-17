@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ShieldCheck } from "lucide-react";
-import { FloatingLabelInput } from "../shared/floating-label-input";
+import { OtpInput } from "../shared/otp-input";
 import { Button } from "@/components/ui/button";
 import { useResendOtp, useVerifyOtp } from "@/hooks/auth/use-auth-mutations";
 import { ApiError, toErrorMessage } from "@/lib/api/errors";
@@ -21,7 +20,7 @@ export function OtpForm() {
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<VerifyOtpFormData>({
@@ -54,6 +53,8 @@ export function OtpForm() {
     });
   };
 
+  const isVerifying = verifyMutation.isPending || verifyMutation.isSuccess;
+
   const errorMessage = verifyMutation.isError
     ? toErrorMessage(verifyMutation.error)
     : resendMutation.isError
@@ -66,17 +67,32 @@ export function OtpForm() {
       className="space-y-4"
     >
       <div>
-        <FloatingLabelInput
-          label="Verification Code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={OTP_LENGTH}
-          autoFocus
-          icon={<ShieldCheck className="size-5" />}
-          {...register("code")}
+        <Controller
+          control={control}
+          name="code"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <OtpInput
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              length={OTP_LENGTH}
+              autoFocus
+              disabled={isVerifying}
+              invalid={!!errors.code}
+              aria-label="Verification code"
+              aria-describedby={errors.code ? "otp-error" : undefined}
+              // Filling the last digit submits, so the admin never has to
+              // reach for the button after typing or pasting the code.
+              onComplete={(code) => {
+                if (!isVerifying) verifyMutation.mutate({ code });
+              }}
+            />
+          )}
         />
         {errors.code && (
-          <p className="mt-1 text-sm text-destructive">{errors.code.message}</p>
+          <p id="otp-error" className="mt-2 text-sm text-destructive">
+            {errors.code.message}
+          </p>
         )}
       </div>
 
@@ -94,7 +110,7 @@ export function OtpForm() {
       <Button
         type="submit"
         // Stays busy through the redirect that follows a successful login.
-        isLoading={verifyMutation.isPending || verifyMutation.isSuccess}
+        isLoading={isVerifying}
         className="w-full h-10 md:h-10.5 rounded-full bg-primary hover:bg-[#2d442d] text-white"
       >
         Verify
