@@ -134,7 +134,10 @@ export function OtpInput({
     <div
       role="group"
       aria-label={aria["aria-label"] ?? "Verification code"}
-      className={cn("flex items-center gap-2 sm:gap-3", className)}
+      // Centred rather than left-aligned: the slots cap at `max-w-14`, so on any
+      // container wider than the six of them the row would otherwise sit against
+      // the left edge with the slack trailing off to the right.
+      className={cn("flex items-center justify-center gap-2 sm:gap-3", className)}
     >
       {Array.from({ length }, (_, index) => (
         <input

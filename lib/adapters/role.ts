@@ -16,11 +16,6 @@ export function toRoleRow(dto: RoleSummaryDto): RoleRow {
   };
 }
 
-/** Flattens the grouped permission catalogue into a single list. */
-export function flattenPermissions(groups: GroupedPermissionDto[] = []) {
-  return groups.flatMap((group) => group.permissions ?? []);
-}
-
 /**
  * Narrows the catalogue to the categories a role actually holds, so the view
  * dialog lists what was granted instead of a mostly-unchecked master list.

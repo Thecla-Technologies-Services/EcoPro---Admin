@@ -1,21 +1,28 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { ActionDialog } from "@/components/shared/action-dialog";
 
 interface ConfirmActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description: React.ReactNode;
   iconClassName?: string;
+  /** The action buttons, laid out in a row. */
   children: React.ReactNode;
   className?: string;
+  /** Which animated mark to show above the copy. */
   status?: "confirmed" | "user";
 }
 
+/**
+ * Mark, title, description, buttons — the shape most confirm dialogs need,
+ * without spelling out the parts.
+ *
+ * Reach for `ActionDialog` directly when a flow needs more than this: extra
+ * steps, a form between the copy and the buttons, or an inline error.
+ */
 export function ConfirmActionDialog({
   open,
   onOpenChange,
@@ -26,37 +33,11 @@ export function ConfirmActionDialog({
   className,
 }: ConfirmActionDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          "max-w-xs md:max-w-sm gap-0 py-4 md:py-6 px-4",
-          className,
-        )}
-      >
-        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      
-        </DialogClose>
-
-        <div className="flex justify-start mb-5">
-          <Image
-            src={
-              status === "confirmed"
-                ? "/assets/images/check-circle.gif"
-                : "/assets/images/avatar.gif"
-            }
-            alt="Success"
-            width={90}
-            height={90}
-          />
-        </div>
-
-        <DialogTitle className="text-lg font-semibold mb-2">{title}</DialogTitle>
-        <DialogDescription className="text-sm text-muted-foreground mb-6">
-          {description}
-        </DialogDescription>
-
-        <div className="flex gap-2">{children}</div>
-      </DialogContent>
-    </Dialog>
+    <ActionDialog open={open} onOpenChange={onOpenChange} className={className}>
+      <ActionDialog.Media kind={status} />
+      <ActionDialog.Title>{title}</ActionDialog.Title>
+      <ActionDialog.Description>{description}</ActionDialog.Description>
+      <ActionDialog.Actions>{children}</ActionDialog.Actions>
+    </ActionDialog>
   );
 }

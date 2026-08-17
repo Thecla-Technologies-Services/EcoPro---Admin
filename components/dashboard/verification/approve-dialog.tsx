@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
-
-type State = "confirm" | "loading" | "success";
+import { ActionDialog } from "@/components/shared/action-dialog";
+import { useAsyncAction } from "@/hooks/use-async-action";
 
 interface ApproveDialogProps {
   open: boolean;
@@ -21,56 +18,56 @@ export function ApproveDialog({
   accountType,
   onApprove,
 }: ApproveDialogProps) {
-  const [state, setState] = useState<State>("confirm");
+  const approve = useAsyncAction(onApprove);
 
-  const handleApprove = async () => {
-    setState("loading");
-    await onApprove();
-    setState("success");
+  // The dialog is reused for every row, so a previous outcome has to be cleared
+  // before it opens on the next applicant.
+  const handleOpenChange = (next: boolean) => {
+    if (!next) approve.reset();
+    onOpenChange(next);
   };
 
   return (
-    <ConfirmActionDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={
-        state === "success" ? "Verification Approved" : "Approve Verification"
-      }
-      description={
-        state === "success"
-          ? `${applicantName} ${accountType} account has been verified and confirmation email sent`
-          : `You are about to approve the verification for ${applicantName}. Ensure all the necessary due diligence have been carried out.`
-      }
-      iconClassName={
-        state === "success" ? "text-primary" : "text-muted-foreground"
-      }
-    >
-      {state === "success" ? (
-        <Button
-          className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={() => onOpenChange(false)}
-        >
-          Done
-        </Button>
+    <ActionDialog open={open} onOpenChange={handleOpenChange}>
+      <ActionDialog.Media />
+
+      {approve.isSuccess ? (
+        <>
+          <ActionDialog.Title>Verification Approved</ActionDialog.Title>
+          <ActionDialog.Description>
+            {applicantName} {accountType} account has been verified and
+            confirmation email sent
+          </ActionDialog.Description>
+          <ActionDialog.Actions>
+            <ActionDialog.Done onClick={() => handleOpenChange(false)} />
+          </ActionDialog.Actions>
+        </>
       ) : (
         <>
-          <Button
-            variant="outline"
-            className="flex-1 rounded-full"
-            disabled={state === "loading"}
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="flex-1 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-            isLoading={state === "loading"}
-            onClick={handleApprove}
-          >
-            Yes, Approve
-          </Button>
+          <ActionDialog.Title>Approve Verification</ActionDialog.Title>
+          <ActionDialog.Description>
+            You are about to approve the verification for {applicantName}.
+            Ensure all the necessary due diligence have been carried out.
+          </ActionDialog.Description>
+
+          {/* A failed review must not read as an approval — the flow stays on
+              this step with the API's own message so it can be retried. */}
+          <ActionDialog.Error error={approve.error} />
+
+          <ActionDialog.Actions>
+            <ActionDialog.Cancel
+              disabled={approve.isLoading}
+              onClick={() => handleOpenChange(false)}
+            />
+            <ActionDialog.Confirm
+              isLoading={approve.isLoading}
+              onClick={() => approve.run()}
+            >
+              Yes, Approve
+            </ActionDialog.Confirm>
+          </ActionDialog.Actions>
         </>
       )}
-    </ConfirmActionDialog>
+    </ActionDialog>
   );
 }

@@ -2,22 +2,16 @@
 
 import { useState } from "react";
 import { type ColumnDef, type PaginationState } from "@tanstack/react-table";
-import { MoreVertical, Search } from "lucide-react";
 import {
   IoEyeOutline,
   IoTrashBinOutline,
   IoCreateOutline,
 } from "react-icons/io5";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/shared/data-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DataState } from "@/components/shared/data-state";
+import { RowActions } from "@/components/shared/row-actions";
+import { TableSearchInput } from "@/components/shared/table-search-input";
 import { EditRoleDialog } from "./edit-role-dialog";
 import { ViewRoleDialog } from "./view-role-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
@@ -123,97 +117,75 @@ export function PermissionsTable({
         const role = row.original;
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 bg-background rounded-md"
-              >
-                <MoreVertical className="w-4 h-4 text-gray-400" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-44 gap-3 justify-start md:w-56 rounded-md p-3"
+          <RowActions>
+            <RowActions.Item
+              icon={IoEyeOutline}
+              onSelect={() => openAction(role, "view")}
             >
-              <DropdownMenuItem
-                className="rounded-sm"
-                onClick={() => openAction(role, "view")}
-              >
-                <IoEyeOutline className="size-4 md:size-5 mr-2" />
-                View Role
-              </DropdownMenuItem>
-              {/* System roles are locked upstream, so the mutating actions are
-                  hidden rather than left to fail on submit. */}
-              {role.isEditable && (
-                <>
-                  <DropdownMenuItem
-                    className="rounded-sm"
-                    onClick={() => openAction(role, "edit")}
-                  >
-                    <IoCreateOutline className="size-4 md:size-5 mr-2" />
-                    Edit Role
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="rounded-sm text-destructive focus:text-destructive"
-                    onClick={() => openAction(role, "delete")}
-                  >
-                    <IoTrashBinOutline className="size-4 md:size-5 mr-2" />
-                    Delete Role
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              View Role
+            </RowActions.Item>
+            {/* System roles are locked upstream, so the mutating actions are
+                hidden rather than left to fail on submit. */}
+            {role.isEditable && (
+              <>
+                <RowActions.Item
+                  icon={IoCreateOutline}
+                  onSelect={() => openAction(role, "edit")}
+                >
+                  Edit Role
+                </RowActions.Item>
+                <RowActions.Item
+                  icon={IoTrashBinOutline}
+                  destructive
+                  onSelect={() => openAction(role, "delete")}
+                >
+                  Delete Role
+                </RowActions.Item>
+              </>
+            )}
+          </RowActions>
         );
       },
     },
   ];
 
-  if (isLoading && !data.length) {
-    return (
-      <div className="bg-white space-y-3 py-4" aria-busy>
-        <Skeleton className="h-9 w-full max-w-md" />
-        {Array.from({ length: pagination.pageSize }, (_, index) => (
-          <Skeleton key={index} className="h-12 w-full" />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div>
-      <div
-        aria-busy={isLoading}
-        // Dim rather than unmount while a page or search change is in flight,
-        // so the table doesn't collapse and jump the layout.
-        className={isLoading ? "opacity-60 transition-opacity" : undefined}
-      >
-        <DataTable
-          columns={columns}
-          data={data}
-          pageSize={pagination.pageSize}
-          rowLabel="roles"
-          hideSortIcon={["actions"]}
-          manualPagination
-          pagination={pagination}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          onPaginationChange={onPaginationChange}
-          headerExtra={
-            <div className="relative mt-5 md:mt-3 w-full md:w-60 ml-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search"
-                className="pl-9 h-9 focus-within:border-primary outline:none focus-within:ring-0 focus-within:outline-0 focus-visible:border-primary ring-0 rounded-md md:rounded-lg text-sm"
+      <DataState>
+        {/* First load has nothing to dim, so it gets placeholders instead. */}
+        <DataState.Loading
+          when={isLoading && !data.length}
+          className="bg-white py-4"
+        >
+          <Skeleton className="h-9 w-full max-w-md" />
+          {Array.from({ length: pagination.pageSize }, (_, index) => (
+            <Skeleton key={index} className="h-12 w-full" />
+          ))}
+        </DataState.Loading>
+        {/* Dim rather than unmount while a page or search change is in flight,
+            so the table doesn't collapse and jump the layout. */}
+        <DataState.Content busy={isLoading}>
+          <DataTable
+            columns={columns}
+            data={data}
+            pageSize={pagination.pageSize}
+            rowLabel="roles"
+            hideSortIcon={["actions"]}
+            manualPagination
+            pagination={pagination}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPaginationChange={onPaginationChange}
+            headerExtra={
+              <TableSearchInput
+                className="ml-auto"
                 value={search}
-                onChange={(event) => onSearchChange(event.target.value)}
+                onChange={onSearchChange}
               />
-            </div>
-          }
-        />
-      </div>
+            }
+          />
+        </DataState.Content>
+      </DataState>
 
       {/* Keyed on the role id so each dialog mounts fresh per row. */}
       {selectedRole && action === "view" && (

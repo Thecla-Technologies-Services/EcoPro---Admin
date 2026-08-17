@@ -1,6 +1,11 @@
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { DetailList } from "@/components/shared/detail-list";
+
+/**
+ * Withdrawal / escrow facts — the shared list's `stacked` row, with the label
+ * above the value and a hairline between entries.
+ */
 export function DetailRow({
   label,
   value,
@@ -11,15 +16,21 @@ export function DetailRow({
   valueClassName?: string;
 }) {
   return (
-    <div className="flex flex-col gap-0.5 py-2.5 border-b border-gray-100 last:border-0">
-      <span className="text-xs text-gray-400">{label}</span>
-      <span className={cn("text-sm font-medium text-gray-900", valueClassName)}>
-        {value}
-      </span>
-    </div>
+    <DetailList.Row
+      variant="stacked"
+      label={label}
+      value={value}
+      valueClassName={valueClassName}
+    />
   );
 }
 
+/**
+ * Terminal step of the escrow flows.
+ *
+ * These dialogs already own their own shell, so this stays a plain block rather
+ * than an `ActionDialog` — it is dropped inside the open dialog's content.
+ */
 export function SuccessState({
   title,
   description,
@@ -34,7 +45,7 @@ export function SuccessState({
       <div className="flex justify-start mb-5">
         <Image
           src={"/assets/images/check-circle.gif"}
-          alt="Success"
+          alt=""
           width={90}
           height={90}
         />
@@ -44,7 +55,6 @@ export function SuccessState({
         {description}
       </p>
       <Button
-        variant={"default"}
         className="w-full bg-[#2D7A4F] hover:bg-[#235f3d] text-white rounded-full"
         onClick={onDone}
       >

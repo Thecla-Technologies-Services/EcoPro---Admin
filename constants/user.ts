@@ -50,8 +50,3 @@ export const DELIVERYSTEPS: { key: DeliveryPartnerStep; label: string }[] = [
   { key: "documents", label: "Documents" },
   { key: "location", label: "Location" },
 ];
-
-export const NGOSTEPS: { key: DeliveryPartnerStep; label: string }[] = [
-  { key: "contact", label: "Contact Details" },
-  { key: "documents", label: "Documents" },
-];

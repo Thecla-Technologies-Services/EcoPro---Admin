@@ -35,26 +35,21 @@ export function toListingRow(dto: AdminListingItemDto): Listing {
   };
 }
 
-/** Tab labels shown above the listing rows. */
-export const LISTING_TABS = [
-  { value: "all", label: "All Listings" },
-  { value: "active", label: "Active" },
-  { value: "flagged", label: "Flagged" },
-] as const;
-
-export type ListingTab = (typeof LISTING_TABS)[number]["value"];
+/** The tabs above the listing rows. Their labels live in the page's markup. */
+export type ListingTab = "all" | "active" | "flagged";
 
 /**
  * Values sent as the `Tab` query parameter.
  *
- * ASSUMPTION: swagger declares `Tab` as an unconstrained string. These slugs
- * are inferred from the metrics the same endpoint returns (activeListings /
- * flaggedItems). If the API expects other spellings, change them here only.
+ * The endpoint's swagger summary documents the set as "filter tabs (All, Active,
+ * Flagged)", so they are spelled exactly that way: `Tab` is typed as a bare
+ * string, and an unrecognised value returns an unfiltered list rather than an
+ * error.
  */
 export const LISTING_TAB_PARAMS: Record<ListingTab, string | undefined> = {
-  all: undefined,
-  active: "active",
-  flagged: "flagged",
+  all: "All",
+  active: "Active",
+  flagged: "Flagged",
 };
 
 /**

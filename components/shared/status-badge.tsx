@@ -39,6 +39,7 @@ const statusConfig: Record<BadgeStatus, keyof typeof badgeVariants> = {
   NGO: "purple",
   Delivery: "blueSoft",
   Individual: "gray",
+  Admin: "cyan",
   Scheduled: "cyan",
   Paused: "orange",
   Ended: "muted",

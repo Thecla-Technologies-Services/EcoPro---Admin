@@ -9,22 +9,32 @@ import ListingRow from "@/components/dashboard/listings/listing-row";
 import { IoCartOutline } from "react-icons/io5";
 import { HiOutlineDocumentCheck } from "react-icons/hi2";
 import SharedStatCard from "@/components/shared/stat-card";
-import TabButton from "@/components/shared/tab-button";
-import { FadeIn } from "@/components/motion/fade-in";
-import { QueryError } from "@/components/shared/query-error";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatGrid } from "@/components/shared/stat-grid";
+import { DataState } from "@/components/shared/data-state";
+import { FilterTabs } from "@/components/shared/filter-tabs";
+import { Toolbar } from "@/components/shared/toolbar";
+import { SimpleSelect } from "@/components/shared/simple-select";
 import { useListings } from "@/hooks/admin/use-listings";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { cn } from "@/lib/utils";
 import {
   LISTING_TAB_PARAMS,
   toListingRow,
   type ListingTab,
 } from "@/lib/adapters/listing";
+import {
+  ALL_COUNTRIES,
+  COUNTRY_FILTER_OPTIONS,
+  toCountryParam,
+  type CountryFilter,
+} from "@/constants/country";
 
 const PAGE_SIZE = 10;
 
 export default function ListingsPage() {
   const [tab, setTab] = useState<ListingTab>("all");
+  const [country, setCountry] = useState<CountryFilter>(ALL_COUNTRIES);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -37,6 +47,7 @@ export default function ListingsPage() {
       pageNumber: page,
       pageSize: PAGE_SIZE,
       searchTerm: debouncedSearch || undefined,
+      country: toCountryParam(country),
     }
   );
 
@@ -53,82 +64,93 @@ export default function ListingsPage() {
     setPage(1);
   };
 
+  // A narrower or wider country invalidates the current page position.
+  const changeCountry = (next: string) => {
+    setCountry(next as CountryFilter);
+    setPage(1);
+  };
+
   return (
     <div className="space-y-6 w-full overflow-x-hidden">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl md:text-[28px] font-semibold text-foreground">
+      <PageHeader>
+        <PageHeader.Heading className="gap-0.5">
+          <PageHeader.Title className="font-semibold">
             Listings
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          </PageHeader.Title>
+          <PageHeader.Description>
             Review, approve, and manage all platform listings
-          </p>
-        </div>
-        <Button
-          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 gap-1.5"
-          onClick={() => setAddOpen(true)}
-        >
-          <Plus className="size-4" />
-          Add Listing
-        </Button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-7">
-        <FadeIn delay={0.1}>
-          <SharedStatCard
-            label="Total Listings"
-            value={metrics?.totalListings ?? 0}
-            icon={IoCartOutline}
-          />
-        </FadeIn>
-
-        <FadeIn delay={0.2}>
-          <SharedStatCard
-            label="Active Listings"
-            value={metrics?.activeListings ?? 0}
-            icon={Package}
-          />
-        </FadeIn>
-        <FadeIn delay={0.3}>
-          <SharedStatCard
-            label="Pending Approval"
-            value={metrics?.pendingApproval ?? 0}
-            icon={Box}
-          />
-        </FadeIn>
-        <FadeIn delay={0.4}>
-          <SharedStatCard
-            label="Flagged Items"
-            value={metrics?.flaggedItems ?? 0}
-            icon={HiOutlineDocumentCheck}
-          />
-        </FadeIn>
-      </div>
-
-      {/* Tab filters */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <TabButton active={tab === "all"} onClick={() => changeTab("all")}>
-            All Listings
-          </TabButton>
-          <TabButton
-            active={tab === "active"}
-            onClick={() => changeTab("active")}
+          </PageHeader.Description>
+        </PageHeader.Heading>
+        <PageHeader.Actions>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 gap-1.5"
+            onClick={() => setAddOpen(true)}
           >
-            Active ({metrics?.activeListings ?? 0})
-          </TabButton>
-          <TabButton
-            active={tab === "flagged"}
-            flagged
-            onClick={() => changeTab("flagged")}
-          >
-            Flagged ({metrics?.flaggedItems ?? 0})
-          </TabButton>
-        </div>
+            <Plus className="size-4" />
+            Add Listing
+          </Button>
+        </PageHeader.Actions>
+      </PageHeader>
 
-        <div>
+      <StatGrid className="mb-7">
+        <SharedStatCard
+          label="Total Listings"
+          isLoading={isPending}
+          value={metrics?.totalListings ?? 0}
+          icon={IoCartOutline}
+        />
+        <SharedStatCard
+          label="Active Listings"
+          isLoading={isPending}
+          value={metrics?.activeListings ?? 0}
+          icon={Package}
+        />
+        <SharedStatCard
+          label="Pending Approval"
+          isLoading={isPending}
+          value={metrics?.pendingApproval ?? 0}
+          icon={Box}
+        />
+        <SharedStatCard
+          label="Flagged Items"
+          isLoading={isPending}
+          value={metrics?.flaggedItems ?? 0}
+          icon={HiOutlineDocumentCheck}
+        />
+      </StatGrid>
+
+      <Toolbar>
+        <Toolbar.Start>
+          <FilterTabs value={tab} onChange={(next) => changeTab(next as ListingTab)}>
+            <FilterTabs.Tab value="all">All Listings</FilterTabs.Tab>
+            <FilterTabs.Tab value="active" count={metrics?.activeListings ?? 0}>
+              Active
+            </FilterTabs.Tab>
+            <FilterTabs.Tab
+              value="flagged"
+              count={metrics?.flaggedItems ?? 0}
+              flagged
+            >
+              Flagged
+            </FilterTabs.Tab>
+          </FilterTabs>
+
+          {/* Sits in the tab row and borrows the tab styling: it filters the
+              same list, and a country picked reads as an active filter. */}
+          <SimpleSelect
+            options={COUNTRY_FILTER_OPTIONS}
+            value={country}
+            onValueChange={changeCountry}
+            aria-label="Filter by country"
+            className={cn(
+              "w-auto gap-2 rounded-md border-transparent px-4 py-3 text-sm font-medium transition-all h-auto data-[size=default]:h-auto",
+              country === ALL_COUNTRIES
+                ? "bg-[#F2F2F2] text-gray-500 hover:bg-gray-200"
+                : "bg-primary/7 text-primary",
+            )}
+          />
+        </Toolbar.Start>
+        <Toolbar.End>
           <SearchDropDown
             placeholder="Search listings..."
             onSearch={(query) => {
@@ -136,36 +158,29 @@ export default function ListingsPage() {
               setPage(1);
             }}
           />
-        </div>
-      </div>
+        </Toolbar.End>
+      </Toolbar>
 
-      {/* List */}
-      {isError ? (
-        <QueryError error={error} onRetry={() => refetch()} />
-      ) : isPending ? (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-44 w-full rounded-md" />
+      <DataState>
+        <DataState.Error
+          when={isError}
+          error={error}
+          onRetry={() => refetch()}
+        />
+        <DataState.Loading
+          when={isPending}
+          rows={4}
+          rowClassName="h-44 rounded-md"
+        />
+        <DataState.Empty when={listings.length === 0}>
+          No listings found.
+        </DataState.Empty>
+        <DataState.Content busy={isFetching} className="space-y-3">
+          {listings.map((listing) => (
+            <ListingRow key={listing.id} listing={listing} />
           ))}
-        </div>
-      ) : (
-        <div
-          aria-busy={isFetching}
-          className={
-            isFetching ? "space-y-3 opacity-60 transition-opacity" : "space-y-3"
-          }
-        >
-          {listings.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              No listings found.
-            </div>
-          ) : (
-            listings.map((listing) => (
-              <ListingRow key={listing.id} listing={listing} />
-            ))
-          )}
-        </div>
-      )}
+        </DataState.Content>
+      </DataState>
 
       {/* Footer */}
       {listings.length > 0 && (

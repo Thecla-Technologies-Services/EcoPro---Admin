@@ -1,7 +1,8 @@
 import type { ChatMessage, Dispute } from "@/types/dispute";
 
 
-export const messages: ChatMessage[] = [
+/** Attached to every mock dispute below; nothing outside this file reads it. */
+const messages: ChatMessage[] = [
   {
     id: "1",
     sender: "Adewale Joel",

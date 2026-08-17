@@ -1,4 +1,9 @@
-export type UserRole = "Individual" | "NGO" | "Delivery";
+/**
+ * The account kinds the dashboard filters and badges by. "Admin" covers staff
+ * accounts, which are listed in the roles module rather than alongside platform
+ * users.
+ */
+export type UserRole = "Individual" | "NGO" | "Delivery" | "Admin";
 export type UserStatus = "Active" | "Suspended";
 
 export type ModalType =
@@ -55,14 +60,6 @@ export interface ViewUserSheetProps {
   onClose: () => void;
   editMode?: boolean;
   onEdit?: () => void;
-}
-
-export interface EditUserFormValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  accountRole: string;
-  accountStatus: string;
 }
 
 export type DeliveryPartnerStep = "contact" | "documents" | "location";
@@ -166,42 +163,10 @@ export interface CreatedRiderCredentials {
   password: string;
 }
 
-export type DonationStatus = "completed" | "pending" | "failed";
-
 export interface NgoDocument {
   id: string;
   name: string;
   url: string;
-}
-
-export interface NgoDonation {
-  id: string;
-  donorName: string;
-  amount: number;
-  date: string;
-  method: string;
-  status: DonationStatus;
-}
-
-export interface Ngo {
-  id: string;
-  organisationName: string;
-  contactPersonName: string;
-  contactEmail: string;
-  contactPhone: string;
-  profileImageUrl?: string;
-  postalCode: string;
-  organizationAddress: string;
-  accountRole: string;
-  signupDate: string;
-  lastActive: string;
-  accountStatus: "active" | "suspended";
-  emailVerified: boolean;
-  kycStatus: "verified" | "pending" | "rejected";
-  documents: NgoDocument[];
-  totalDonationsReceived: number;
-  totalDonors: number;
-  donations: NgoDonation[];
 }
 
 export interface NgoFormValues {
@@ -216,12 +181,6 @@ export interface NgoFormValues {
   documents: File[];
   existingDocuments: NgoDocument[];
 }
-
-export interface CreatedNgoCredentials {
-  email: string;
-  password: string;
-}
-
 
 export type Tab = "Profile" | "Listing (12)" | "Wallet History";
 export type ListingFilter =

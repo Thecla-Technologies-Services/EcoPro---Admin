@@ -1,45 +1,104 @@
+"use client";
+
+import { useMemo } from "react";
 import { Package, Truck } from "lucide-react";
-import { FadeIn } from "@/components/motion/fade-in";
 import { IoCartOutline } from "react-icons/io5";
 import { HiOutlineDocumentCheck } from "react-icons/hi2";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatGrid } from "@/components/shared/stat-grid";
+import { DataState } from "@/components/shared/data-state";
 import SharedStatCard from "@/components/shared/stat-card";
 import VerificationTable from "@/components/dashboard/verification/verification-table";
+import {
+  usePendingOrganizations,
+  usePendingRiders,
+} from "@/hooks/admin/use-verification";
+import { toVerificationQueue } from "@/lib/adapters/verification";
+
+/**
+ * Stands in for counters the Admin API does not expose. Only the two pending
+ * queues are readable — there is no endpoint for approved or rejected history,
+ * so those cards show a placeholder rather than a number we cannot source.
+ */
+const UNAVAILABLE = "—";
 
 export default function VerificationPage() {
+  const organizations = usePendingOrganizations();
+  const riders = usePendingRiders();
+
+  const rows = useMemo(
+    () => toVerificationQueue(organizations.data, riders.data),
+    [organizations.data, riders.data],
+  );
+
+  // Either queue failing leaves the page showing a partial list, which would
+  // read as "nothing left to review" — so surface the failure instead.
+  const failed = organizations.isError
+    ? organizations
+    : riders.isError
+      ? riders
+      : null;
+
+  const pendingCount = rows.filter(
+    (row) => row.status === "Pending Review",
+  ).length;
+
+  const isPending = organizations.isPending || riders.isPending;
+
+  const retry = () => {
+    organizations.refetch();
+    riders.refetch();
+  };
+
   return (
     <div className="space-y-6 w-full overflow-x-hidden">
-      <div className="grid gap-2">
-        <h1 className="text-2xl md:text-[28px] font-bold">
-          Verification Queue
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Review and approve partner applications
-        </p>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 ">
-        <FadeIn delay={0.1}>
-          <SharedStatCard
-            label="Total Applications"
-            value={12204}
-            icon={IoCartOutline}
-          />
-        </FadeIn>
+      <PageHeader>
+        <PageHeader.Heading>
+          <PageHeader.Title>Verification Queue</PageHeader.Title>
+          <PageHeader.Description>
+            Review and approve partner applications
+          </PageHeader.Description>
+        </PageHeader.Heading>
+      </PageHeader>
 
-        <FadeIn delay={0.2}>
-          <SharedStatCard label="Pending Review" value={67} icon={Package} />
-        </FadeIn>
-        <FadeIn delay={0.3}>
-          <SharedStatCard label="Approved" value={198} icon={Truck} />
-        </FadeIn>
-        <FadeIn delay={0.4}>
-          <SharedStatCard
-            label="Rejected"
-            value={145}
-            icon={HiOutlineDocumentCheck}
+      {/* Only the pending figure is fetched; the placeholder cards have nothing
+          in flight, so showing them a skeleton would promise a number that is
+          never coming. */}
+      <StatGrid>
+        <SharedStatCard
+          label="Total Applications"
+          value={UNAVAILABLE}
+          icon={IoCartOutline}
+        />
+        <SharedStatCard
+          label="Pending Review"
+          value={pendingCount}
+          icon={Package}
+          isLoading={isPending}
+        />
+        <SharedStatCard label="Approved" value={UNAVAILABLE} icon={Truck} />
+        <SharedStatCard
+          label="Rejected"
+          value={UNAVAILABLE}
+          icon={HiOutlineDocumentCheck}
+        />
+      </StatGrid>
+
+      <DataState>
+        <DataState.Error
+          when={!!failed}
+          error={failed?.error}
+          onRetry={retry}
+        />
+        <DataState.Content>
+          <VerificationTable
+            data={rows}
+            isLoading={
+              isPending || organizations.isFetching || riders.isFetching
+            }
           />
-        </FadeIn>
-      </div>
-      <VerificationTable />
+        </DataState.Content>
+      </DataState>
     </div>
   );
 }

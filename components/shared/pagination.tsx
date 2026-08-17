@@ -110,6 +110,11 @@ export function Pagination<T>({
     return { start, end: Math.min(start + onPage - 1, totalRows), totalRows };
   })();
 
+  // Nothing to page through — an empty table already says "No results", and a
+  // "Showing 0–0 of 0" row with dead arrows underneath it only adds noise.
+  const isEmpty = rowSummary ? rowSummary.totalRows === 0 : pageCount === 0;
+  if (isEmpty) return null;
+
   return (
     <div
       className={cn(

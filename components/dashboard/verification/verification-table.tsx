@@ -2,45 +2,104 @@
 
 import { useMemo, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Eye, MoreVertical } from "lucide-react";
+import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
 import { type OrderStatus } from "@/types/order-swap";
 import DetailPanel from "./detail-panel";
 import { DataTable } from "@/components/shared/data-table";
+import { DataState } from "@/components/shared/data-state";
+import { RowActions } from "@/components/shared/row-actions";
+import { Skeleton } from "@/components/ui/skeleton";
 import TableDateFilter from "../../shared/table-date-filter";
 import { ApproveDialog } from "./approve-dialog";
 import { RejectDialog } from "./reject-dialog";
 import { DateRangeFilterValue } from "@/types/date";
 import { type Applicant } from "@/types/verification";
-import { MOCK_APPLICANTS } from "@/data/verification";
+import { toRejectionReason } from "@/lib/adapters/verification";
+import { useReviewOrganization, useReviewRider } from "@/hooks/admin/use-verification";
 
 const STATUS_FILTERS = [
-  "All Disputes",
+  "All Applications",
   "Pending Review",
   "Approved",
   "Rejected",
 ] as const;
 
-type StatusFilter = (typeof STATUS_FILTERS)[number];
+const PAGE_SIZE = 7;
 
-const FILTER_COUNTS: Record<StatusFilter, number> = {
-  "All Disputes": 300,
-  "Pending Review": 20,
-  Approved: 23,
-  Rejected: 18,
-};
+interface VerificationTableProps {
+  data: Applicant[];
+  isLoading?: boolean;
+}
 
-export default function VerificationTable() {
-  const [selectedDispute, setSelectedDispute] = useState<Applicant | null>(
+export default function VerificationTable({
+  data,
+  isLoading,
+}: VerificationTableProps) {
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
   );
   const [dateFilter, setDateFilter] = useState<
     DateRangeFilterValue | undefined
   >(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+
+  const reviewOrganization = useReviewOrganization();
+  const reviewRider = useReviewRider();
+
+  /**
+   * Both queues are reviewed the same way but through different endpoints, so
+   * the row's `kind` picks the mutation and the id it expects.
+   */
+  const review = async (
+    applicant: Applicant,
+    approve: boolean,
+    rejectionReason?: string,
+  ) => {
+    if (applicant.kind === "organization") {
+      await reviewOrganization.mutateAsync({
+        organizationId: applicant.id,
+        approve,
+        rejectionReason,
+      });
+      return;
+    }
+
+    await reviewRider.mutateAsync({
+      riderProfileId: applicant.id,
+      approve,
+      rejectionReason,
+    });
+  };
+
+  /** A reviewed applicant leaves the pending queue, so the detail sheet behind
+   * the confirmation would be showing a row that no longer exists. */
+  const reviewAndCloseDetail = async (
+    approve: boolean,
+    rejectionReason?: string,
+  ) => {
+    if (!selectedApplicant) return;
+    await review(selectedApplicant, approve, rejectionReason);
+    setDialogOpen(false);
+  };
+
+  const counts = useMemo(() => {
+    const tally: Record<string, number> = {
+      "All Applications": data.length,
+      "Pending Review": 0,
+      Approved: 0,
+      Rejected: 0,
+    };
+
+    for (const applicant of data) {
+      if (applicant.status in tally && applicant.status !== "All Applications") {
+        tally[applicant.status] += 1;
+      }
+    }
+    return tally;
+  }, [data]);
 
   const columns = useMemo<ColumnDef<Applicant>[]>(
     () => [
@@ -110,96 +169,91 @@ export default function VerificationTable() {
         id: "actions",
         header: "",
         cell: ({ row }) => {
-          const order = row.original;
-          const isOpen = openMenuId === order.id;
+          const applicant = row.original;
           return (
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenMenuId(isOpen ? null : order.id);
+            <RowActions>
+              <RowActions.Item
+                icon={Eye}
+                onSelect={() => {
+                  setSelectedApplicant(applicant);
+                  setDialogOpen(true);
                 }}
-                className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {isOpen && (
-                <div
-                  className="absolute right-0 top-8 z-20 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-32.5"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => {
-                      setSelectedDispute(order);
-                      setDialogOpen(true);
-                      setOpenMenuId(null);
-                    }}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    View Details
-                  </button>
-                </div>
-              )}
-            </div>
+                View Details
+              </RowActions.Item>
+            </RowActions>
           );
         },
       },
     ],
-    [openMenuId],
+    [],
   );
 
   return (
     <>
-      <DataTable
-        data={MOCK_APPLICANTS}
-        headerExtra={
-          <TableDateFilter selected={dateFilter} setSelected={setDateFilter} />
-        }
-        columns={columns}
-        title="Recent Verifications"
-        rowLabel="verification"
-        pageSize={7}
-        filterTabs={STATUS_FILTERS}
-        filterCounts={FILTER_COUNTS}
-        filterColumnKey="status"
-        allTabValue="All Disputes"
-      />
+      <DataState>
+        {/* First load has nothing to dim, so it gets placeholders instead. */}
+        <DataState.Loading
+          when={isLoading && !data.length}
+          className="rounded-lg bg-white p-4"
+        >
+          <Skeleton className="h-9 w-full max-w-md" />
+          {Array.from({ length: PAGE_SIZE }, (_, index) => (
+            <Skeleton key={index} className="h-12 w-full" />
+          ))}
+        </DataState.Loading>
+        {/* Dim rather than unmount while a refetch is in flight, so approving a
+            row doesn't collapse the table and jump the layout. */}
+        <DataState.Content busy={isLoading}>
+          <DataTable
+            data={data}
+            headerExtra={
+              <TableDateFilter
+                selected={dateFilter}
+                setSelected={setDateFilter}
+              />
+            }
+            columns={columns}
+            title="Recent Verifications"
+            rowLabel="verification"
+            pageSize={PAGE_SIZE}
+            filterTabs={STATUS_FILTERS}
+            filterCounts={counts}
+            filterColumnKey="status"
+            allTabValue="All Applications"
+          />
+        </DataState.Content>
+      </DataState>
 
       <DetailPanel
-        applicant={selectedDispute}
+        applicant={selectedApplicant}
         open={dialogOpen}
         onApprove={() => setApproveOpen(true)}
         onReject={() => setRejectOpen(true)}
         onOpenChange={() => {
           setDialogOpen(false);
-          setSelectedDispute(null);
+          setSelectedApplicant(null);
         }}
       />
 
       <ApproveDialog
         open={approveOpen}
         onOpenChange={setApproveOpen}
-        applicantName={selectedDispute?.name || ""}
-        accountType={selectedDispute?.accountType || ""}
-        onApprove={async () => {
-          await new Promise((r) => setTimeout(r, 1500));
-          // TODO: call your API
-        }}
+        applicantName={selectedApplicant?.name || ""}
+        accountType={selectedApplicant?.accountType || ""}
+        onApprove={() => reviewAndCloseDetail(true)}
       />
 
       <RejectDialog
         open={rejectOpen}
         onOpenChange={setRejectOpen}
-        applicantName={selectedDispute?.name || ""}
-        applicationId={selectedDispute?.id || ""}
-        orgName="Green Earth NGO"
-        contactEmail={selectedDispute?.email || ""}
-        onReject={async (reason, note) => {
-          await new Promise((r) => setTimeout(r, 1500));
-          console.log("Rejected:", reason, note);
-          // TODO: call your API
-        }}
+        applicantName={selectedApplicant?.name || ""}
+        applicationId={selectedApplicant?.id || ""}
+        orgName={selectedApplicant?.name || ""}
+        contactEmail={selectedApplicant?.email || ""}
+        onReject={(reason, note) =>
+          reviewAndCloseDetail(false, toRejectionReason(reason, note))
+        }
       />
     </>
   );

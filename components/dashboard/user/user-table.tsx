@@ -1,24 +1,18 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
 import {
   IoEyeOutline,
   IoPersonRemoveOutline,
   IoPersonAddOutline,
   IoTrashBinOutline,
 } from "react-icons/io5";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { MoreVertical, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
+import { DataState } from "@/components/shared/data-state";
+import { RowActions } from "@/components/shared/row-actions";
 import { StatusBadge } from "@/components/shared/status-badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { TableSearchInput } from "@/components/shared/table-search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PaginationState } from "@tanstack/react-table";
@@ -42,6 +36,18 @@ interface UserTableProps {
   totalCount?: number;
   filterCounts?: Record<string, number>;
   isLoading?: boolean;
+  /**
+   * Dropped when the list is already pinned to one account kind — the roles
+   * module's staff accounts have nothing to filter between.
+   */
+  showFilterTabs?: boolean;
+  rowLabel?: string;
+  /**
+   * Accessor keys to leave out, for a list whose source has no value for them —
+   * staff accounts carry no wallet balance or eco-points, and a column of zeroes
+   * reads as real data.
+   */
+  hiddenColumns?: readonly string[];
 }
 
 export function UserTable({
@@ -57,6 +63,9 @@ export function UserTable({
   totalCount,
   filterCounts,
   isLoading,
+  showFilterTabs = true,
+  rowLabel = "users",
+  hiddenColumns,
 }: UserTableProps) {
 
   const columns: ColumnDef<User, unknown>[] = [
@@ -65,8 +74,13 @@ export function UserTable({
       header: "SN",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
+          {/* Numbered by position rather than from the row's own `sn`: staff
+              accounts are dropped after the server has numbered the page, so
+              `sn` arrives with gaps (a page whose first rows were admins would
+              otherwise start at 6). This keeps the column aligned with the
+              "Showing 1–5 of …" summary underneath. */}
           <span className="text-sm text-gray-500">
-            {row.original.sn ?? row.index + 1}.
+            {pagination.pageIndex * pagination.pageSize + row.index + 1}.
           </span>
           {/* The list endpoint sends no trend direction, so the arrow only
               appears if one is ever supplied. */}
@@ -158,104 +172,89 @@ export function UserTable({
         const user = row.original;
         const isSuspended = user.status === "Suspended";
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 bg-background rounded-md"
-              >
-                <MoreVertical className="w-4 h-4 text-gray-400" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-44 gap-3 justify-start md:w-56 rounded-md p-3"
+          <RowActions>
+            <RowActions.Item
+              icon={IoEyeOutline}
+              onSelect={() => onOpenModal(user, "view")}
             >
-              <DropdownMenuItem
-                className="rounded-sm"
-                onClick={() => onOpenModal(user, "view")}
+              View Account
+            </RowActions.Item>
+            {isSuspended ? (
+              <RowActions.Item
+                icon={IoPersonAddOutline}
+                onSelect={() => onOpenModal(user, "unsuspend")}
               >
-                <IoEyeOutline className="size-4 md:size-5 mr-2" />
-                View Account
-              </DropdownMenuItem>
-              {isSuspended ? (
-                <DropdownMenuItem
-                  className="rounded-sm"
-                  onClick={() => onOpenModal(user, "unsuspend")}
-                >
-                  <IoPersonAddOutline className="size-4 md:size-5 mr-2" />
-                  Unsuspend Account
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  className="rounded-sm"
-                  onClick={() => onOpenModal(user, "suspend")}
-                >
-                  <IoPersonRemoveOutline className="size-4 md:size-5 mr-2" />
-                  Suspend Account
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                className="rounded-sm text-destructive focus:text-destructive"
-                onClick={() => onOpenModal(user, "delete")}
+                Unsuspend Account
+              </RowActions.Item>
+            ) : (
+              <RowActions.Item
+                icon={IoPersonRemoveOutline}
+                onSelect={() => onOpenModal(user, "suspend")}
               >
-                <IoTrashBinOutline className="size-4 md:size-5 mr-2" />
-                Delete Account
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                Suspend Account
+              </RowActions.Item>
+            )}
+            <RowActions.Item
+              icon={IoTrashBinOutline}
+              destructive
+              onSelect={() => onOpenModal(user, "delete")}
+            >
+              Delete Account
+            </RowActions.Item>
+          </RowActions>
         );
       },
     },
   ];
 
-  if (isLoading && !data.length) {
-    return (
-      <div className="bg-white space-y-3 py-4" aria-busy>
+  const visibleColumns = hiddenColumns?.length
+    ? columns.filter((column) => {
+        const key =
+          "accessorKey" in column ? String(column.accessorKey) : column.id;
+        return !key || !hiddenColumns.includes(key);
+      })
+    : columns;
+
+  return (
+    <DataState>
+      {/* First load has nothing to dim, so it gets placeholders instead. */}
+      <DataState.Loading
+        when={isLoading && !data.length}
+        className="bg-white py-4"
+      >
         <Skeleton className="h-9 w-full max-w-md" />
         {Array.from({ length: pagination.pageSize }, (_, index) => (
           <Skeleton key={index} className="h-12 w-full" />
         ))}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      aria-busy={isLoading}
-      // Dim rather than unmount while a page or tab change is in flight, so the
-      // table doesn't collapse and jump the layout on every interaction.
-      className={isLoading ? "opacity-60 transition-opacity" : undefined}
-    >
-      <DataTable
-      columns={columns}
-      data={data}
-      pageSize={pagination.pageSize}
-      rowLabel="users"
-      hideSortIcon={["actions"]}
-      filterTabs={USER_FILTER_TABS}
-      allTabValue="All Users"
-      filterCounts={filterCounts}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      manualPagination
-      pagination={pagination}
-      totalPages={totalPages}
-      totalCount={totalCount}
-      onPaginationChange={onPaginationChange}
-      headerExtra={
-        <div className="relative mt-5 md:mt-3 w-full md:w-60 ml-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search"
-            className="pl-9 h-9 focus-within:border-primary outline:none focus-within:ring-0 focus-within:outline-0 focus-visible:border-primary ring-0 rounded-md md:rounded-lg text-sm"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-      }
-      />
-    </div>
+      </DataState.Loading>
+      {/* Dim rather than unmount while a page or tab change is in flight, so the
+          table doesn't collapse and jump the layout on every interaction. */}
+      <DataState.Content busy={isLoading}>
+        <DataTable
+          columns={visibleColumns}
+          data={data}
+          pageSize={pagination.pageSize}
+          rowLabel={rowLabel}
+          hideSortIcon={["actions"]}
+          filterTabs={showFilterTabs ? USER_FILTER_TABS : undefined}
+          allTabValue="All Users"
+          filterCounts={filterCounts}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          manualPagination
+          pagination={pagination}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPaginationChange={onPaginationChange}
+          headerExtra={
+            <TableSearchInput
+              className="ml-auto"
+              value={search}
+              onChange={onSearchChange}
+            />
+          }
+        />
+      </DataState.Content>
+    </DataState>
   );
 }

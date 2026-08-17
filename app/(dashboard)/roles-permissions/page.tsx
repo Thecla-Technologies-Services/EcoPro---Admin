@@ -11,18 +11,28 @@ import {
 } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
-import { FadeIn } from "@/components/motion/fade-in";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatGrid } from "@/components/shared/stat-grid";
+import { DataState } from "@/components/shared/data-state";
+import { FilterTabs } from "@/components/shared/filter-tabs";
 import SharedStatCard from "@/components/shared/stat-card";
-import { QueryError } from "@/components/shared/query-error";
 import { PermissionsTable } from "@/components/dashboard/roles-permissions/roles-table";
 import { CreateRoleDialog } from "@/components/dashboard/roles-permissions/create-role-dialog";
+import { UsersPanel } from "@/components/dashboard/user/users-panel";
 import { useRoles } from "@/hooks/admin/use-roles";
+import { useAdminUsersPanel } from "@/hooks/admin/use-users-panel";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useTabParam } from "@/hooks/use-tab-param";
 import { toRoleRow } from "@/lib/adapters/role";
 
 const DEFAULT_PAGE_SIZE = 10;
 
+/** `roles` is first, so it stays the tab a bare /roles-permissions link opens. */
+const TABS = ["roles", "admin-users"] as const;
+
 export default function RolesPermissionsPage() {
+  const [tab, setTab] = useTabParam(TABS);
+
   const [openCreate, setOpenCreate] = useState(false);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState<PaginationState>({
@@ -44,35 +54,10 @@ export default function RolesPermissionsPage() {
 
   const rows = useMemo(() => (page?.data ?? []).map(toRoleRow), [page?.data]);
 
-  // NOTE: RoleMetricsDto only carries `totalRoles` alongside three swap-shaped
-  // counters (pendingPickup / inTransit / completed). They are surfaced as the
-  // API names them rather than relabelled into something they aren't.
-  const stats = [
-    {
-      label: "Total Roles",
-      value: metrics?.totalRoles ?? 0,
-      icon: IoPeopleOutline,
-      delay: 0.1,
-    },
-    {
-      label: "Pending Pickup",
-      value: metrics?.pendingPickup ?? 0,
-      icon: HiOutlineBuildingOffice2,
-      delay: 0.2,
-    },
-    {
-      label: "In Transit",
-      value: metrics?.inTransit ?? 0,
-      icon: IoCartOutline,
-      delay: 0.3,
-    },
-    {
-      label: "Completed",
-      value: metrics?.completed ?? 0,
-      icon: IoPersonRemoveOutline,
-      delay: 0.4,
-    },
-  ];
+  // Staff accounts come from the identity service, since the admin users list
+  // has no tab for them — so there is nothing for the table's own account-kind
+  // filters to switch between either.
+  const adminUsers = useAdminUsersPanel();
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -82,43 +67,93 @@ export default function RolesPermissionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Roles &amp; Permissions</h1>
-        </div>
-        <Button
-          onClick={() => setOpenCreate(true)}
-          className="bg-primary text-white gap-2 rounded-full px-5"
-        >
-          <Plus className="w-4 h-4" />
-          Create Role
-        </Button>
-      </div>
+      <PageHeader className="md:items-center">
+        <PageHeader.Heading>
+          <PageHeader.Title className="md:text-2xl">
+            Roles &amp; Permissions
+          </PageHeader.Title>
+        </PageHeader.Heading>
+        {/* Scoped to the roles tab — on Admin Users it would read as though it
+            adds an admin, which it doesn't. */}
+        {tab === "roles" && (
+          <PageHeader.Actions>
+            <Button
+              onClick={() => setOpenCreate(true)}
+              className="bg-primary text-white gap-2 rounded-full px-5"
+            >
+              <Plus className="w-4 h-4" />
+              Create Role
+            </Button>
+          </PageHeader.Actions>
+        )}
+      </PageHeader>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <FadeIn delay={s.delay} key={s.label}>
-            <SharedStatCard label={s.label} value={s.value} icon={s.icon} />
-          </FadeIn>
-        ))}
-      </div>
-
-      {/* Search + Table */}
-      {isError ? (
-        <QueryError error={error} onRetry={() => refetch()} />
-      ) : (
-        <PermissionsTable
-          data={rows}
-          search={search}
-          onSearchChange={handleSearchChange}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-          totalPages={page?.totalPages}
-          totalCount={page?.totalRecords}
-          isLoading={isPending || isFetching}
+      {/* NOTE: RoleMetricsDto only carries `totalRoles` alongside three
+          swap-shaped counters (pendingPickup / inTransit / completed). They are
+          surfaced as the API names them rather than relabelled into something
+          they aren't. */}
+      <StatGrid className="gap-4">
+        <SharedStatCard
+          label="Total Roles"
+          value={metrics?.totalRoles ?? 0}
+          icon={IoPeopleOutline}
+          isLoading={isPending}
         />
+        <SharedStatCard
+          label="Pending Pickup"
+          value={metrics?.pendingPickup ?? 0}
+          icon={HiOutlineBuildingOffice2}
+          isLoading={isPending}
+        />
+        <SharedStatCard
+          label="In Transit"
+          value={metrics?.inTransit ?? 0}
+          icon={IoCartOutline}
+          isLoading={isPending}
+        />
+        <SharedStatCard
+          label="Completed"
+          value={metrics?.completed ?? 0}
+          icon={IoPersonRemoveOutline}
+          isLoading={isPending}
+        />
+      </StatGrid>
+
+      <FilterTabs value={tab} onChange={(next) => setTab(next as typeof tab)}>
+        <FilterTabs.Tab value="roles">Roles &amp; Permissions</FilterTabs.Tab>
+        <FilterTabs.Tab value="admin-users">Admin Users</FilterTabs.Tab>
+      </FilterTabs>
+
+      {tab === "admin-users" ? (
+        <UsersPanel
+          panel={adminUsers}
+          showFilterTabs={false}
+          rowLabel="admin users"
+          // Balance, eco-points and listed have no source for a staff account —
+          // the identity service carries none of them, so they would only ever
+          // render zeroes and placeholders. Code is dropped as noise here.
+          hiddenColumns={["code", "balance", "ecoPoints", "listed"]}
+        />
+      ) : (
+        <DataState>
+          <DataState.Error
+            when={isError}
+            error={error}
+            onRetry={() => refetch()}
+          />
+          <DataState.Content>
+            <PermissionsTable
+              data={rows}
+              search={search}
+              onSearchChange={handleSearchChange}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              totalPages={page?.totalPages}
+              totalCount={page?.totalRecords}
+              isLoading={isPending || isFetching}
+            />
+          </DataState.Content>
+        </DataState>
       )}
 
       <CreateRoleDialog open={openCreate} onOpenChange={setOpenCreate} />

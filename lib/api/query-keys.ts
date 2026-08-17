@@ -23,6 +23,12 @@ export const adminKeys = {
     all: ["admin", "users"] as const,
     list: (tab?: string, filters?: AdminQueryFilters) =>
       ["admin", "users", "list", tab ?? null, filters ?? {}] as const,
+    /**
+     * Staff accounts. Read from the identity service rather than the admin one,
+     * but namespaced under users on purpose: suspending or deleting an account
+     * already invalidates `users.all`, and this list has to follow.
+     */
+    admins: () => ["admin", "users", "admins"] as const,
     detail: (userId: string) => ["admin", "users", "detail", userId] as const,
     listings: (userId: string, listingType?: string, filters?: AdminQueryFilters) =>
       ["admin", "users", "detail", userId, "listings", listingType ?? null, filters ?? {}] as const,

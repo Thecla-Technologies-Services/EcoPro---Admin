@@ -1,5 +1,10 @@
-import { cn } from "@/lib/utils";
+import { DetailList } from "@/components/shared/detail-list";
 
+/**
+ * Donation-panel facts — the shared list's compact `inline` row, kept as a named
+ * export because the panel reads better with `<InfoRow>` than a variant string
+ * repeated at every call site.
+ */
 export function InfoRow({
   label,
   value,
@@ -10,11 +15,11 @@ export function InfoRow({
   valueClassName?: string;
 }) {
   return (
-    <div className="flex justify-between items-start py-1.5">
-      <span className="text-xs text-gray-400 w-32 shrink-0">{label}</span>
-      <span className={cn("text-xs text-gray-800 text-right", valueClassName)}>
-        {value}
-      </span>
-    </div>
+    <DetailList.Row
+      variant="inline"
+      label={label}
+      value={value}
+      valueClassName={valueClassName}
+    />
   );
 }

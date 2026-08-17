@@ -1,5 +1,9 @@
 import type { User, UserRole, UserStatus } from "@/types/user";
-import type { AdminUserDetailsDto, AdminUserSummaryDto } from "@/types/api/admin";
+import type {
+  AdminUserDetailsDto,
+  AdminUserSummaryDto,
+  UserDto,
+} from "@/types/api/admin";
 
 /**
  * The dashboard's role labels and the API's role names are different
@@ -17,6 +21,7 @@ const ROLE_LABELS: Record<string, UserRole> = {
   logisticspartner: "Delivery",
   independentrider: "Delivery",
   delivery: "Delivery",
+  admin: "Admin",
 };
 
 export function toRoleLabel(role: string | null | undefined): UserRole | string {
@@ -109,15 +114,66 @@ export type UserFilterTab = (typeof USER_FILTER_TABS)[number];
 /**
  * Values sent as the `Tab` query parameter.
  *
- * ASSUMPTION: the swagger declares `Tab` as an unconstrained string with no
- * enum, so these slugs are inferred from the metrics the same endpoint returns
- * (individual / ngoPartners / deliveryPartners / suspendedCount). If the API
- * expects different spellings, this map is the only thing that needs changing.
+ * These are the endpoint's documented set — its swagger summary reads "tab
+ * filters (All, Individual, NGO, Delivery, Suspended)" — spelled exactly as
+ * documented, since `Tab` is typed as a bare string and an unrecognised value
+ * would quietly return an unfiltered list instead of failing.
+ *
+ * Note what is missing: there is no tab for staff accounts, and no parameter
+ * that excludes them, so `All` includes admins. See `isAdminRole`.
  */
 export const USER_TAB_PARAMS: Record<UserFilterTab, string | undefined> = {
-  "All Users": undefined,
-  Individual: "individual",
-  NGO: "ngo",
-  Delivery: "delivery",
-  Suspended: "suspended",
+  "All Users": "All",
+  Individual: "Individual",
+  NGO: "NGO",
+  Delivery: "Delivery",
+  Suspended: "Suspended",
 };
+
+/**
+ * Whether a row is a staff account.
+ *
+ * The users list has no way to filter admins out, so the Users page drops them
+ * here after the fact. One consequence is visible: a page of ten that contains
+ * admins renders fewer than ten rows.
+ */
+export function isAdminRole(role: string | null | undefined) {
+  return toRoleLabel(role) === "Admin";
+}
+
+/**
+ * Maps a staff account from `GET /api/user/get-all` onto the same row shape the
+ * users table renders.
+ *
+ * That endpoint returns the identity service's `UserDto` rather than the admin
+ * service's summary, so it carries no wallet balance, eco-points or listing
+ * flag. The balance and eco-points columns are hidden on that table rather than
+ * shown as zero; the fields below only exist to satisfy the row type.
+ */
+export function toAdminUserRow(dto: UserDto): User {
+  const name =
+    [dto.firstName, dto.lastName].filter(Boolean).join(" ") ||
+    dto.email ||
+    "Unnamed user";
+
+  return {
+    id: dto.id ?? "",
+    name,
+    avatar: dto.profilePictureUrl ?? undefined,
+    role: toRoleLabel(dto.userType),
+    code: dto.userCode ?? "—",
+    email: dto.email ?? "",
+    phone: dto.phoneNumber ?? undefined,
+    balance: 0,
+    ecoPoints: 0,
+    status: toStatus(undefined, dto.isActive),
+    signupDate: dto.createdOn ?? undefined,
+    lastActive: dto.lastLoginDate ?? undefined,
+    emailVerified: dto.emailConfirmed,
+  };
+}
+
+/** Picks the staff accounts out of the identity service's full user list. */
+export function selectAdminUsers(users: UserDto[] = []) {
+  return users.filter((dto) => toRoleLabel(dto.userType) === "Admin");
+}
