@@ -2,14 +2,8 @@
 
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Eye, CheckCircle, XCircle, MoreVertical } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { Eye, CheckCircle, XCircle } from "lucide-react";
+import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
 import DateRangeFilter from "@/components/shared/date-range-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -32,46 +26,30 @@ function ActionsCell({
   const isRejected = row.status === "Rejected";
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 bg-background rounded-md"
-        >
-          <MoreVertical className="w-4 h-4 text-gray-400" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52 p-1 py-2 space-y-2">
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          onClick={() => onAction("view", row)}
-        >
-          <Eye className="size-5 text-foreground" />
-          View Withdrawal
-        </DropdownMenuItem>
+    <RowActions>
+      <RowActions.Item icon={Eye} onSelect={() => onAction("view", row)}>
+        View Withdrawal
+      </RowActions.Item>
 
-        {(isPending || isRejected) && (
-          <DropdownMenuItem
-            className="flex items-center gap-2 text-sm cursor-pointer"
-            onClick={() => onAction("approve", row)}
-          >
-            <CheckCircle className="size-5 text-foreground  " />
-            Approve Withdrawal
-          </DropdownMenuItem>
-        )}
+      {(isPending || isRejected) && (
+        <RowActions.Item
+          icon={CheckCircle}
+          onSelect={() => onAction("approve", row)}
+        >
+          Approve Withdrawal
+        </RowActions.Item>
+      )}
 
-        {isPending && (
-          <DropdownMenuItem
-            className="flex items-center gap-2 text-sm cursor-pointer text-destructive focus:text-red-500"
-            onClick={() => onAction("reject", row)}
-          >
-            <XCircle className="size-5 text-foreground" />
-            Reject Withdrawal
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      {isPending && (
+        <RowActions.Item
+          icon={XCircle}
+          destructive
+          onSelect={() => onAction("reject", row)}
+        >
+          Reject Withdrawal
+        </RowActions.Item>
+      )}
+    </RowActions>
   );
 }
 

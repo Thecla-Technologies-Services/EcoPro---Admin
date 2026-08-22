@@ -1,18 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Flag, FlagOff } from "lucide-react";
+import { Flag, FlagOff } from "lucide-react";
 import {
   IoEyeOutline,
   IoCreateOutline,
   IoTrashOutline,
 } from "react-icons/io5";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { RowActions } from "@/components/shared/row-actions";
 import { ViewListingDialog } from "./view-listing";
 import { FlagListingDialog } from "./flag-listing";
 import { UnflagListingDialog } from "./unflag-listing";
@@ -42,66 +37,39 @@ export default function ListingActionMenu({ listing }: ListingActionMenuProps) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="size-8 md:size-10 cursor-pointer rounded-md bg-background flex items-center justify-center hover:bg-muted transition-colors outline-none">
-            <MoreVertical className="size-4 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
+      <RowActions className="size-8 md:size-10">
+        <RowActions.Item icon={IoEyeOutline} onSelect={() => setOpen("view")}>
+          View Listing
+        </RowActions.Item>
 
-        <DropdownMenuContent
-          align="end"
-          className="w-44 rounded-xl shadow-lg p-1 text-foreground"
+        {/*
+          The Admin API exposes no update endpoint for a listing — only
+          create, delete, flag and unflag — so there is nothing to save this
+          to. Disabled rather than removed: re-enable by restoring the
+          ListingFormDialog in edit mode once an endpoint exists.
+        */}
+        <RowActions.Item icon={IoCreateOutline} disabled>
+          Edit Listing
+        </RowActions.Item>
+
+        {isFlagged ? (
+          <RowActions.Item icon={FlagOff} onSelect={() => setOpen("unflag")}>
+            Unflag Listing
+          </RowActions.Item>
+        ) : (
+          <RowActions.Item icon={Flag} onSelect={() => setOpen("flag")}>
+            Flag Listing
+          </RowActions.Item>
+        )}
+
+        <RowActions.Item
+          icon={IoTrashOutline}
+          destructive
+          onSelect={() => setOpen("delete")}
         >
-          <DropdownMenuItem
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer"
-            onClick={() => setOpen("view")}
-          >
-            <IoEyeOutline className="size-4" />
-            View Listing
-          </DropdownMenuItem>
-
-          {/*
-            The Admin API exposes no update endpoint for a listing — only
-            create, delete, flag and unflag — so there is nothing to save this
-            to. Disabled rather than removed: re-enable by restoring the
-            ListingFormDialog in edit mode once an endpoint exists.
-          */}
-          <DropdownMenuItem
-            disabled
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg"
-          >
-            <IoCreateOutline className="size-4" />
-            Edit Listing
-          </DropdownMenuItem>
-
-          {isFlagged ? (
-            <DropdownMenuItem
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer"
-              onClick={() => setOpen("unflag")}
-            >
-              <FlagOff className="size-4" />
-              Unflag Listing
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer"
-              onClick={() => setOpen("flag")}
-            >
-              <Flag className="size-4" />
-              Flag Listing
-            </DropdownMenuItem>
-          )}
-
-          <DropdownMenuItem
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-destructive focus:text-destructive"
-            onClick={() => setOpen("delete")}
-          >
-            <IoTrashOutline className="size-4" />
-            Delete Listing
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          Delete Listing
+        </RowActions.Item>
+      </RowActions>
 
       <ViewListingDialog
         open={open === "view"}

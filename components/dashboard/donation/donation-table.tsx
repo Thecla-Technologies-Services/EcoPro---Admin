@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Eye, ChevronDown } from "lucide-react";
+import { Eye, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RowActions } from "@/components/shared/row-actions";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/data-table";
@@ -30,23 +31,11 @@ function ActionsCell({
   onView: (row: DonationRecord) => void;
 }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40 p-1">
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          onClick={() => onView(row)}
-        >
-          <Eye className="size-4 text-gray-400" />
-          View Details
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <RowActions>
+      <RowActions.Item icon={Eye} onSelect={() => onView(row)}>
+        View Details
+      </RowActions.Item>
+    </RowActions>
   );
 }
 

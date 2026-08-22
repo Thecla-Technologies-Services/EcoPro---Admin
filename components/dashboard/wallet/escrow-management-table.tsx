@@ -5,16 +5,9 @@ import { type ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
   PauseCircle,
-  MoreVertical,
   CheckCircle,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
 import { type EscrowTransaction } from "@/types/wallet";
 import { ForceReleaseDialog } from "./force-release-dialog";
@@ -28,41 +21,17 @@ type EscrowDialog = "dispute" | "release" | "pause" | null;
 
 function ActionsCell({ onAction }: { onAction: (type: EscrowDialog) => void }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 bg-background rounded-md"
-        >
-          <span className="sr-only">Open menu</span>
-          <MoreVertical className="w-4 h-4 text-gray-400" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52 p-1 py-2 space-y-2">
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer px-2 "
-          onClick={() => onAction("dispute")}
-        >
-          <AlertTriangle className="size-5 text-foreground" />
-          Open Dispute
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer px-2 "
-          onClick={() => onAction("release")}
-        >
-          <CheckCircle className="size-5 text-foreground" />
-          Force Release Payment
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer px-2 "
-          onClick={() => onAction("pause")}
-        >
-          <PauseCircle className="size-5 text-foreground" />
-          Pause Escrow
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <RowActions>
+      <RowActions.Item icon={AlertTriangle} onSelect={() => onAction("dispute")}>
+        Open Dispute
+      </RowActions.Item>
+      <RowActions.Item icon={CheckCircle} onSelect={() => onAction("release")}>
+        Force Release Payment
+      </RowActions.Item>
+      <RowActions.Item icon={PauseCircle} onSelect={() => onAction("pause")}>
+        Pause Escrow
+      </RowActions.Item>
+    </RowActions>
   );
 }
 
