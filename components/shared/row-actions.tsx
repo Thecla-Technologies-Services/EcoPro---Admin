@@ -79,6 +79,7 @@ function Item({
   destructive,
   children,
   className,
+  asChild,
   ...props
 }: {
   icon?: React.ElementType;
@@ -98,10 +99,20 @@ function Item({
         className,
       )}
       onClick={onSelect}
+      asChild={asChild}
       {...props}
     >
-      {Icon && <Icon className="mr-2 size-4 md:size-5" />}
-      {children}
+      {/* `asChild` hands the child straight to Radix's Slot, which takes exactly
+          one element — so the icon slot cannot be rendered alongside it. An
+          `asChild` caller draws its own icon inside the element it passes. */}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {Icon && <Icon className="mr-2 size-4 md:size-5" />}
+          {children}
+        </>
+      )}
     </DropdownMenuItem>
   );
 }
