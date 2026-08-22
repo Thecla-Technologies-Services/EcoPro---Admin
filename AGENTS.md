@@ -95,8 +95,13 @@ succeed says so rather than reporting a success that never happened.
 
 ## Modules still fed by fixtures
 
-Wallet (overview, escrow), donations, marketing, analytics, swap-orders and the
-verification queue read from `data/`, as do the stat cards on disputes,
-swap-orders, donations, analytics and marketing — those figures are placeholders,
-not live metrics. Withdrawal requests and disputes have been moved behind
-`useFixturePanel`; the rest have not.
+Wallet (overview, escrow), donations, marketing, analytics and swap-orders read
+from `data/`, as do the stat cards on disputes, swap-orders, donations,
+analytics and marketing — those figures are placeholders, not live metrics.
+
+Three are behind a seam already, and going live is a one-word edit for each:
+withdrawal requests and disputes through `useFixturePanel`, and the
+verification queue through `useVerificationQueue({ source: "fixture" })`
+(`hooks/admin/use-verification-queue.ts`), which is not a list panel — it is a
+selection and two decisions over a queue joined from three endpoints. The rest
+have not been moved.
