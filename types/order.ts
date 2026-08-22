@@ -1,5 +1,5 @@
 import { CampaignStatus } from "./marketing";
-import type { UserRole, UserStatus } from "./user";
+import type { DeliveryStatus, UserRole, UserStatus } from "./user";
 
 export type OrderStatus =
   | "In Transit"
@@ -8,9 +8,9 @@ export type OrderStatus =
   | "Delivered";
 export type BadgeStatus =
   | OrderStatus
+  | DeliveryStatus
   | "Active"
   | "Flagged"
-  | "Pending"
   | "Approved"
   | "Pending Review"
   | "Open"
@@ -24,7 +24,6 @@ export type BadgeStatus =
   | "No"
   | "NGO"
   | "Paused"
-  | "Not Delivered"
   | "Rejected"
   | UserStatus
   | UserRole

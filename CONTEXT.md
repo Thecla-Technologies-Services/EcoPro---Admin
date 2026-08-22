@@ -59,6 +59,12 @@ A trade where two Users exchange goods rather than money.
 **Order**:
 A trade being carried out — the agreement plus its delivery.
 
+**Delivery**:
+The movement of goods for one Order, carried out by a Delivery Partner. Named
+apart from the Order because the two can disagree: a Delivery can end Not
+Delivered while the Order stands, and an Order can be Disputed over something
+that has nothing to do with the movement.
+
 **Flagged**:
 A Listing an Admin User has marked as needing review. Distinct from a Listing
 a User has reported, which is a Listing Report.
