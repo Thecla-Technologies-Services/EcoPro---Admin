@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card'
-import { SimpleSelect } from '../shared/form/simple-select'
+import { SimpleSelect } from '../../shared/form/simple-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { MonthlyFinancialOverviewDto } from '@/types/api/admin'
 

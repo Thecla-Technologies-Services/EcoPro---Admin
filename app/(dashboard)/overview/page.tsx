@@ -3,10 +3,10 @@
 import { Banknote, Leaf } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 import { IoPeopleOutline, IoChatbubbleOutline } from "react-icons/io5";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { ActionSection } from "@/components/dashboard/action-section";
-import { SideStats } from "@/components/dashboard/side-stats";
-import { RevenueChart } from "@/components/dashboard/revenue-charts";
+import { StatCard } from "@/components/dashboard/overview/stat-card";
+import { ActionSection } from "@/components/dashboard/overview/action-section";
+import { SideStats } from "@/components/dashboard/overview/side-stats";
+import { RevenueChart } from "@/components/dashboard/overview/revenue-charts";
 import { DataState } from "@/components/shared/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardOverview } from "@/hooks/admin/use-dashboard";
