@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
-import type { PaginationState } from "@tanstack/react-table";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import {
   IoPeopleOutline,
@@ -21,7 +20,8 @@ import { CreateRoleDialog } from "@/components/dashboard/roles-permissions/creat
 import { UsersPanel } from "@/components/dashboard/user/users-panel";
 import { useRoles } from "@/hooks/admin/use-roles";
 import { useAdminUsersPanel } from "@/hooks/admin/use-users-panel";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useListPanel } from "@/hooks/shared/use-list-panel";
+import type { RoleMetricsDto } from "@/types/api/admin";
 import { useTabParam } from "@/hooks/use-tab-param";
 import { toRoleRow } from "@/lib/adapters/role";
 
@@ -34,36 +34,40 @@ export default function RolesPermissionsPage() {
   const [tab, setTab] = useTabParam(TABS);
 
   const [openCreate, setOpenCreate] = useState(false);
-  const [search, setSearch] = useState("");
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
+
+  const roles = useListPanel({
     pageSize: DEFAULT_PAGE_SIZE,
+    useQuery: ({ pagination, search }) => {
+      const query = useRoles({
+        // The API pages from 1; the table indexes from 0.
+        pageNumber: pagination.pageIndex + 1,
+        pageSize: pagination.pageSize,
+        searchTerm: search || undefined,
+      });
+
+      const page = query.data?.roles;
+
+      return {
+        rows: page?.data ?? [],
+        meta: query.data?.metrics,
+        totalPages: page?.totalPages,
+        totalCount: page?.totalRecords,
+        isPending: query.isPending,
+        isFetching: query.isFetching,
+        isError: query.isError,
+        error: query.error,
+        refetch: () => void query.refetch(),
+      };
+    },
+    toRow: toRoleRow,
   });
-
-  const debouncedSearch = useDebouncedValue(search);
-
-  const { data, isPending, isFetching, isError, error, refetch } = useRoles({
-    // The API pages from 1; the table indexes from 0.
-    pageNumber: pagination.pageIndex + 1,
-    pageSize: pagination.pageSize,
-    searchTerm: debouncedSearch || undefined,
-  });
-
-  const metrics = data?.metrics;
-  const page = data?.roles;
-
-  const rows = useMemo(() => (page?.data ?? []).map(toRoleRow), [page?.data]);
 
   // Staff accounts come from the identity service, since the admin users list
   // has no tab for them — so there is nothing for the table's own account-kind
   // filters to switch between either.
   const adminUsers = useAdminUsersPanel();
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    // A new search invalidates the current page position.
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  };
+  const metrics: RoleMetricsDto | undefined = roles.meta;
 
   return (
     <div className="space-y-6">
@@ -97,25 +101,25 @@ export default function RolesPermissionsPage() {
           label="Total Roles"
           value={metrics?.totalRoles ?? 0}
           icon={IoPeopleOutline}
-          isLoading={isPending}
+          isLoading={roles.query.isPending}
         />
         <SharedStatCard
           label="Pending Pickup"
           value={metrics?.pendingPickup ?? 0}
           icon={HiOutlineBuildingOffice2}
-          isLoading={isPending}
+          isLoading={roles.query.isPending}
         />
         <SharedStatCard
           label="In Transit"
           value={metrics?.inTransit ?? 0}
           icon={IoCartOutline}
-          isLoading={isPending}
+          isLoading={roles.query.isPending}
         />
         <SharedStatCard
           label="Completed"
           value={metrics?.completed ?? 0}
           icon={IoPersonRemoveOutline}
-          isLoading={isPending}
+          isLoading={roles.query.isPending}
         />
       </StatGrid>
 
@@ -138,21 +142,12 @@ export default function RolesPermissionsPage() {
       ) : (
         <DataState>
           <DataState.Error
-            when={isError}
-            error={error}
-            onRetry={() => refetch()}
+            when={roles.query.isError}
+            error={roles.query.error}
+            onRetry={roles.query.refetch}
           />
           <DataState.Content>
-            <PermissionsTable
-              data={rows}
-              search={search}
-              onSearchChange={handleSearchChange}
-              pagination={pagination}
-              onPaginationChange={setPagination}
-              totalPages={page?.totalPages}
-              totalCount={page?.totalRecords}
-              isLoading={isPending || isFetching}
-            />
+            <PermissionsTable {...roles.table} />
           </DataState.Content>
         </DataState>
       )}

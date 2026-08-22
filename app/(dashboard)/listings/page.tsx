@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Plus, Package, Box } from "lucide-react";
 import { SearchDropDown } from "@/components/shared/search-dropdown";
 import { DateRangeFilter } from "@/components/shared/date-range-filter";
@@ -17,7 +17,8 @@ import { FilterTabs } from "@/components/shared/filter-tabs";
 import { Toolbar } from "@/components/shared/toolbar";
 import { SimpleSelect } from "@/components/shared/simple-select";
 import { useListings } from "@/hooks/admin/use-listings";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useListPanel } from "@/hooks/shared/use-list-panel";
+import type { AdminListingMetricsDto } from "@/types/api/admin";
 import { cn } from "@/lib/utils";
 import type { DateRangeFilterValue } from "@/types/date";
 import {
@@ -54,59 +55,65 @@ function filterSelectClass(unfiltered: boolean) {
 }
 
 export default function ListingsPage() {
-  const [tab, setTab] = useState<ListingTab>("all");
-  const [country, setCountry] = useState<CountryFilter>(ALL_COUNTRIES);
-  const [listingType, setListingType] =
-    useState<ListingTypeFilter>(ALL_LISTING_TYPES);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  /**
+   * The picker deals in `Date`s and the panel's filters in strings, so the
+   * chosen range is kept here for the trigger's label and sent to the API as
+   * two ISO timestamps.
+   */
   const [dateFilter, setDateFilter] = useState<DateRangeFilterValue>();
 
-  const debouncedSearch = useDebouncedValue(search);
+  const panel = useListPanel({
+    pageSize: PAGE_SIZE,
+    initialFilters: {
+      tab: "all",
+      country: ALL_COUNTRIES,
+      listingType: ALL_LISTING_TYPES,
+    },
+    useQuery: ({ pagination, search, filters }) => {
+      const query = useListings(
+        LISTING_TAB_PARAMS[(filters.tab ?? "all") as ListingTab],
+        {
+          // The API pages from 1; the panel indexes from 0.
+          pageNumber: pagination.pageIndex + 1,
+          pageSize: pagination.pageSize,
+          searchTerm: search || undefined,
+          country: toCountryParam(filters.country as CountryFilter),
+          listingType: toListingTypeParam(
+            filters.listingType as ListingTypeFilter,
+          ),
+          fromDate: filters.fromDate,
+          toDate: filters.toDate,
+        },
+      );
 
-  const { data, isPending, isFetching, isError, error, refetch } = useListings(
-    LISTING_TAB_PARAMS[tab],
-    {
-      pageNumber: page,
-      pageSize: PAGE_SIZE,
-      searchTerm: debouncedSearch || undefined,
-      country: toCountryParam(country),
-      listingType: toListingTypeParam(listingType),
-      // The endpoint types both bounds as date-time, so the range is sent as
-      // full ISO timestamps rather than bare dates.
-      fromDate: dateFilter?.range.from.toISOString(),
-      toDate: dateFilter?.range.to.toISOString(),
-    }
-  );
+      const page = query.data?.listings;
 
-  const metrics = data?.metrics;
-  const pageData = data?.listings;
+      return {
+        rows: page?.data ?? [],
+        meta: query.data?.metrics,
+        totalPages: page?.totalPages,
+        totalCount: page?.totalRecords,
+        isPending: query.isPending,
+        isFetching: query.isFetching,
+        isError: query.isError,
+        error: query.error,
+        refetch: () => void query.refetch(),
+      };
+    },
+    toRow: toListingRow,
+  });
 
-  const listings = useMemo(
-    () => (pageData?.data ?? []).map(toListingRow),
-    [pageData?.data]
-  );
-
-  const changeTab = (next: ListingTab) => {
-    setTab(next);
-    setPage(1);
-  };
-
-  // A narrower or wider country invalidates the current page position.
-  const changeCountry = (next: string) => {
-    setCountry(next as CountryFilter);
-    setPage(1);
-  };
-
-  const changeListingType = (next: string) => {
-    setListingType(next as ListingTypeFilter);
-    setPage(1);
-  };
+  const listings = panel.rows;
+  const metrics: AdminListingMetricsDto | undefined = panel.meta;
+  const { setFilter } = panel;
 
   const changeDateFilter = (next: DateRangeFilterValue) => {
     setDateFilter(next);
-    setPage(1);
+    // The endpoint types both bounds as date-time, so the range is sent as
+    // full ISO timestamps rather than bare dates.
+    setFilter("fromDate", next.range.from.toISOString());
+    setFilter("toDate", next.range.to.toISOString());
   };
 
   return (
@@ -138,25 +145,25 @@ export default function ListingsPage() {
         <StatGrid className="mb-7">
           <SharedStatCard
             label="Total Listings"
-            isLoading={isPending}
+            isLoading={panel.query.isPending}
             value={metrics?.totalListings ?? 0}
             icon={IoCartOutline}
           />
           <SharedStatCard
             label="Active Listings"
-            isLoading={isPending}
+            isLoading={panel.query.isPending}
             value={metrics?.activeListings ?? 0}
             icon={Package}
           />
           <SharedStatCard
             label="Pending Approval"
-            isLoading={isPending}
+            isLoading={panel.query.isPending}
             value={metrics?.pendingApproval ?? 0}
             icon={Box}
           />
           <SharedStatCard
             label="Flagged Items"
-            isLoading={isPending}
+            isLoading={panel.query.isPending}
             value={metrics?.flaggedItems ?? 0}
             icon={HiOutlineDocumentCheck}
           />
@@ -164,7 +171,10 @@ export default function ListingsPage() {
 
         <Toolbar className="gap-3">
           <Toolbar.Start className="w-full md:w-auto">
-            <FilterTabs value={tab} onChange={(next) => changeTab(next as ListingTab)}>
+            <FilterTabs
+              value={panel.table.activeTab}
+              onChange={panel.table.onTabChange}
+            >
               <FilterTabs.Tab value="all">All Listings</FilterTabs.Tab>
               <FilterTabs.Tab value="active" count={metrics?.activeListings ?? 0}>
                 Active
@@ -180,18 +190,20 @@ export default function ListingsPage() {
 
             <SimpleSelect
               options={COUNTRY_FILTER_OPTIONS}
-              value={country}
-              onValueChange={changeCountry}
+              value={panel.filters.country}
+              onValueChange={(next) => setFilter("country", next)}
               aria-label="Filter by country"
-              className={filterSelectClass(country === ALL_COUNTRIES)}
+              className={filterSelectClass(panel.filters.country === ALL_COUNTRIES)}
             />
 
             <SimpleSelect
               options={LISTING_TYPE_FILTER_OPTIONS}
-              value={listingType}
-              onValueChange={changeListingType}
+              value={panel.filters.listingType}
+              onValueChange={(next) => setFilter("listingType", next)}
               aria-label="Filter by listing type"
-              className={filterSelectClass(listingType === ALL_LISTING_TYPES)}
+              className={filterSelectClass(
+                panel.filters.listingType === ALL_LISTING_TYPES,
+              )}
             />
           </Toolbar.Start>
           {/* Dropping the shared `ml-auto` leaves the alignment to the
@@ -209,8 +221,7 @@ export default function ListingsPage() {
               placeholder="Search listings..."
               className="w-full sm:w-auto sm:min-w-40 sm:flex-1 md:w-56 md:flex-none"
               onSearch={(query) => {
-                setSearch(query);
-                setPage(1);
+                panel.table.onSearchChange(query);
               }}
             />
           </Toolbar.End>
@@ -218,19 +229,19 @@ export default function ListingsPage() {
 
         <DataState>
           <DataState.Error
-            when={isError}
-            error={error}
-            onRetry={() => refetch()}
+            when={panel.query.isError}
+            error={panel.query.error}
+            onRetry={panel.query.refetch}
           />
           <DataState.Loading
-            when={isPending}
+            when={panel.query.isPending}
             rows={4}
             rowClassName="h-44 rounded-md"
           />
           <DataState.Empty when={listings.length === 0}>
             No listings found.
           </DataState.Empty>
-          <DataState.Content busy={isFetching} className="space-y-3">
+          <DataState.Content busy={panel.table.isLoading} className="space-y-3">
             {listings.map((listing) => (
               <ListingRow key={listing.id} listing={listing} />
             ))}
@@ -245,11 +256,17 @@ export default function ListingsPage() {
           container, which overflows the page sideways and clips the header. */}
       {listings.length > 0 && (
         <div className="shrink-0 border-t border-border bg-white pt-4">
+          {/* The panel indexes from 0, this control counts from 1. */}
           <Pagination
-            current={page}
-            total={pageData?.totalPages ?? 1}
-            onChange={setPage}
-            totalCount={pageData?.totalRecords}
+            current={panel.table.pagination.pageIndex + 1}
+            total={panel.table.totalPages ?? 1}
+            onChange={(next) =>
+              panel.table.onPaginationChange({
+                ...panel.table.pagination,
+                pageIndex: next - 1,
+              })
+            }
+            totalCount={panel.table.totalCount}
             pageSize={PAGE_SIZE}
             rowsOnPage={listings.length}
             rowLabel="listings"
