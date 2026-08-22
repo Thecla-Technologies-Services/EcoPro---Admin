@@ -14,7 +14,7 @@ all three end up holding something named after the same entity:
 | --- | --- |
 | `types/` | declarations only. One file per domain entity, named after it in the singular: `listing.ts` declares `Listing` |
 | `constants/` | closed option lists, their label maps, and the `to*Param` converters that drop a sentinel |
-| `data/` | fixture rows standing in for an endpoint that is not wired yet |
+| `data/` | fixture rows standing in for an endpoint that is not wired yet. Named for the rows in the plural, and the export is that name in caps: `applicants.ts` exports `APPLICANTS` |
 
 `components/` sorts by who calls a file:
 
