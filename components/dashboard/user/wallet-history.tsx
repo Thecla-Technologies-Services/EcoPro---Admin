@@ -12,8 +12,7 @@ import {
   RefreshCw,
   type LucideIcon,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { QueryError } from "@/components/shared/query-error";
+import { DataState } from "@/components/shared/data-state";
 import { useUserTransactions } from "@/hooks/admin/use-users";
 import type { WalletFilter } from "@/types/user";
 import { cn } from "@/lib/utils";
@@ -99,29 +98,29 @@ export function WalletHistoryTab({
         onChange={setFilter}
       />
 
-      {isPending ? (
-        <div className="mt-4 space-y-3">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-9 w-full" />
-          ))}
-        </div>
-      ) : isError ? (
-        <QueryError error={error} onRetry={() => refetch()} className="mt-4" />
-      ) : displayed.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 py-16 text-gray-400">
-          <Image
-            src="/assets/images/wallet-empty-state.png"
-            alt="No transactions"
-            width={90}
-            height={90}
-          />
+      <DataState>
+        <DataState.Error
+          when={isError}
+          error={error}
+          onRetry={() => refetch()}
+          className="mt-4"
+        />
+        <DataState.Loading when={isPending} rows={4} rowClassName="h-9" className="mt-4" />
+        <DataState.Empty when={displayed.length === 0}>
+          <div className="flex flex-col items-center justify-center gap-4 text-gray-400">
+            <Image
+              src="/assets/images/wallet-empty-state.png"
+              alt="No transactions"
+              width={90}
+              height={90}
+            />
 
-          <p className="text-sm md:text-base font-medium text-foreground">
-            No Transactions for now
-          </p>
-        </div>
-      ) : (
-        <div className="mt-4 space-y-3 max-h-70 overflow-y-auto pr-1">
+            <p className="text-sm md:text-base font-medium text-foreground">
+              No Transactions for now
+            </p>
+          </div>
+        </DataState.Empty>
+        <DataState.Content className="mt-4 space-y-3 max-h-70 overflow-y-auto pr-1">
           {displayed.map((tx) => {
             const isCredit = tx.transactionType?.toLowerCase() === "credit";
             const glyph = glyphFor(tx.iconType, isCredit);
@@ -154,8 +153,8 @@ export function WalletHistoryTab({
               </div>
             );
           })}
-        </div>
-      )}
+        </DataState.Content>
+      </DataState>
     </div>
   );
 }

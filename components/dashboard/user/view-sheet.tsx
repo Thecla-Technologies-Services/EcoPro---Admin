@@ -18,7 +18,7 @@ import type { Tab, ViewUserSheetProps } from "@/types/user";
 import { OrderList } from "./delivery/order-list";
 import { useUser } from "@/hooks/admin/use-users";
 import { toUserDetails } from "@/lib/adapters/user";
-import { QueryError } from "@/components/shared/query-error";
+import { DataState } from "@/components/shared/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const triggerClassName =
@@ -50,15 +50,21 @@ export function ViewUserSheet({
       {
         value: "Profile" as Tab,
         label: "Profile",
-        content: detailPending ? (
-          <div className="space-y-3">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-40 w-full" />
-          </div>
-        ) : detailFailed ? (
-          <QueryError error={detailError} onRetry={() => refetchDetail()} />
-        ) : (
-          <ProfileView user={user} />
+        content: (
+          <DataState>
+            <DataState.Error
+              when={detailFailed}
+              error={detailError}
+              onRetry={() => refetchDetail()}
+            />
+            <DataState.Loading when={detailPending}>
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </DataState.Loading>
+            <DataState.Content>
+              <ProfileView user={user} />
+            </DataState.Content>
+          </DataState>
         ),
       },
     ];

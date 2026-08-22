@@ -7,8 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { QueryError } from "@/components/shared/query-error";
+import { DataState } from "@/components/shared/data-state";
 import { PermissionGrid } from "./permission-grid";
 import { useRole } from "@/hooks/admin/use-roles";
 import { formatRoleDate, selectedGroups } from "@/lib/adapters/role";
@@ -47,16 +46,10 @@ export function ViewRoleDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isError ? (
-          <QueryError error={error} onRetry={() => refetch()} />
-        ) : isPending ? (
-          <div className="space-y-3" aria-busy>
-            {Array.from({ length: 8 }, (_, index) => (
-              <Skeleton key={index} className="h-6 w-full" />
-            ))}
-          </div>
-        ) : (
-          <>
+        <DataState>
+          <DataState.Error when={isError} error={error} onRetry={() => refetch()} />
+          <DataState.Loading when={isPending} rows={8} rowClassName="h-6" />
+          <DataState.Content>
             <dl className="grid grid-cols-2 gap-4 border-b pb-4 text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-muted-foreground">Permissions</dt>
@@ -85,8 +78,8 @@ export function ViewRoleDialog({
                 </p>
               )}
             </div>
-          </>
-        )}
+          </DataState.Content>
+        </DataState>
       </DialogContent>
     </Dialog>
   );

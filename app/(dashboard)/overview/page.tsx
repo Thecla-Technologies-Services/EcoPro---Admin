@@ -7,7 +7,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ActionSection } from "@/components/dashboard/action-section";
 import { SideStats } from "@/components/dashboard/side-stats";
 import { RevenueChart } from "@/components/dashboard/revenue-charts";
-import { QueryError } from "@/components/shared/query-error";
+import { DataState } from "@/components/shared/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardOverview } from "@/hooks/admin/use-dashboard";
 
@@ -26,10 +26,9 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {isError ? (
-        <QueryError error={error} onRetry={() => refetch()} />
-      ) : (
-        <>
+      <DataState>
+        <DataState.Error when={isError} error={error} onRetry={() => refetch()} />
+        <DataState.Content className="space-y-6">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {isPending ? (
@@ -103,8 +102,8 @@ export default function DashboardPage() {
             data={data?.financialOverview ?? undefined}
             isLoading={isPending}
           />
-        </>
-      )}
+        </DataState.Content>
+      </DataState>
     </div>
   );
 }

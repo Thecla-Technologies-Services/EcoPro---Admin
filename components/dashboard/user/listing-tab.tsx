@@ -3,8 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { IoEyeOutline } from "react-icons/io5";
 import { FilterPills, ListingTypeBadge } from "./pills";
-import { Skeleton } from "@/components/ui/skeleton";
-import { QueryError } from "@/components/shared/query-error";
+import { DataState } from "@/components/shared/data-state";
 import { useUserListings } from "@/hooks/admin/use-users";
 import type { ListingFilter } from "@/types/user";
 
@@ -39,29 +38,34 @@ export function ListingTab({ userId }: { userId?: string }) {
         onChange={setFilter}
       />
 
-      {isPending ? (
-        <div className="mt-4 space-y-3">
-          {Array.from({ length: 3 }, (_, index) => (
-            <Skeleton key={index} className="h-24 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : isError ? (
-        <QueryError error={error} onRetry={() => refetch()} className="mt-4" />
-      ) : displayed.length === 0 ? (
-        <div className="flex flex-col gap-4 items-center justify-center py-16">
-          <Image
-            src="/assets/images/all-listing-empty.png"
-            alt="No listings"
-            width={90}
-            height={90}
-          />
+      <DataState>
+        <DataState.Error
+          when={isError}
+          error={error}
+          onRetry={() => refetch()}
+          className="mt-4"
+        />
+        <DataState.Loading
+          when={isPending}
+          rows={3}
+          rowClassName="h-24 rounded-lg"
+          className="mt-4"
+        />
+        <DataState.Empty when={displayed.length === 0}>
+          <div className="flex flex-col gap-4 items-center justify-center">
+            <Image
+              src="/assets/images/all-listing-empty.png"
+              alt="No listings"
+              width={90}
+              height={90}
+            />
 
-          <p className="text-sm md:text-base font-medium text-foreground">
-            No Listed Items for now
-          </p>
-        </div>
-      ) : (
-        <div className="mt-4 space-y-3 max-h-80 overflow-y-auto pr-1">
+            <p className="text-sm md:text-base font-medium text-foreground">
+              No Listed Items for now
+            </p>
+          </div>
+        </DataState.Empty>
+        <DataState.Content className="mt-4 space-y-3 max-h-80 overflow-y-auto pr-1">
           {displayed.map((item) => (
             <div
               key={item.id}
@@ -101,8 +105,8 @@ export function ListingTab({ userId }: { userId?: string }) {
               </div>
             </div>
           ))}
-        </div>
-      )}
+        </DataState.Content>
+      </DataState>
     </div>
   );
 }
