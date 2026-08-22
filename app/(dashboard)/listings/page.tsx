@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Plus, Package, Box } from "lucide-react";
 import { SearchDropDown } from "@/components/shared/form/search-dropdown";
-import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { DateRangeFilter } from "@/components/shared/date/date-range-filter";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/shared/pagination";
 import { ListingFormDialog } from "@/components/dashboard/listings/listing-form";

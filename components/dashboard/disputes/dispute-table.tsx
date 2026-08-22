@@ -9,7 +9,7 @@ import { type OrderStatus } from "@/types/order-swap";
 import { DataTable } from "@/components/shared/data-table";
 import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
 import { RowActions } from "@/components/shared/row-actions";
-import TableDateFilter from "../../shared/table-date-filter";
+import TableDateFilter from "../../shared/date/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
 import type { Dispute } from "@/types/dispute";
 import { DISPUTES } from "@/data/disputes";

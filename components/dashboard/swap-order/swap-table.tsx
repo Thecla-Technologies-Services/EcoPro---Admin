@@ -11,7 +11,7 @@ import {
   DataTable } from "@/components/shared/data-table"; // ← reusable component
 import { RowActions,
 } from "@/components/shared/row-actions";
-import TableDateFilter from "../../shared/table-date-filter";
+import TableDateFilter from "../../shared/date/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
 
 // ── Constants ──────────────────────────────────────────────────────────────

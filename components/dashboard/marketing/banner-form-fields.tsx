@@ -1,5 +1,5 @@
 import { Control, Controller, FieldErrors } from "react-hook-form";
-import { FloatingDatePicker } from "@/components/shared/floating-date-picker";
+import { FloatingDatePicker } from "@/components/shared/date/floating-date-picker";
 import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { FloatingSelect } from "@/components/shared/form/floating-select";
 import SectionCard from "./section-card";
