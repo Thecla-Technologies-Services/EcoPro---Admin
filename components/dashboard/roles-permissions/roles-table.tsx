@@ -16,7 +16,7 @@ import { EditRoleDialog } from "./edit-role-dialog";
 import { ViewRoleDialog } from "./view-role-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
 import { formatRoleDate } from "@/lib/adapters/role";
-import type { RoleRow } from "@/types/permission";
+import type { RoleRow } from "@/types/role";
 
 type RoleAction = "view" | "edit" | "delete";
 

@@ -1,5 +1,5 @@
 import type { GroupedPermissionDto, RoleSummaryDto } from "@/types/api/admin";
-import type { RoleRow } from "@/types/permission";
+import type { RoleRow } from "@/types/role";
 import { formatDate } from "@/lib/adapters/shared";
 
 /** Maps a row from `GET /api/admin/roles` onto the shape the table renders. */

@@ -20,7 +20,7 @@ import {
 } from "@/lib/validations/permissions";
 import { useDeleteRole } from "@/hooks/admin/use-roles";
 import { toErrorMessage } from "@/lib/api/errors";
-import type { RoleRow } from "@/types/permission";
+import type { RoleRow } from "@/types/role";
 
 interface DeleteRoleDialogProps {
   open: boolean;

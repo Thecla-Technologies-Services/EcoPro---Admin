@@ -11,7 +11,7 @@ import { DataState } from "@/components/shared/data-state";
 import { PermissionGrid } from "./permission-grid";
 import { useRole } from "@/hooks/admin/use-roles";
 import { formatRoleDate, selectedGroups } from "@/lib/adapters/role";
-import type { RoleRow } from "@/types/permission";
+import type { RoleRow } from "@/types/role";
 
 interface ViewRoleDialogProps {
   open: boolean;
