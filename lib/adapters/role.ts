@@ -1,5 +1,6 @@
 import type { GroupedPermissionDto, RoleSummaryDto } from "@/types/api/admin";
 import type { RoleRow } from "@/types/permission";
+import { formatDate } from "@/lib/adapters/shared";
 
 /** Maps a row from `GET /api/admin/roles` onto the shape the table renders. */
 export function toRoleRow(dto: RoleSummaryDto): RoleRow {
@@ -37,15 +38,4 @@ export function selectedGroups(
 }
 
 /** Formats a role's `createdAt` for the table, tolerating an absent value. */
-export function formatRoleDate(iso: string | undefined): string {
-  if (!iso) return "—";
-
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+export const formatRoleDate = formatDate;

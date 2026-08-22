@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
-  MoreVertical,
   Pencil,
   Pause,
   Copy,
@@ -12,13 +11,9 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
 import type { Campaign } from "@/types/marketing";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -70,51 +65,27 @@ function ActionsCell({
   onPause: (id: string) => void;
 }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44 p-1">
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          asChild
-        >
-          <Link href="/marketing/create-banner">
-            <Pencil className="size-4 text-gray-400" />
-            Edit Ad
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          onClick={() => onPause(row.id)}
-        >
-          <Pause className="size-4 text-gray-400" />
-          Pause
-        </DropdownMenuItem>
-        <DropdownMenuItem className="flex items-center gap-2 text-sm cursor-pointer">
-          <Copy className="size-4 text-gray-400" />
-          Duplicate
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          onClick={() => onViewAnalytics(row)}
-        >
-          <BarChart2 className="size-4 text-gray-400" />
-          View Analytics
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer text-red-500 focus:text-red-500"
-          onClick={() => onDelete(row.id)}
-        >
-          <Trash2 className="size-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <RowActions>
+      {/* asChild so the row's primary action stays a real link — right-click
+          and open-in-new-tab keep working. */}
+      <RowActions.Item asChild>
+        <Link href="/marketing/create-banner">
+          <Pencil className="mr-2 size-4 md:size-5" />
+          Edit Ad
+        </Link>
+      </RowActions.Item>
+      <RowActions.Item icon={Pause} onSelect={() => onPause(row.id)}>
+        Pause
+      </RowActions.Item>
+      <RowActions.Item icon={Copy}>Duplicate</RowActions.Item>
+      <RowActions.Item icon={BarChart2} onSelect={() => onViewAnalytics(row)}>
+        View Analytics
+      </RowActions.Item>
+      <DropdownMenuSeparator />
+      <RowActions.Item icon={Trash2} destructive onSelect={() => onDelete(row.id)}>
+        Delete
+      </RowActions.Item>
+    </RowActions>
   );
 }
 

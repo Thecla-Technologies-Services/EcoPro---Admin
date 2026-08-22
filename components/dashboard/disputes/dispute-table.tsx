@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Eye, MoreVertical } from "lucide-react";
+import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
 import { type OrderStatus } from "@/types/order-swap";
 import { DataTable } from "@/components/shared/data-table";
+import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
+import { RowActions } from "@/components/shared/row-actions";
 import TableDateFilter from "../../shared/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
 import type { Dispute } from "@/types/dispute";
@@ -22,20 +24,35 @@ const STATUS_FILTERS = [
 
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
-const FILTER_COUNTS: Record<StatusFilter, number> = {
-  "All Disputes": 300,
-  Open: 20,
-  "In Progress": 23,
-  Resolved: 18,
-  Closed: 5,
-};
+const ALL_TAB: StatusFilter = "All Disputes";
+
+/**
+ * Counted from the rows rather than written down — the literals here disagreed
+ * with what the table actually held.
+ */
+const FILTER_COUNTS = STATUS_FILTERS.reduce<Record<string, number>>(
+  (counts, tab) => ({
+    ...counts,
+    [tab]:
+      tab === ALL_TAB
+        ? DISPUTES.length
+        : DISPUTES.filter((row) => row.status === tab).length,
+  }),
+  {},
+);
 
 export default function DisputeTable() {
   const router = useRouter();
   const [dateFilter, setDateFilter] = useState<
     DateRangeFilterValue | undefined
   >(undefined);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const panel = useFixturePanel({
+    rows: DISPUTES,
+    pageSize: 7,
+    initialFilters: { tab: ALL_TAB },
+    matches: (row, _term, { tab }) => tab === ALL_TAB || row.status === tab,
+  });
 
   const columns = useMemo<ColumnDef<Dispute>[]>(
     () => [
@@ -112,49 +129,32 @@ export default function DisputeTable() {
       {
         id: "actions",
         header: "",
-        cell: ({ row }) => {
-          const dispute = row.original;
-          const isOpen = openMenuId === dispute.id;
-          return (
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenMenuId(isOpen ? null : dispute.id);
-                }}
-                className="p-1.5 cursor-pointer rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {isOpen && (
-                <div
-                  className="absolute right-0 top-8 z-20 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-32.5"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    className="w-full flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => {
-                      router.push(`/disputes/${dispute.id}`);
-                      setOpenMenuId(null);
-                    }}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    View Details
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        },
+        cell: ({ row }) => (
+          <RowActions>
+            <RowActions.Item
+              icon={Eye}
+              onSelect={() => router.push(`/disputes/${row.original.id}`)}
+            >
+              View Details
+            </RowActions.Item>
+          </RowActions>
+        ),
       },
     ],
-    [openMenuId, router],
+    [router],
   );
 
   return (
     <>
       <DataTable
-        data={DISPUTES}
+        data={panel.table.data}
+        manualPagination
+        pagination={panel.table.pagination}
+        onPaginationChange={panel.table.onPaginationChange}
+        totalPages={panel.table.totalPages}
+        totalCount={panel.table.totalCount}
+        activeTab={panel.table.activeTab}
+        onTabChange={panel.table.onTabChange}
         headerExtra={
           <TableDateFilter selected={dateFilter} setSelected={setDateFilter} />
         }
@@ -164,8 +164,7 @@ export default function DisputeTable() {
         pageSize={7}
         filterTabs={STATUS_FILTERS}
         filterCounts={FILTER_COUNTS}
-        filterColumnKey="status"
-        allTabValue="All Disputes"
+        allTabValue={ALL_TAB}
       />
     </>
   );

@@ -2,12 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Eye, MoreVertical } from "lucide-react";
+import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
 import { type Order, type OrderStatus } from "@/types/order-swap";
 import { ORDERS } from "@/data/swap";
 import OrderDetailDialog from "./order-detail-dialog";
-import { DataTable } from "@/components/shared/data-table"; // ← reusable component
+import {
+  DataTable } from "@/components/shared/data-table"; // ← reusable component
+import { RowActions,
+} from "@/components/shared/row-actions";
 import TableDateFilter from "../../shared/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
 
@@ -36,7 +39,6 @@ export default function SwapTable() {
     DateRangeFilterValue | undefined
   >(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const columns = useMemo<ColumnDef<Order>[]>(
     () => [
@@ -113,44 +115,22 @@ export default function SwapTable() {
       {
         id: "actions",
         header: "",
-        cell: ({ row }) => {
-          const order = row.original;
-          const isOpen = openMenuId === order.id;
-          return (
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenMenuId(isOpen ? null : order.id);
-                }}
-                className="p-1.5 cursor-pointer rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {isOpen && (
-                <div
-                  className="absolute right-0 top-8 z-20 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-32.5"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    className="w-full flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => {
-                      setSelectedOrder(order);
-                      setDialogOpen(true);
-                      setOpenMenuId(null);
-                    }}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    View Details
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        },
+        cell: ({ row }) => (
+          <RowActions>
+            <RowActions.Item
+              icon={Eye}
+              onSelect={() => {
+                setSelectedOrder(row.original);
+                setDialogOpen(true);
+              }}
+            >
+              View Details
+            </RowActions.Item>
+          </RowActions>
+        ),
       },
     ],
-    [openMenuId],
+    [],
   );
 
   return (

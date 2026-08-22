@@ -21,9 +21,8 @@ import {
   toVerificationQueue,
 } from "@/lib/adapters/verification";
 import {
-  DUMMY_APPLICATIONS,
-  USE_DUMMY_DATA,
-} from "@/constants/verification";
+  FIXTURE_QUEUE,
+  } from "@/constants/verification";
 
 export default function VerificationPage() {
   const organizations = usePendingOrganizations();
@@ -37,7 +36,16 @@ export default function VerificationPage() {
     [organizations.data, riders.data, users.data],
   );
 
-  const rows = USE_DUMMY_DATA ? DUMMY_APPLICATIONS : liveRows;
+  /**
+   * The queue's data source, chosen here rather than by a shared flag.
+   *
+   * The pending endpoints return nothing usable yet, so the rows are fixtures
+   * and swapping this for `liveRows` is the whole change when they do. It is a
+   * choice of rows only: reviewing still calls the API below, so an application
+   * that cannot be reviewed says so instead of reporting a success that never
+   * happened.
+   */
+  const rows = FIXTURE_QUEUE;
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
@@ -59,9 +67,6 @@ export default function VerificationPage() {
    */
   const review = async (approve: boolean, rejectionReason?: string) => {
     if (!selected) return;
-    // Dummy rows carry made-up ids, so there is nothing to review against —
-    // resolving lets the dialogs show their success step for the walkthrough.
-    if (USE_DUMMY_DATA) return;
 
     if (selected.kind === "organization") {
       await reviewOrganization.mutateAsync({
@@ -79,8 +84,9 @@ export default function VerificationPage() {
     });
   };
 
+  // Fixture rows are in hand immediately; only a live queue can be in flight.
   const isPending =
-    !USE_DUMMY_DATA &&
+    rows === liveRows &&
     (organizations.isPending || riders.isPending || users.isPending);
 
   return (
@@ -98,7 +104,7 @@ export default function VerificationPage() {
         {/* The directory only supplies rider names — a failure there leaves
             nameless rows, which is worth showing rather than blocking on. */}
         <DataState.Error
-          when={!USE_DUMMY_DATA && (organizations.isError || riders.isError)}
+          when={rows === liveRows && (organizations.isError || riders.isError)}
           error={organizations.error ?? riders.error}
           onRetry={() => {
             organizations.refetch();

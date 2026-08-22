@@ -13,8 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { QueryError } from "@/components/shared/query-error";
+import { DataState } from "@/components/shared/data-state";
 import { PermissionPicker } from "./permission-picker";
 import { RoleSavedDialog } from "./success-dialog";
 import {
@@ -69,25 +68,27 @@ export function EditRoleDialog({
           <DialogTitle className="text-lg font-semibold">Edit role</DialogTitle>
         </DialogHeader>
 
-        {detail.isError ? (
-          <QueryError error={detail.error} onRetry={() => detail.refetch()} />
-        ) : detail.isPending ? (
-          <div className="space-y-3" aria-busy>
-            {Array.from({ length: 8 }, (_, index) => (
-              <Skeleton key={index} className="h-10 w-full" />
-            ))}
-          </div>
-        ) : (
-          // Mounting only once the detail is in hand lets the form and the
-          // permission selection initialise from it directly, with no effect
-          // syncing server state into local state after the fact.
-          <EditRoleForm
-            roleId={role.id}
-            detail={detail.data}
-            onCancel={() => onOpenChange(false)}
-            onSaved={() => setSaved(true)}
+        <DataState>
+          <DataState.Error
+            when={detail.isError}
+            error={detail.error}
+            onRetry={() => detail.refetch()}
           />
-        )}
+          <DataState.Loading when={detail.isPending} rows={8} rowClassName="h-10" />
+          <DataState.Content>
+            {/* Mounting only once the detail is in hand lets the form and the
+                permission selection initialise from it directly, with no effect
+                syncing server state into local state after the fact. */}
+            {detail.data && (
+              <EditRoleForm
+                roleId={role.id}
+                detail={detail.data}
+                onCancel={() => onOpenChange(false)}
+                onSaved={() => setSaved(true)}
+              />
+            )}
+          </DataState.Content>
+        </DataState>
       </DialogContent>
     </Dialog>
   );

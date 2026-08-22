@@ -2,15 +2,11 @@
 
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Eye, CheckCircle, XCircle, MoreVertical } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { Eye, CheckCircle, XCircle } from "lucide-react";
+import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
+import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
+import { WITHDRAWAL_REQUESTS } from "@/data/withdrawals";
 import DateRangeFilter from "@/components/shared/date-range-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ViewWithdrawalDialog } from "./view-withdrawal-dialog";
@@ -32,46 +28,30 @@ function ActionsCell({
   const isRejected = row.status === "Rejected";
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 bg-background rounded-md"
-        >
-          <MoreVertical className="w-4 h-4 text-gray-400" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52 p-1 py-2 space-y-2">
-        <DropdownMenuItem
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          onClick={() => onAction("view", row)}
-        >
-          <Eye className="size-5 text-foreground" />
-          View Withdrawal
-        </DropdownMenuItem>
+    <RowActions>
+      <RowActions.Item icon={Eye} onSelect={() => onAction("view", row)}>
+        View Withdrawal
+      </RowActions.Item>
 
-        {(isPending || isRejected) && (
-          <DropdownMenuItem
-            className="flex items-center gap-2 text-sm cursor-pointer"
-            onClick={() => onAction("approve", row)}
-          >
-            <CheckCircle className="size-5 text-foreground  " />
-            Approve Withdrawal
-          </DropdownMenuItem>
-        )}
+      {(isPending || isRejected) && (
+        <RowActions.Item
+          icon={CheckCircle}
+          onSelect={() => onAction("approve", row)}
+        >
+          Approve Withdrawal
+        </RowActions.Item>
+      )}
 
-        {isPending && (
-          <DropdownMenuItem
-            className="flex items-center gap-2 text-sm cursor-pointer text-destructive focus:text-red-500"
-            onClick={() => onAction("reject", row)}
-          >
-            <XCircle className="size-5 text-foreground" />
-            Reject Withdrawal
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      {isPending && (
+        <RowActions.Item
+          icon={XCircle}
+          destructive
+          onSelect={() => onAction("reject", row)}
+        >
+          Reject Withdrawal
+        </RowActions.Item>
+      )}
+    </RowActions>
   );
 }
 
@@ -126,21 +106,8 @@ function buildColumns(
   ];
 }
 
-const SAMPLE_DATA: WithdrawalRequest[] = Array.from({ length: 20 }, (_, i) => ({
-  requestId: "WD-53156908",
-  userId: "USR-1245",
-  user: "Tayo Igbira",
-  fullName: "Tayo Igbira Adewale",
-  bankName: "Access Bank PLC",
-  accountNumber: "0123672348",
-  amount: 125000,
-  status: (["Pending", "Approved", "Rejected"] as const)[i % 3],
-  date: "Feb 7, 2026, 11:23 PM",
-  note:
-    i % 3 === 2
-      ? "The request was rejected because the account number provided is incorrect."
-      : undefined,
-}));
+const ALL_TAB = "All";
+const TABS = [ALL_TAB, "Pending", "Approved", "Rejected"] as const;
 
 export function WithdrawalRequestTable() {
   const [activeRow, setActiveRow] = React.useState<WithdrawalRequest | null>(
@@ -167,31 +134,54 @@ export function WithdrawalRequestTable() {
 
   const columns = React.useMemo(() => buildColumns(handleAction), []);
 
-  const filterCounts = {
-    All: SAMPLE_DATA.length,
-    Pending: 12,
-    Approved: 23,
-    Rejected: 6,
-  };
+  const panel = useFixturePanel({
+    rows: WITHDRAWAL_REQUESTS,
+    pageSize: 7,
+    initialFilters: { tab: ALL_TAB },
+    matches: (row, _term, { tab }) => tab === ALL_TAB || row.status === tab,
+  });
 
-  const tabs = ["All", "Pending", "Approved", "Rejected"] as const;
+  /**
+   * Counted from the rows rather than written down. The figures here used to be
+   * literals that disagreed with what the table showed.
+   */
+  const filterCounts = React.useMemo(
+    () =>
+      TABS.reduce<Record<string, number>>(
+        (counts, tab) => ({
+          ...counts,
+          [tab]:
+            tab === ALL_TAB
+              ? WITHDRAWAL_REQUESTS.length
+              : WITHDRAWAL_REQUESTS.filter((row) => row.status === tab).length,
+        }),
+        {},
+      ),
+    [],
+  );
 
   return (
     <>
       <DataTable
         columns={columns}
-        data={SAMPLE_DATA}
+        data={panel.table.data}
+        manualPagination
+        pagination={panel.table.pagination}
+        onPaginationChange={panel.table.onPaginationChange}
+        totalPages={panel.table.totalPages}
+        totalCount={panel.table.totalCount}
+        activeTab={panel.table.activeTab}
+        onTabChange={panel.table.onTabChange}
         pageSize={7}
         rowLabel="requests"
         hideSortIcon={["actions"]}
-        allTabValue="All"
+        allTabValue={ALL_TAB}
         title="Pending Withdrawal Requests"
-        filterTabs={tabs}
+        filterTabs={TABS}
         filterCounts={filterCounts}
         headerExtra={
           <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         }
-        filterColumnKey="status"
       />
 
       {/* ── Dialogs ── */}
