@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { Bell, Search, ChevronDown } from "lucide-react";
-import {LogoutDialog} from "@/components/dashboard/logout-dialog";
+import {LogoutDialog} from "@/components/layout/logout-dialog";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

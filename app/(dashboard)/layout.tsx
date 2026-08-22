@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/shared/side-bar'
-import { Header } from '@/components/shared/header'
+import { AppSidebar } from '@/components/layout/side-bar'
+import { Header } from '@/components/layout/header'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
 
