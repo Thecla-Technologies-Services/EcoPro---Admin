@@ -8,6 +8,12 @@ export type ApplicantStatus = "Pending Review" | "Approved" | "Rejected";
  */
 export type ApplicantKind = "organization" | "rider";
 
+/** One label/value fact in a detail card. */
+export interface ApplicantFact {
+  label: string;
+  value: string;
+}
+
 export interface ApplicantDocument {
   label: string;
   /** Absent when the API only reports that a document was supplied. */
@@ -22,7 +28,10 @@ export interface Applicant {
   id: string;
   kind: ApplicantKind;
   name: string;
+  /** The account's raw id — what the user endpoints expect. */
   userId: string;
+  /** The short, human-facing account code, e.g. `USR-4521`. Absent for organizations. */
+  userCode?: string;
   accountType: AccountType;
   date: string;
   email: string;
@@ -31,13 +40,29 @@ export interface Applicant {
   reviewDate: string;
   phone: string;
   address: string;
+  /** Set for riders, whose identity fields come from the joined user record. */
+  country?: string;
+  /** The document type the rider verified with, e.g. "Driver's Licence". */
+  documentType?: string;
+  /** The number on that document — its meaning follows `documentType`. */
+  idNumber?: string;
+  /** Unique Taxpayer Reference. UK riders only. */
+  utr?: string;
   bank?: {
     accountName: string;
     accountNumber: string;
     bankName: string;
   };
-  /** Extra key/value facts to show in place of bank details, e.g. rider checks. */
-  details?: { label: string; value: string }[];
+  /** Organization registration facts. */
+  details?: ApplicantFact[];
+  /**
+   * Where the rider will deliver, and what they charge for each.
+   *
+   * Always empty: the admin API exposes no rider service areas or pricing. The
+   * field exists so the view can say the data is unavailable rather than
+   * quietly dropping a section the spec asks for.
+   */
+  locations?: ApplicantFact[];
   documents: ApplicantDocument[];
   rejectionReason?: string;
   avatarUrl?: string;

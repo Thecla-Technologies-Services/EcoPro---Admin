@@ -4,7 +4,7 @@ import * as React from "react";
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 import PhoneInputBase, { type Value, type Country } from "react-phone-number-input/input";
-import { toE164 } from "@/lib/helper";
+import { toPhoneValue } from "@/lib/helper";
 
 
 interface FloatingPhoneInputProps {
@@ -67,8 +67,13 @@ export function FloatingPhoneInput({
           <PhoneInputBase
             id={id}
             country={country}
-            value={toE164(value, country)}
-            onChange={onChange}
+            value={toPhoneValue(value, country)}
+            // The library emits `undefined` once the field is empty, but an
+            // `undefined` form value reads as "unset" to react-hook-form, which
+            // then falls back to the field's default — so clearing the input
+            // made the original number reappear. An empty string is a real
+            // value, and it is what the schemas already expect.
+            onChange={(next) => onChange(next ?? "")}
             disabled={disabled}
             placeholder={isFloating ? placeholder : ""}
             onFocus={() => setFocused(true)}

@@ -20,17 +20,19 @@ export const profileSchema = z.object({
     .min(2, "Last name must be at least 2 characters")
     .max(50, "Last name must be less than 50 characters"),
 
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email({ message: "Invalid email address" }),
-
+  // No email: it is the login credential and the OTP destination, so it is
+  // read-only on the profile and changed through user management instead.
   phone: phoneNumberSchema,
 
+  /**
+   * Editable, but not sent: `AdminEditUserRequestDto` has no address field, so
+   * the value is discarded on save. Optional on purpose — an admin whose record
+   * carries no address must still be able to save their name and phone.
+   */
   location: z
     .string()
-    .min(1, "Location is required")
-    .max(100, "Location must be less than 100 characters"),
+    .max(100, "Location must be less than 100 characters")
+    .optional(),
 });
 
 export const editUserSchema = z.object({

@@ -177,3 +177,24 @@ export function toAdminUserRow(dto: UserDto): User {
 export function selectAdminUsers(users: UserDto[] = []) {
   return users.filter((dto) => toRoleLabel(dto.userType) === "Admin");
 }
+
+/**
+ * The admin's location as one line, from the identity service's user record.
+ *
+ * Composed here rather than in the view because the pieces are spread across
+ * four optional fields and the API's country tokens are PascalCase
+ * ("UnitedKingdom"). Returns undefined when none of them are set, so a caller
+ * can show a placeholder instead of a string of stray commas.
+ */
+export function toLocation(dto: UserDto | undefined): string | undefined {
+  const parts = [
+    dto?.address,
+    dto?.state,
+    dto?.country?.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
+    dto?.postalCode,
+  ]
+    .map((part) => part?.trim())
+    .filter(Boolean);
+
+  return parts.length ? parts.join(", ") : undefined;
+}

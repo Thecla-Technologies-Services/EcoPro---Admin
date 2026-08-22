@@ -165,9 +165,15 @@ export function DataTable<TData, TValue>({
             </h2>
           )}
 
+          {/* Tabs left, extras right — but with nothing on the left to balance
+              against (no title, no tabs) a lone control belongs on the right
+              rather than floating under the table's first column. */}
           <div
             className={cn(
-              "flex items-center justify-between gap-2 flex-wrap",
+              "flex items-center gap-2 flex-wrap",
+              title || (filterTabs && headerExtra)
+                ? "justify-between"
+                : "justify-end",
               title && "mb-4",
             )}
           >

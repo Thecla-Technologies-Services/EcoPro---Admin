@@ -79,7 +79,7 @@ function Section({
 
   return (
     <>
-      <div className={cn("p-3 lg:p-4", className)}>
+      <div className={cn("px-3 py-4 lg:px-4 lg:py-5", className)}>
         {title && (
           <h3 className="mb-4 text-lg font-semibold text-foreground md:text-xl">
             {title}

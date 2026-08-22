@@ -11,7 +11,11 @@ import {
   IoFileTrayFullOutline,
 } from "react-icons/io5";
 import { BiDonateHeart } from "react-icons/bi";
-import { HiOutlineCheckBadge, HiOutlineQueueList } from "react-icons/hi2";
+import {
+  HiOutlineCheckBadge,
+  HiOutlineQueueList,
+  HiOutlineShieldCheck,
+} from "react-icons/hi2";
 
 import { MessageSquare, Settings } from "lucide-react";
 
@@ -26,6 +30,11 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Image from "next/image";
 
 const navItems = [
@@ -36,11 +45,18 @@ const navItems = [
     icon: HiOutlineCheckBadge,
     label: "Independent Riders",
     href: "/independent-riders",
+    fullLabel: "Independent Riders",
+  },
+  {
+    icon: HiOutlineShieldCheck,
+    label: "Verification",
+    href: "/verification",
   },
   {
     icon: IoDocumentTextOutline,
-    label: "Swap & Ord.",
+    label: "Swap & Orders",
     href: "/swap-orders",
+    fullLabel: "Swap & Orders",
   },
   { icon: IoWalletOutline, label: "Wallet", href: "/wallet" },
   { icon: BiDonateHeart, label: "Donations", href: "/donations" },
@@ -90,7 +106,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
-                      tooltip={item.label}
+                      tooltip={item.fullLabel ?? item.label}
                       className={`${isActive ? "bg-primary/80 text-primary hover:bg-green-100 hover:text-green-800 rounded-full" : ""}
                         
                           " data-[active=true]:text-primary data-[active=true]:bg-primary/15 group-data-[active=true]:bg-primary/80 group-data-[state=open]:text-primary group-data-[state=open]:hover:bg-green-100 group-data-[state=open]:hover:text-green-800 py-2 px-4 md:px-5 h-8 [active=true]:rounded-full!" `}
@@ -99,7 +115,20 @@ export function AppSidebar() {
                         <item.icon
                           className={`${isActive ? "text-primary" : "text-[#3A3A3A]"}"h-5! w-5! size-5! "`}
                         />
-                        <span>{item.label}</span>
+                        {/* The rail is too narrow for these labels, so the
+                            name only exists in full on hover. */}
+                        {item.fullLabel ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>{item.label}</span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              {item.fullLabel}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span>{item.label}</span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

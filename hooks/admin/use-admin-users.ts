@@ -28,3 +28,21 @@ export function useAdminUsers() {
     staleTime: 60_000,
   });
 }
+
+/**
+ * GET /api/user/get-all — the same list, unnarrowed.
+ *
+ * The Independent Riders page is built from this list: the admin service has no
+ * endpoint that lists riders (its users list only filters by
+ * All/Individual/NGO/Delivery/Suspended, and neither its list nor its detail
+ * response carries a country), and `RiderProfileDto` carries no name, country,
+ * email or phone at all. Same caveat as above — the whole list comes back
+ * unpaginated, and the fix at scale is a server-side rider endpoint.
+ */
+export function useUserDirectory() {
+  return useQuery({
+    queryKey: adminKeys.users.directory(),
+    queryFn: () => apiFetch<UserDto[]>("/get-all", { service: "user" }),
+    staleTime: 60_000,
+  });
+}

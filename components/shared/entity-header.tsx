@@ -72,14 +72,16 @@ function Identity({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex min-w-0 items-center gap-1", className)}>
       <Avatar className="size-16 shrink-0 md:size-22.5">
         <AvatarImage src={avatarUrl} />
         <AvatarFallback className="bg-muted text-xl font-bold">
           {initials(name)}
         </AvatarFallback>
       </Avatar>
-      <div>
+      {/* Names and ids are user data of any length, so this column has to be
+          allowed to shrink rather than push the contact facts off the edge. */}
+      <div className="min-w-0">
         {title ?? (
           <p className="text-lg font-medium leading-4.5 text-foreground md:text-xl">
             {name}
@@ -103,7 +105,7 @@ function Meta({
   return (
     <div
       className={cn(
-        "space-y-1.5 text-left text-sm text-muted-foreground md:space-y-3 md:text-right",
+        "min-w-0 space-y-1.5 text-left text-sm break-words text-muted-foreground md:space-y-3 md:text-right",
         className,
       )}
     >
@@ -116,10 +118,12 @@ function MetaItem({
   icon: Icon,
   children,
   className,
+  iconClassName,
 }: {
   icon: React.ElementType;
   children: React.ReactNode;
   className?: string;
+  iconClassName?: string;
 }) {
   return (
     <div
@@ -128,7 +132,7 @@ function MetaItem({
         className,
       )}
     >
-      <Icon className="size-3.5 shrink-0" />
+      <Icon className={cn("size-3.5 shrink-0", iconClassName)} />
       <span>{children}</span>
     </div>
   );

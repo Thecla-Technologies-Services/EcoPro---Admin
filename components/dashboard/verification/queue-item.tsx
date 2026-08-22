@@ -1,22 +1,24 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Applicant } from "@/types/verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StatusBadge } from "@/components/shared/status-badge";
 
-export function AccountBadge({ type }: { type: Applicant["accountType"] }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-        type === "NGO"
-          ? "bg-amber-100 text-amber-700"
-          : "bg-purple-100 text-purple-700",
-      )}
-    >
-      {type}
-    </span>
-  );
+/** First letter of each word — the fallback when no avatar was uploaded. */
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("");
 }
 
+/**
+ * One row in the verification queue. The selected row carries a green wash and a
+ * thick left edge; the others keep a transparent edge of the same width so
+ * selecting a row shifts nothing sideways.
+ */
 export default function QueueItem({
   applicant,
   isSelected,
@@ -30,33 +32,33 @@ export default function QueueItem({
     <button
       type="button"
       onClick={onClick}
+      aria-current={isSelected}
       className={cn(
-        "w-full flex items-center gap-3 px-3 lg:px-4 py-3 text-left transition-colors",
+        "flex w-full items-center gap-3 border-l-4 px-3 py-3 text-left transition-colors lg:px-4",
         isSelected
-          ? "bg-primary/10 border-l-4 border-primary"
-          : "hover:bg-muted border-l-4 border-transparent",
+          ? "border-primary bg-primary/10"
+          : "border-transparent hover:bg-muted",
       )}
     >
       <Avatar className="size-10 shrink-0">
         <AvatarImage src={applicant.avatarUrl} />
-        <AvatarFallback className="text-sm font-semibold bg-muted-foreground/20">
-          {applicant.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
+        <AvatarFallback className="bg-muted-foreground/20 text-sm font-semibold">
+          {initials(applicant.name)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">
+        <p className="truncate text-sm font-semibold text-foreground">
           {applicant.name}
         </p>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <AccountBadge type={applicant.accountType} />
-          <span className="text-xs text-muted-foreground">
-            {applicant.userId}
+        <div className="mt-1 flex items-center gap-2">
+          <StatusBadge status={applicant.accountType} />
+          {/* The short code when the directory issued one — a raw uuid would
+              swamp a row this narrow. */}
+          <span className="truncate text-xs text-muted-foreground">
+            {applicant.userCode || applicant.userId}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5">{applicant.date}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{applicant.date}</p>
       </div>
     </button>
   );

@@ -145,9 +145,11 @@ function Row({
 /** Renders `{ label, value }[]` straight from an adapter. */
 function Rows({
   items,
+  labelClassName,
   valueClassName,
 }: {
   items: readonly { label: string; value: React.ReactNode }[];
+  labelClassName?: string;
   valueClassName?: string;
 }) {
   return (
@@ -157,6 +159,7 @@ function Rows({
           key={item.label}
           label={item.label}
           value={item.value}
+          labelClassName={labelClassName}
           valueClassName={valueClassName}
         />
       ))}

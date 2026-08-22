@@ -29,6 +29,11 @@ export const adminKeys = {
      * already invalidates `users.all`, and this list has to follow.
      */
     admins: () => ["admin", "users", "admins"] as const,
+    /**
+     * The same identity-service list as `admins()`, unnarrowed — the only place
+     * a rider's name, country and contact details can be read from.
+     */
+    directory: () => ["admin", "users", "directory"] as const,
     detail: (userId: string) => ["admin", "users", "detail", userId] as const,
     listings: (userId: string, listingType?: string, filters?: AdminQueryFilters) =>
       ["admin", "users", "detail", userId, "listings", listingType ?? null, filters ?? {}] as const,
