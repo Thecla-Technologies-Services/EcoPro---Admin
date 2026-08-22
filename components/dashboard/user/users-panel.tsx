@@ -19,6 +19,8 @@ interface UsersPanelProps {
   rowLabel?: string;
   /** Accessor keys this list has no data for — see `UserTable`. */
   hiddenColumns?: readonly string[];
+  /** Adds "Change Password" to the row menu — staff accounts only. */
+  showChangePassword?: boolean;
 }
 
 /**
@@ -33,6 +35,7 @@ export function UsersPanel({
   showFilterTabs = true,
   rowLabel,
   hiddenColumns,
+  showChangePassword = false,
 }: UsersPanelProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modal, setModal] = useState<ModalType>(null);
@@ -64,6 +67,7 @@ export function UsersPanel({
             showFilterTabs={showFilterTabs}
             rowLabel={rowLabel}
             hiddenColumns={hiddenColumns}
+            showChangePassword={showChangePassword}
           />
         </DataState.Content>
       </DataState>

@@ -122,7 +122,7 @@ export default function DisputeTable() {
                   e.stopPropagation();
                   setOpenMenuId(isOpen ? null : dispute.id);
                 }}
-                className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1.5 cursor-pointer rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -132,7 +132,7 @@ export default function DisputeTable() {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="w-full flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     onClick={() => {
                       router.push(`/disputes/${dispute.id}`);
                       setOpenMenuId(null);

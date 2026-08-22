@@ -38,6 +38,19 @@ export function isUnauthorized(error: unknown): boolean {
   );
 }
 
+/**
+ * True when the API accepted the identity but refused the action.
+ *
+ * Matched the same two ways as `isUnauthorized`: the API's enum name, or the
+ * numeric string used when we synthesise the failure from a bodiless response.
+ */
+export function isForbidden(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.statusCode === "Forbidden" || error.statusCode === "403")
+  );
+}
+
 /** Message to show the user for any thrown value. */
 export function toErrorMessage(error: unknown, fallback = "Something went wrong. Please try again.") {
   if (error instanceof ApiError) return error.message;

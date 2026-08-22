@@ -133,6 +133,7 @@ export default function RolesPermissionsPage() {
           // the identity service carries none of them, so they would only ever
           // render zeroes and placeholders. Code is dropped as noise here.
           hiddenColumns={["code", "balance", "ecoPoints", "listed"]}
+          showChangePassword
         />
       ) : (
         <DataState>

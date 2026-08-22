@@ -67,6 +67,7 @@ function ActionDialogRoot({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        showCloseButton={false}
         className={cn("max-w-xs gap-0 px-4 py-4 md:max-w-sm md:py-6", className)}
       >
         <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />

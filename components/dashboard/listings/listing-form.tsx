@@ -5,7 +5,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FloatingSelect } from "@/components/shared/floating-select";
-import ImageUploader from "@/components/shared/image-uploader";
+import ImageUploader, {
+  type PickedImage,
+} from "@/components/shared/image-uploader";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,10 @@ import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
 import { listingSchema } from "@/lib/validations/listings";
 import { FloatingLabelTextarea } from "@/components/shared/floating-label-text-area";
 import { useCreateListing } from "@/hooks/admin/use-listings";
+import {
+  uploadListingImages,
+  useUploadListingMedia,
+} from "@/hooks/marketplace/use-listing-media";
 import { useCategories } from "@/hooks/marketplace/use-categories";
 import { toErrorMessage } from "@/lib/api/errors";
 import {
@@ -37,6 +43,12 @@ interface ListingFormDialogProps {
   mode: "add" | "edit";
 }
 
+/** Kept in step with the `max` on `listingSchema.description`. */
+const DESCRIPTION_MAX_LENGTH = 100;
+
+/** A listing carries at most five images. */
+const MAX_LISTING_IMAGES = 5;
+
 const EMPTY_FORM: Partial<ListingFormData> = {
   title: "",
   description: "",
@@ -54,16 +66,18 @@ export function ListingFormDialog({
   mode,
 }: ListingFormDialogProps) {
   /**
-   * NOT PERSISTED: `CreateAdminListingRequestDto` accepts no media, brand or
-   * size, and the Admin API has no listing-media endpoint. These inputs are
-   * kept so the form still matches the design, but their values are dropped on
-   * submit — see the note in the PR description.
+   * NOT PERSISTED: `CreateAdminListingRequestDto` accepts no brand or size, so
+   * those two inputs are kept to match the design but dropped on submit.
+   * Images, by contrast, are uploaded after the listing exists — see
+   * `onSubmit`.
    */
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<PickedImage[]>([]);
   const [successOpen, setSuccessOpen] = useState(false);
   const [savedTitle, setSavedTitle] = useState("");
+  const [uploadWarning, setUploadWarning] = useState<string>();
 
   const createListing = useCreateListing();
+  const uploadMedia = useUploadListingMedia();
   const { data: categories = [], isPending: categoriesPending } = useCategories();
 
   const {
@@ -86,6 +100,7 @@ export function ListingFormDialog({
     if (!next) {
       reset(EMPTY_FORM);
       createListing.reset();
+      images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
       setImages([]);
     }
     onOpenChange(next);
@@ -94,6 +109,7 @@ export function ListingFormDialog({
   const categoryNames = categories.map((c) => c.name ?? "").filter(Boolean);
 
   const onSubmit = (data: ListingFormData) => {
+    setUploadWarning(undefined);
     const categoryId = categories.find((c) => c.name === data.category)?.id;
 
     createListing.mutate(
@@ -110,7 +126,33 @@ export function ListingFormDialog({
         price: data.price ? Number(data.price) : null,
       },
       {
-        onSuccess: () => {
+        /**
+         * The listing has to exist before its media can be attached, so the
+         * uploads run here rather than alongside the create. A file that fails
+         * is reported instead of thrown: the listing is already saved by then,
+         * and rolling it back over a rejected image would lose the whole form.
+         */
+        onSuccess: async (created) => {
+          const listingId = created?.id;
+
+          if (listingId && images.length) {
+            const { failed, forbidden } = await uploadListingImages(
+              listingId,
+              images.map((image) => image.file),
+              uploadMedia.mutateAsync,
+            );
+
+            if (forbidden) {
+              setUploadWarning(
+                "the images could not be attached — this account is not permitted to upload media for it.",
+              );
+            } else if (failed.length) {
+              setUploadWarning(
+                `${failed.length} of ${images.length} images could not be uploaded: ${failed.join(", ")}.`,
+              );
+            }
+          }
+
           setSavedTitle(data.title);
           handleOpenChange(false);
           setSuccessOpen(true);
@@ -124,14 +166,12 @@ export function ListingFormDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
+        <DialogContent showCloseButton={false} className="max-w-sm gap-0 p-0 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-4 border-b border-border">
             <DialogTitle className="text-base font-semibold">
               {isEdit ? "Edit Listing" : "Add New Listing"}
             </DialogTitle>
-            <DialogClose className="text-muted-foreground hover:text-foreground">
-
-            </DialogClose>
+            <DialogClose className="text-muted-foreground hover:text-foreground" />
           </div>
 
           <form
@@ -139,7 +179,11 @@ export function ListingFormDialog({
             className="overflow-y-auto max-h-[80vh]"
           >
             <div className="p-4 space-y-3">
-              <ImageUploader images={images} onChange={setImages} />
+              <ImageUploader
+                images={images}
+                onChange={setImages}
+                maxImages={MAX_LISTING_IMAGES}
+              />
 
               <FloatingLabelInput
                 label="Item Title"
@@ -149,6 +193,7 @@ export function ListingFormDialog({
 
                   <FloatingLabelTextarea
                   label="Description"
+                  maxLength={DESCRIPTION_MAX_LENGTH}
                   error={errors.description?.message}
                   {...register("description")}
                 />
@@ -236,7 +281,13 @@ export function ListingFormDialog({
         open={successOpen}
         onOpenChange={setSuccessOpen}
         title="Listing Created Successfully"
-        description={`${savedTitle} has been created and is now on the platform.`}
+        description={
+          // The listing itself saved either way, so a failed image is reported
+          // here rather than presented as a failed submission.
+          uploadWarning
+            ? `${savedTitle} has been created, but ${uploadWarning}`
+            : `${savedTitle} has been created and is now on the platform.`
+        }
         iconClassName="text-primary"
       >
         <Button

@@ -16,6 +16,7 @@ export default function ListingRow({ listing }: { listing: Listing }) {
               alt={listing.title}
               className="object-cover"
               fill
+              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -30,7 +31,7 @@ export default function ListingRow({ listing }: { listing: Listing }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 md:flex-1">
         <div className="flex items-start justify-between gap-4">
           <div className="grid gap-1">
             <h3 className="font-semibold text-foreground text-base md:text-lg truncate">
@@ -59,7 +60,7 @@ export default function ListingRow({ listing }: { listing: Listing }) {
 
         {/* Meta */}
         <div className="flex items-center justify-between flex-wrap gap-3 mt-2">
-          <div className="flex  items-start gap-3 md:gap-5 ">
+          <div className="flex flex-wrap items-start gap-3 md:gap-5">
             <div>
               <p className="text-xs text-muted-foreground">Listed by</p>
               <p className="text-xs md:text-sm text-foreground font-medium">
@@ -70,6 +71,24 @@ export default function ListingRow({ listing }: { listing: Listing }) {
               <p className="text-xs text-muted-foreground">Price</p>
               <p className="text-sm md:text-base text-foreground font-bold">
                 {listing.formattedPrice ?? `₦${listing.price.toLocaleString()}`}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Brand</p>
+              <p className="text-xs md:text-sm text-foreground font-medium">
+                {listing.brand ?? "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Color</p>
+              <p className="text-xs md:text-sm text-foreground font-medium">
+                {listing.color ?? "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Quantity</p>
+              <p className="text-xs md:text-sm text-foreground font-medium">
+                {listing.quantity?.toLocaleString() ?? "—"}
               </p>
             </div>
             <div>

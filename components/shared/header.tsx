@@ -44,36 +44,45 @@ export function Header({ session }: { session: AdminSession | null }) {
           <Search className="top-1/2 h-5 w-5  text-[#BDBDBD]" />
         </div>
       </div>
-      <div className="relative hidden sm:block">
+      {/* `md` matches the mobile cluster's `md:hidden`. At `sm` the two overlap
+          and the bar renders two search controls at once. */}
+      <div className="relative hidden min-w-0 flex-1 md:block md:max-w-80">
         <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#BDBDBD]" />
         <Input
           type="text"
           placeholder="Search"
-          className="w-80 pl-9 bg-white h-9 rounded-full border-0 placeholder:text-[#BDBDBD]  disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full pl-9 bg-white h-9 rounded-full border-0 placeholder:text-[#BDBDBD]  disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
+      <div className="flex min-w-0 items-center gap-2 md:gap-4">
+        <Button variant="ghost" size="icon" className="relative shrink-0">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
           <span className="sr-only">Notifications</span>
         </Button>
 
-        <div className="flex items-center gap-2">
-          <Link href={"/profile"} className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
+        <div className="flex min-w-0 items-center gap-2">
+          <Link href={"/profile"} className="flex min-w-0 items-center gap-3">
+            <Avatar className="h-9 w-9 shrink-0">
               <AvatarImage src={session?.profilePictureUrl ?? ""} alt={fullName} />
               <AvatarFallback className="bg-gradient-to-br from-green-400 to-emerald-600 text-white">
                 {initialsOf(fullName)}
               </AvatarFallback>
             </Avatar>
-            <div className="hidden text-left sm:block">
-              <p className="text-sm font-medium">{fullName}</p>
-              <p className="text-xs text-muted-foreground">{email}</p>
+            {/* An address long enough to push the chevron off the bar gets
+                truncated instead. */}
+            <div className="hidden min-w-0 text-left md:block">
+              <p className="truncate text-sm font-medium">{fullName}</p>
+              <p className="truncate text-xs text-muted-foreground">{email}</p>
             </div>
           </Link>
-          <Button onClick={() => setLogoutOpen(true)} variant="ghost" size="icon">
+          <Button
+            onClick={() => setLogoutOpen(true)}
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+          >
             <ChevronDown className="h-4 w-4" />
           </Button>
         </div>

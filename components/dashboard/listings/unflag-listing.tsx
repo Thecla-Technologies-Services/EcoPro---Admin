@@ -48,16 +48,14 @@ export function UnflagListingDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-sm gap-0 p-4 md:p-6">
+        <DialogContent showCloseButton={false} className="max-w-sm gap-0 p-4 md:p-6">
           <DialogTitle className="text-base md:text-lg text-foreground font-semibold mb-2">Unflag Listing</DialogTitle>
           <DialogDescription className="text-xs md:text-sm text-muted-foreground font-medium mb-5">
             This will remove the flag and make the listing active. The issue has
             been resolved and the listing is safe to go live.
           </DialogDescription>
 
-          <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-         
-          </DialogClose>
+          <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
 
           {/* Listing preview pill */}
           <div>

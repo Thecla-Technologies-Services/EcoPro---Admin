@@ -30,53 +30,22 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TruncatedText } from "@/components/shared/truncated-text";
 import Image from "next/image";
 
 const navItems = [
   { icon: IoPersonOutline, label: "Dashboard", href: "/overview" },
   { icon: IoPersonAddOutline, label: "Users", href: "/users" },
   { icon: HiOutlineQueueList, label: "Listing", href: "/listings" },
-  {
-    icon: HiOutlineCheckBadge,
-    label: "Independent Riders",
-    href: "/independent-riders",
-    fullLabel: "Independent Riders",
-  },
-  {
-    icon: HiOutlineShieldCheck,
-    label: "Verification",
-    href: "/verification",
-  },
-  {
-    icon: IoDocumentTextOutline,
-    label: "Swap & Orders",
-    href: "/swap-orders",
-    fullLabel: "Swap & Orders",
-  },
+  { icon: HiOutlineCheckBadge, label: "Independent Riders", href: "/independent-riders" },
+  { icon: HiOutlineShieldCheck, label: "Verification", href: "/verification" },
+  { icon: IoDocumentTextOutline, label: "Swap & Orders", href: "/swap-orders" },
   { icon: IoWalletOutline, label: "Wallet", href: "/wallet" },
   { icon: BiDonateHeart, label: "Donations", href: "/donations" },
   { icon: MessageSquare, label: "Disputes", href: "/disputes" },
-  {
-    icon: IoAnalyticsOutline,
-    label: "Analytics",
-    href: "/analytics",
-  },
-  {
-    icon: IoFileTrayFullOutline,
-    label: "Marketing",
-    href: "/marketing",
-  },
-  {
-    icon: IoFileTrayFullOutline,
-    label: "Roles & Permissions",
-    href: "/roles-permissions",
-    fullLabel: "Roles & Permissions",
-  },
+  { icon: IoAnalyticsOutline, label: "Analytics", href: "/analytics" },
+  { icon: IoFileTrayFullOutline, label: "Marketing", href: "/marketing" },
+  { icon: IoFileTrayFullOutline, label: "Roles & Permissions", href: "/roles-permissions" },
 ];
 
 export function AppSidebar() {
@@ -107,7 +76,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
-                      tooltip={item.fullLabel ?? item.label}
+                      tooltip={item.label}
                       className={`${isActive ? "bg-primary/80 text-primary hover:bg-green-100 hover:text-green-800 rounded-full" : ""}
                         
                           " data-[active=true]:text-primary data-[active=true]:bg-primary/15 group-data-[active=true]:bg-primary/80 group-data-[state=open]:text-primary group-data-[state=open]:hover:bg-green-100 group-data-[state=open]:hover:text-green-800 py-2 px-4 md:px-5 h-8 [active=true]:rounded-full!" `}
@@ -116,20 +85,12 @@ export function AppSidebar() {
                         <item.icon
                           className={`${isActive ? "text-primary" : "text-[#3A3A3A]"}"h-5! w-5! size-5! "`}
                         />
-                        {/* The rail is too narrow for these labels, so the
-                            name only exists in full on hover. */}
-                        {item.fullLabel ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span>{item.label}</span>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">
-                              {item.fullLabel}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <span>{item.label}</span>
-                        )}
+                        {/* `SidebarMenuButton` truncates the label already; this
+                            measures whether it did and only then offers the
+                            name on hover. */}
+                        <TruncatedText side="right">
+                          {item.label}
+                        </TruncatedText>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -12,3 +12,12 @@ export interface CategoryDto {
   parentCategoryId?: string | null;
   iconKey?: string | null;
 }
+
+/** A file attached to a listing by `POST /api/marketplace/listings/{id}/media`. */
+export interface ListingMediaDto {
+  id?: string;
+  mediaType?: string | null;
+  url?: string | null;
+  fileName?: string | null;
+  sortOrder?: number;
+}

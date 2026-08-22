@@ -44,7 +44,7 @@ export default function ListingActionMenu({ listing }: ListingActionMenuProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="size-8 md:size-10 rounded-md bg-background flex items-center justify-center hover:bg-muted transition-colors outline-none">
+          <button className="size-8 md:size-10 cursor-pointer rounded-md bg-background flex items-center justify-center hover:bg-muted transition-colors outline-none">
             <MoreVertical className="size-4 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
@@ -106,7 +106,7 @@ export default function ListingActionMenu({ listing }: ListingActionMenuProps) {
       <ViewListingDialog
         open={open === "view"}
         onOpenChange={(v) => !v && close()}
-        listing={listing}
+        listingId={listing.id}
       />
 
       {/*

@@ -49,10 +49,8 @@ export function DonationDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm gap-0 p-5 max-h-[90vh] overflow-y-auto">
-        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10">
-       
-        </DialogClose>
+      <DialogContent showCloseButton={false} className="max-w-sm gap-0 p-5 max-h-[90vh] overflow-y-auto">
+        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10" />
 
         {/* Header */}
         <div className="flex items-start gap-2 mb-3 pr-6">

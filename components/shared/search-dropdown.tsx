@@ -64,7 +64,7 @@ export function SearchDropDown({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "flex items-center gap-2.5 w-56 max-w-sm rounded-full border border-gray-200 bg-white px-4 py-2.5 text-left text-sm text-gray-400 hover:border-gray-300 transition-colors",
+          "flex cursor-pointer items-center gap-2.5 w-56 max-w-sm rounded-full border border-gray-200 bg-white px-4 py-2.5 text-left text-sm text-gray-400 hover:border-gray-300 transition-colors",
           className,
         )}
       >
@@ -72,9 +72,11 @@ export function SearchDropDown({
         <span className="truncate">{query || placeholder}</span>
       </button>
 
-      {/* Search dialog */}
-      <Command>
-        <CommandDialog open={open} onOpenChange={setOpen}>
+      {/* Search dialog. `Command` belongs inside the dialog: it carries
+          `size-full`, so left in the toolbar row it lays out as an empty
+          full-width box beside the trigger. */}
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <Command>
           <CommandInput
             placeholder="Search for Listings..."
             value={query}
@@ -112,8 +114,8 @@ export function SearchDropDown({
               </CommandGroup>
             )}
           </CommandList>
-        </CommandDialog>
-      </Command>
+        </Command>
+      </CommandDialog>
     </>
   );
 }

@@ -26,9 +26,33 @@ function DialogPortal({
 }
 
 function DialogClose({
+  className,
+  children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      className={cn(
+        // `self-center` is what does the vertical centring: sat in a header row,
+        // the button stays on the band's centre line however tall that band
+        // grows — a wrapped title, an avatar-and-contact-details block — and it
+        // does so without the row having to align its other children that way.
+        "ml-auto shrink-0 cursor-pointer self-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none dark:hover:bg-muted/50",
+        className
+      )}
+      {...props}
+    >
+      {/* The glyph is the default, so a caller passes children only when it
+          wants a different one — e.g. a light X over a photo. */}
+      {children ?? (
+        <>
+          <XIcon className="size-4" />
+          <span className="sr-only">Close</span>
+        </>
+      )}
+    </DialogPrimitive.Close>
+  )
 }
 
 function DialogOverlay({

@@ -20,7 +20,7 @@ export default function OrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl! w-full p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
+      <DialogContent showCloseButton={false} className="max-w-xl! w-full p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
 
         <div className="flex items-center justify-between p-4 md:p-6 border-b shrink-0">
@@ -30,9 +30,7 @@ export default function OrderDetailDialog({
             </h2>
             <DeliveryBadge type={order.deliveryType} />
           </div>
-              <DialogClose className="text-muted-foreground hover:text-foreground">
-            
-            </DialogClose>
+              <DialogClose className="text-muted-foreground hover:text-foreground" />
         </div>
 
         <div className="p-4 md:p-6">

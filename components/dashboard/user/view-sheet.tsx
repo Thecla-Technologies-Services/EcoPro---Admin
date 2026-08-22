@@ -114,11 +114,12 @@ export function ViewUserSheet({
         open={open}
         onOpenChange={handleClose}
       >
-        <DialogContent className="w-full sm:max-w-lg p-0 flex flex-col">
+        <DialogContent showCloseButton={false} className="w-full sm:max-w-lg p-0 flex flex-col">
           {/* Header */}
           {isEditMode ? (
-            <div className="p-5 border-b border-gray-100">
+            <div className="flex items-center p-5 border-b border-gray-100">
               <DialogTitle>Edit User</DialogTitle>
+              <DialogClose className="text-muted-foreground hover:text-foreground" />
             </div>
           ) : (
             <div className="flex items-start gap-3 p-5 border-b border-gray-100">
@@ -141,9 +142,7 @@ export function ViewUserSheet({
                 <p className="text-xs text-gray-400">{user.id}</p>
               </div>
 
-             <DialogClose className="text-muted-foreground hover:text-foreground">
-            
-            </DialogClose>
+             <DialogClose className="text-muted-foreground hover:text-foreground" />
             </div>
           )}
 

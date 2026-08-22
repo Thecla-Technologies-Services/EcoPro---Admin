@@ -16,10 +16,10 @@ export default function SharedStatCard({
 }) {
   return (
     <div
-      className="bg-background rounded-md h-full p-3 md:p-5 flex items-center justify-between"
+      className="bg-background rounded-md h-full p-3 md:p-5 flex items-center justify-between gap-3"
       aria-busy={isLoading}
     >
-      <div className="grid gap-1">
+      <div className="grid min-w-0 gap-1">
         {isLoading ? (
           // Sized to the rendered figure so the card doesn't resize when the
           // number lands.
@@ -27,7 +27,7 @@ export default function SharedStatCard({
         ) : (
           <p
             ref={ref}
-            className="text-2xl md:text-[32px]  font-bold text-[#1B1C1E]"
+            className="truncate text-2xl md:text-[32px]  font-bold text-[#1B1C1E]"
           >
             {value.toLocaleString()}
           </p>

@@ -46,7 +46,7 @@ function RejectDialogContent({
 
   if (reject.isSuccess) {
     return (
-      <DialogContent className="max-w-sm gap-0 px-4 py-4 md:max-w-md md:py-6">
+      <DialogContent showCloseButton={false} className="max-w-sm gap-0 px-4 py-4 md:max-w-md md:py-6">
         <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
         <ActionDialog.Media />
         <ActionDialog.Title>Verification Rejected</ActionDialog.Title>
@@ -61,7 +61,7 @@ function RejectDialogContent({
   }
 
   return (
-    <DialogContent className="max-w-sm md:max-w-md gap-0 p-0 overflow-hidden flex flex-col max-h-[85vh]">
+    <DialogContent showCloseButton={false} className="max-w-sm md:max-w-md gap-0 p-0 overflow-hidden flex flex-col max-h-[85vh]">
       <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground z-10" />
 
       {/* Fixed header */}

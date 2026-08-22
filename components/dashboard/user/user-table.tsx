@@ -6,6 +6,7 @@ import {
   IoPersonRemoveOutline,
   IoPersonAddOutline,
   IoTrashBinOutline,
+  IoKeyOutline,
 } from "react-icons/io5";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
@@ -48,6 +49,11 @@ interface UserTableProps {
    * reads as real data.
    */
   hiddenColumns?: readonly string[];
+  /**
+   * Adds "Change Password" to the row menu. Off by default: it is a staff-
+   * account action, so the Users page does not offer it.
+   */
+  showChangePassword?: boolean;
 }
 
 export function UserTable({
@@ -66,6 +72,7 @@ export function UserTable({
   showFilterTabs = true,
   rowLabel = "users",
   hiddenColumns,
+  showChangePassword = false,
 }: UserTableProps) {
 
   const columns: ColumnDef<User, unknown>[] = [
@@ -192,6 +199,14 @@ export function UserTable({
                 onSelect={() => onOpenModal(user, "suspend")}
               >
                 Suspend Account
+              </RowActions.Item>
+            )}
+            {showChangePassword && (
+              <RowActions.Item
+                icon={IoKeyOutline}
+                onSelect={() => onOpenModal(user, "changePassword")}
+              >
+                Change Password
               </RowActions.Item>
             )}
             <RowActions.Item

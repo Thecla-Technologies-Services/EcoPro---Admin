@@ -12,6 +12,7 @@ export type ModalType =
   | "delete"
   | "view"
   | "edit"
+  | "changePassword"
   | null;
 
 /**

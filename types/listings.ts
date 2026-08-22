@@ -44,5 +44,8 @@ export interface Listing {
   /** Not returned by the Admin API — see the notes in the adapter. */
   brand?: string;
   size?: string;
+  color?: string;
+  quantity?: number;
+  location?: string;
   type?: ListingType | string;
 }

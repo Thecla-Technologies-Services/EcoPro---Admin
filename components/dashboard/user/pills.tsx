@@ -75,7 +75,7 @@ export function FilterPills<T extends string>({
           type="button"
           onClick={() => onChange(o)}
           className={cn(
-            "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
+            "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
             active === o
               ? "bg-primary text-white border-primary"
               : "bg-transparent text-gray-500 border-gray-200 hover:border-gray-300",

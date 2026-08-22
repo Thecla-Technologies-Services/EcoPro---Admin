@@ -35,9 +35,8 @@ export function OpenDisputeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm gap-0">
-        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
-        </DialogClose>
+      <DialogContent showCloseButton={false} className="max-w-sm gap-0">
+        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" />
 
         {step !== "success" ? (
           <>

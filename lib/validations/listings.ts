@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const listingSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(100, "Description cannot exceed 100 characters"),
   category: z.string().min(1, "Category is required"),
   condition: z.string().min(1, "Condition is required"),
   // Optional: the Admin API's create endpoint accepts neither, so these are

@@ -43,6 +43,7 @@ function DetailDialogRoot({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        showCloseButton={false}
         className={cn(
           "max-w-2xl! flex max-h-[85vh] flex-col gap-0 overflow-hidden bg-background p-0",
           className,

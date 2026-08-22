@@ -18,7 +18,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <SidebarProvider>
+    // Bounding the shell to the viewport is what makes `main` below the real
+    // scroll container. Without it the wrapper is only `min-h-svh`, so it grows
+    // with the page, the window scrolls instead, and anything sticky inside
+    // `main` pins to a box that extends past the bottom of the screen.
+    <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
       <SidebarInset className='overflow-x-hidden!'>
         <Header session={session} />

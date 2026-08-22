@@ -44,9 +44,8 @@ export function FlagListingDialog({
   return (
     <>
       <Dialog key={listing.id} open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-sm gap-0 p-4 md:p-6">
-          <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-          </DialogClose>
+        <DialogContent showCloseButton={false} className="max-w-sm gap-0 p-4 md:p-6">
+          <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
  
           <DialogTitle className="text-base md:text-lg text-foreground font-semibold mb-2">Flag Listing</DialogTitle>
           <p className="text-sm text-muted-foreground mb-4">Reason for flagging</p>

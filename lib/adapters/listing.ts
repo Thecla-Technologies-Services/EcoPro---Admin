@@ -9,9 +9,9 @@ import type {
  * Maps a row from `GET /api/admin/listings` onto the shape the listing rows,
  * detail dialog and action menu render.
  *
- * Three fields the UI was designed around have no counterpart in
- * `AdminListingItemDto` and are therefore left unset: `brand`, `size`, and any
- * image beyond `primaryImageUrl`.
+ * Several fields the UI was designed around have no counterpart in
+ * `AdminListingItemDto` and are therefore left unset: `brand`, `size`, `color`,
+ * `quantity`, `location`, `type`, and any image beyond `primaryImageUrl`.
  */
 export function toListingRow(dto: AdminListingItemDto): Listing {
   return {

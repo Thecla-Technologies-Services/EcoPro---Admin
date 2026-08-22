@@ -1,8 +1,12 @@
-import { Package, Truck } from "lucide-react";
-import { FadeIn } from "@/components/motion/fade-in";
-import { IoCartOutline } from "react-icons/io5";
+import { Loader } from "lucide-react";
+import {
+  IoChatbubblesOutline,
+  IoFolderOpenOutline,
+  IoLockClosedOutline,
+} from "react-icons/io5";
 import { HiOutlineDocumentCheck } from "react-icons/hi2";
 import SharedStatCard from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import DisputeTable from "@/components/dashboard/disputes/dispute-table";
 
 export default function DisputesPage() {
@@ -14,36 +18,21 @@ export default function DisputesPage() {
           Review and resolve transaction disputes
         </p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 ">
-        <FadeIn delay={0.1}>
-          <SharedStatCard
-            label="All Disputes"
-            value={12204}
-            icon={IoCartOutline}
-          />
-        </FadeIn>
-
-        <FadeIn delay={0.2}>
-          <SharedStatCard label="Open" value={67} icon={Package} />
-        </FadeIn>
-        <FadeIn delay={0.3}>
-          <SharedStatCard label="In Progress" value={198} icon={Truck} />
-        </FadeIn>
-        <FadeIn delay={0.4}>
-          <SharedStatCard
-            label="Resolved"
-            value={145}
-            icon={HiOutlineDocumentCheck}
-          />
-        </FadeIn>
-        <FadeIn delay={0.5}>
-          <SharedStatCard
-            label="Closed"
-            value={145}
-            icon={HiOutlineDocumentCheck}
-          />
-        </FadeIn>
-      </div>
+      <StatGrid columns={5}>
+        <SharedStatCard
+          label="All Disputes"
+          value={12204}
+          icon={IoChatbubblesOutline}
+        />
+        <SharedStatCard label="Open" value={67} icon={IoFolderOpenOutline} />
+        <SharedStatCard label="In Progress" value={198} icon={Loader} />
+        <SharedStatCard
+          label="Resolved"
+          value={145}
+          icon={HiOutlineDocumentCheck}
+        />
+        <SharedStatCard label="Closed" value={145} icon={IoLockClosedOutline} />
+      </StatGrid>
       <DisputeTable />
     </div>
   );

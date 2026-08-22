@@ -15,9 +15,7 @@ import {
   useUnsuspendUser,
 } from "@/hooks/admin/use-users";
 import { toErrorMessage } from "@/lib/api/errors";
-import type { User } from "@/types/user";
-
-type ModalType = "suspend" | "unsuspend" | "delete" | "view" | "edit" | null;
+import type { ModalType, User } from "@/types/user";
 
 interface UserActionModalsProps {
   user: User;
@@ -104,10 +102,8 @@ function SuspendModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xs md:max-w-sm gap-0 py-6 px-5">
-        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      
-        </DialogClose>
+      <DialogContent showCloseButton={false} className="max-w-xs md:max-w-sm gap-0 py-6 px-5">
+        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
         <UserAvatar user={user} />
         <DialogTitle className="text-lg font-semibold mb-2">Confirm User Suspension</DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground mb-6">
@@ -185,10 +181,8 @@ function UnsuspendModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xs md:max-w-sm gap-0 py-6 px-5">
-        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-   
-        </DialogClose>
+      <DialogContent showCloseButton={false} className="max-w-xs md:max-w-sm gap-0 py-6 px-5">
+        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
         <UserAvatar user={user} />
         <DialogTitle className="text-lg font-semibold mb-2">
           Confirm User Unsuspension
@@ -294,10 +288,8 @@ function DeleteModal({
 
   return (
     <Dialog key={user.id} open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xs md:max-w-sm gap-0 py-6 px-5">
-        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-   
-        </DialogClose>
+      <DialogContent showCloseButton={false} className="max-w-xs md:max-w-sm gap-0 py-6 px-5">
+        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
         <UserAvatar user={user} />
         <DialogTitle className="text-lg font-semibold mb-2">Delete {user.name}</DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground mb-5">
@@ -349,6 +341,139 @@ function DeleteModal({
   );
 }
 
+// ── Change password ───────────────────────────────────────────────────────────
+
+const changePasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Confirm the new password"),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
+type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
+
+/**
+ * Sets a new password on a staff account.
+ *
+ * NOT WIRED: the API has no endpoint for an admin to set another account's
+ * password. `POST /api/auth/change-password` acts on whoever is signed in and
+ * takes no user id, and `forgot-password` only mails the account a code. The
+ * form is complete and validated; submitting reports that the action is
+ * unavailable rather than reporting a success that never happened. Wiring it up
+ * means calling the endpoint from `onSubmit` once it exists.
+ */
+function ChangePasswordModal({
+  user,
+  open,
+  onClose,
+}: {
+  user: User;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [unavailable, setUnavailable] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<ChangePasswordForm>({
+    resolver: zodResolver(changePasswordSchema),
+    mode: "onChange",
+    defaultValues: { newPassword: "", confirmPassword: "" },
+  });
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      reset({ newPassword: "", confirmPassword: "" });
+      setUnavailable(false);
+      onClose();
+    }
+  };
+
+  const onSubmit = () => setUnavailable(true);
+
+  return (
+    <Dialog key={user.id} open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-xs md:max-w-sm gap-0 py-6 px-5"
+      >
+        <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
+        <UserAvatar user={user} />
+        <DialogTitle className="text-lg font-semibold mb-2">
+          Change Password
+        </DialogTitle>
+        <DialogDescription className="text-sm text-muted-foreground mb-5">
+          Set a new password for {user.name}. They will need it the next time
+          they sign in.
+        </DialogDescription>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
+            <FloatingLabelInput
+              label="New Password"
+              type="password"
+              autoComplete="new-password"
+              {...register("newPassword")}
+            />
+            {errors.newPassword && (
+              <p className="mt-1 text-xs text-destructive">
+                {errors.newPassword.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <FloatingLabelInput
+              label="Confirm Password"
+              type="password"
+              autoComplete="new-password"
+              {...register("confirmPassword")}
+            />
+            {errors.confirmPassword && (
+              <p className="mt-1 text-xs text-destructive">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          {unavailable && (
+            <p role="alert" className="text-sm text-destructive">
+              Changing a password from the dashboard is not available yet — the
+              API has no endpoint for it. Nothing was changed.
+            </p>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 rounded-full"
+              onClick={() => handleOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 rounded-full bg-primary text-white"
+              disabled={!isValid}
+            >
+              Change Password
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Orchestrator ──────────────────────────────────────────────────────────────
 
 export function UserActionModals({
@@ -365,6 +490,11 @@ export function UserActionModals({
         onClose={onClose}
       />
       <DeleteModal user={user} open={modal === "delete"} onClose={onClose} />
+      <ChangePasswordModal
+        user={user}
+        open={modal === "changePassword"}
+        onClose={onClose}
+      />
     </>
   );
 }

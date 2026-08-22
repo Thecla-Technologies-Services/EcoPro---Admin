@@ -58,10 +58,8 @@ export function AnalyticsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl! gap-0 p-3 md:p-6">
-        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10">
-      
-        </DialogClose>
+      <DialogContent showCloseButton={false} className="w-full max-w-2xl! gap-0 p-3 md:p-6">
+        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10" />
 
         <DialogTitle className="text-lg font-semibold text-gray-900 mb-0.5">
           Campaigns &amp; App Banners

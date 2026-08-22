@@ -14,6 +14,11 @@ export interface AdminQueryFilters {
   toDate?: string;
   country?: string;
   state?: string;
+  /**
+   * Not yet a documented parameter on any list endpoint — see the note in
+   * `paginationParams`.
+   */
+  listingType?: string;
 }
 
 export type QueryParamValue = string | number | boolean | null | undefined;
@@ -48,5 +53,9 @@ export function paginationParams(
     ToDate: filters.toDate,
     Country: filters.country,
     State: filters.state,
+    // The listings endpoint does not document a type filter, so this is sent
+    // ahead of the API supporting it; an unrecognised parameter comes back as
+    // an unfiltered list rather than an error.
+    ListingType: filters.listingType,
   };
 }

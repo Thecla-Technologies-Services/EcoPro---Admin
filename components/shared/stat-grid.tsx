@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 interface StatGridProps {
   children: React.ReactNode;
   /** Columns from the `lg` breakpoint up. Below it the grid is always 2-up. */
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 3 | 4 | 5;
   /**
    * Seconds added per card for the entry stagger. Pass 0 to opt out of the
    * animation entirely — the cards then render unwrapped.
@@ -18,6 +18,9 @@ const columnClass: Record<NonNullable<StatGridProps["columns"]>, string> = {
   2: "lg:grid-cols-2",
   3: "lg:grid-cols-3",
   4: "lg:grid-cols-4",
+  // Five cards at `lg` leaves each one too narrow for a long figure, so the
+  // last column waits for `xl`.
+  5: "lg:grid-cols-3 xl:grid-cols-5",
 };
 
 /**

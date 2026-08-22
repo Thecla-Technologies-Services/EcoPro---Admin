@@ -104,9 +104,8 @@ export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
   return (
     <>
       <Dialog open={open && !success} onOpenChange={handleClose}>
-        <DialogContent className="max-w-sm gap-0 py-6 px-5">
-          <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-          </DialogClose>
+        <DialogContent showCloseButton={false} className="max-w-sm gap-0 py-6 px-5">
+          <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
 
           <DialogTitle className="text-lg font-semibold mb-5">
             Create New User

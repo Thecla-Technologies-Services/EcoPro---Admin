@@ -148,7 +148,7 @@ export function WalletOverview() {
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "text-sm px-4 py-1.5 rounded-full font-medium transition-all",
+                "text-sm px-4 py-1.5 rounded-full font-medium transition-all cursor-pointer",
                 filter === f
                   ? "bg-[#2D7A4F] text-white"
                   : "bg-[#F2F2F2] text-gray-500 hover:bg-gray-200",

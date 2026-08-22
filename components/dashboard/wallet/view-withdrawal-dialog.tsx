@@ -33,15 +33,14 @@ export function ViewWithdrawalDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm gap-0">
+      <DialogContent showCloseButton={false} className="max-w-sm gap-0">
         <DialogTitle className="text-base font-semibold mb-1">
           Withdrawal Details
         </DialogTitle>
         <DialogDescription className="sr-only">
           Details for withdrawal request {request.requestId}
         </DialogDescription>
-        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
-        </DialogClose>
+        <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" />
 
         <AmountBanner amount={request.amount} />
 

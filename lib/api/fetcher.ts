@@ -6,9 +6,10 @@ interface FetcherOptions extends Omit<RequestInit, "body"> {
   /**
    * Which of this app's proxy routes to go through. Defaults to the admin
    * service, which is where nearly every dashboard call belongs; `"user"` is for
-   * the few reads the admin service doesn't expose.
+   * the few reads the admin service doesn't expose, and `"marketplace"` for the
+   * catalogue and listing-media endpoints that live only on that service.
    */
-  service?: "admin" | "user";
+  service?: "admin" | "user" | "marketplace";
 }
 
 /**
@@ -29,14 +30,22 @@ export async function apiFetch<T>(
   path: string,
   { body, headers, service = "admin", ...init }: FetcherOptions = {}
 ): Promise<T> {
+  // FormData carries its own multipart boundary in the Content-Type the browser
+  // generates, so setting the header here — or stringifying the body — breaks
+  // the upload.
+  const isFormData = body instanceof FormData;
+
   const response = await fetch(`/api/${service}${path}`, {
     ...init,
     headers: {
       Accept: "application/json",
-      ...(body !== undefined && { "Content-Type": "application/json" }),
+      ...(body !== undefined &&
+        !isFormData && { "Content-Type": "application/json" }),
       ...headers,
     },
-    ...(body !== undefined && { body: JSON.stringify(body) }),
+    ...(body !== undefined && {
+      body: isFormData ? body : JSON.stringify(body),
+    }),
   });
 
   const text = await response.text();
