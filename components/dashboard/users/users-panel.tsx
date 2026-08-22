@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { UserTable } from "@/components/dashboard/user/user-table";
-import { UserActionModals } from "@/components/dashboard/user/user-modals";
-import { ViewUserSheet } from "@/components/dashboard/user/view-sheet";
+import { UserTable } from "@/components/dashboard/users/user-table";
+import { UserActionModals } from "@/components/dashboard/users/user-modals";
+import { ViewUserSheet } from "@/components/dashboard/users/view-sheet";
 import { DataState } from "@/components/shared/data-state";
 import type { UsersPanelState } from "@/hooks/admin/use-users-panel";
 import type { ModalType, User } from "@/types/user";

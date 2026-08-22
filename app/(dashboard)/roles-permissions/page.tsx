@@ -17,7 +17,7 @@ import { FilterTabs } from "@/components/shared/filter-tabs";
 import SharedStatCard from "@/components/shared/stat-card";
 import { PermissionsTable } from "@/components/dashboard/roles-permissions/roles-table";
 import { CreateRoleDialog } from "@/components/dashboard/roles-permissions/create-role-dialog";
-import { UsersPanel } from "@/components/dashboard/user/users-panel";
+import { UsersPanel } from "@/components/dashboard/users/users-panel";
 import { useRoles } from "@/hooks/admin/use-roles";
 import { useAdminUsersPanel } from "@/hooks/admin/use-users-panel";
 import { useListPanel } from "@/hooks/shared/use-list-panel";
