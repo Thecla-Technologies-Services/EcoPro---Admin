@@ -1,14 +1,5 @@
 import { type Applicant } from "@/types/verification";
 
-/**
- * Drives the verification queue from `DUMMY_APPLICATIONS` instead of the API.
- *
- * The pending endpoints return nothing usable yet, so the page would otherwise
- * render an empty state and none of the layout could be reviewed. Flip this to
- * `false` to go back to the live queues — the query wiring in the page is intact
- * and gated on this one constant, so nothing else has to change.
- */
-export const USE_DUMMY_DATA = true;
 
 const CONTACT = {
   email: "contact@greenearth.ng",
@@ -58,7 +49,7 @@ const NAMES = [
  * Twelve pending applications, alternating between the two account types so both
  * badge styles and both document layouts are on screen.
  */
-export const DUMMY_APPLICATIONS: Applicant[] = NAMES.map((name, index) => {
+export const FIXTURE_QUEUE: Applicant[] = NAMES.map((name, index) => {
   const isOrganization = index % 2 === 0;
 
   return {

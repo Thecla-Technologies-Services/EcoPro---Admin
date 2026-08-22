@@ -88,8 +88,12 @@ interface ListPanelOptions<Dto, Row, Meta> {
    * happen here over the full set.
    */
   paging?: "server" | "client";
-  /** Client paging only: whether a row matches the search term. */
-  matches?: (row: Row, term: string) => boolean;
+  /**
+   * Client paging only: whether a row survives the current search term and
+   * filters. Called with the trimmed, lowercased term — empty when not
+   * searching, so a predicate that only filters by tab can ignore it.
+   */
+  matches?: (row: Row, term: string, filters: ListFilters) => boolean;
   /**
    * Applied after mapping. For a list the API cannot narrow itself — dropping
    * staff accounts, say — which is why a server-paged page can come back short.
@@ -170,12 +174,11 @@ export function useListPanel<Dto, Row, Meta = unknown>({
 
   /** Client paging: the endpoint returned everything, so narrow it here. */
   const matching = useMemo(() => {
-    if (paging === "server") return mapped;
+    if (paging === "server" || !matches) return mapped;
     const term = debouncedSearch.trim().toLowerCase();
-    if (!term || !matches) return mapped;
-    return mapped.filter((row) => matches(row, term));
+    return mapped.filter((row) => matches(row, term, filters));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapped, debouncedSearch, paging]);
+  }, [mapped, debouncedSearch, filters, paging]);
 
   const rows = useMemo(() => {
     if (paging === "server") return matching;

@@ -7,6 +7,7 @@ import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
 import { type OrderStatus } from "@/types/order-swap";
 import { DataTable } from "@/components/shared/data-table";
+import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
 import { RowActions } from "@/components/shared/row-actions";
 import TableDateFilter from "../../shared/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
@@ -23,19 +24,35 @@ const STATUS_FILTERS = [
 
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
-const FILTER_COUNTS: Record<StatusFilter, number> = {
-  "All Disputes": 300,
-  Open: 20,
-  "In Progress": 23,
-  Resolved: 18,
-  Closed: 5,
-};
+const ALL_TAB: StatusFilter = "All Disputes";
+
+/**
+ * Counted from the rows rather than written down — the literals here disagreed
+ * with what the table actually held.
+ */
+const FILTER_COUNTS = STATUS_FILTERS.reduce<Record<string, number>>(
+  (counts, tab) => ({
+    ...counts,
+    [tab]:
+      tab === ALL_TAB
+        ? DISPUTES.length
+        : DISPUTES.filter((row) => row.status === tab).length,
+  }),
+  {},
+);
 
 export default function DisputeTable() {
   const router = useRouter();
   const [dateFilter, setDateFilter] = useState<
     DateRangeFilterValue | undefined
   >(undefined);
+
+  const panel = useFixturePanel({
+    rows: DISPUTES,
+    pageSize: 7,
+    initialFilters: { tab: ALL_TAB },
+    matches: (row, _term, { tab }) => tab === ALL_TAB || row.status === tab,
+  });
 
   const columns = useMemo<ColumnDef<Dispute>[]>(
     () => [
@@ -130,7 +147,14 @@ export default function DisputeTable() {
   return (
     <>
       <DataTable
-        data={DISPUTES}
+        data={panel.table.data}
+        manualPagination
+        pagination={panel.table.pagination}
+        onPaginationChange={panel.table.onPaginationChange}
+        totalPages={panel.table.totalPages}
+        totalCount={panel.table.totalCount}
+        activeTab={panel.table.activeTab}
+        onTabChange={panel.table.onTabChange}
         headerExtra={
           <TableDateFilter selected={dateFilter} setSelected={setDateFilter} />
         }
@@ -140,8 +164,7 @@ export default function DisputeTable() {
         pageSize={7}
         filterTabs={STATUS_FILTERS}
         filterCounts={FILTER_COUNTS}
-        filterColumnKey="status"
-        allTabValue="All Disputes"
+        allTabValue={ALL_TAB}
       />
     </>
   );
