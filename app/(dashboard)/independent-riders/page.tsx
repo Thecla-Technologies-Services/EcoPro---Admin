@@ -1,26 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataState } from "@/components/shared/data-state";
 import IndependentRidersTable from "@/components/dashboard/independent-riders/independent-riders-table";
-import { useUserDirectory } from "@/hooks/admin/use-admin-users";
-import { usePendingRiders } from "@/hooks/admin/use-verification";
-import { toRiderQueue } from "@/lib/adapters/verification";
+import { useIndependentRiders } from "@/hooks/admin/use-independent-riders";
 
 export default function IndependentRidersPage() {
-  // No admin endpoint returns riders, so the rows come from the user directory
-  // filtered by account type.
-  const users = useUserDirectory();
-  // The pending-verification queue is what carries a rider's documents and the
-  // provider's result, so it is joined in by user id. Riders with nothing
-  // pending simply have no profile to show.
-  const riders = usePendingRiders();
-
-  const rows = useMemo(
-    () => toRiderQueue(users.data, riders.data),
-    [users.data, riders.data],
-  );
+  const { rows, query } = useIndependentRiders();
 
   return (
     <div className="space-y-6 w-full overflow-x-hidden">
@@ -35,15 +21,14 @@ export default function IndependentRidersPage() {
 
       <DataState>
         <DataState.Error
-          when={users.isError}
-          error={users.error}
-          onRetry={() => users.refetch()}
+          when={query.isError}
+          error={query.error}
+          onRetry={query.refetch}
         />
+        {/* The table owns its own loading branch, so it is handed the flag
+            rather than being swapped out for a skeleton here. */}
         <DataState.Content>
-          <IndependentRidersTable
-            data={rows}
-            isLoading={users.isPending || users.isFetching}
-          />
+          <IndependentRidersTable data={rows} isLoading={query.isLoading} />
         </DataState.Content>
       </DataState>
     </div>
