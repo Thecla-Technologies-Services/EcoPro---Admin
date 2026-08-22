@@ -3,7 +3,7 @@ import { FadeIn } from "@/components/motion/fade-in";
 import { IoCartOutline } from "react-icons/io5";
 import { HiOutlineDocumentCheck } from "react-icons/hi2";
 import SharedStatCard from "@/components/shared/stat-card";
-import SwapTable from "@/components/dashboard/swap-order/swap-table";
+import SwapTable from "@/components/dashboard/swap-orders/swap-table";
 
 export default function SwapsOrdersPage() {
   return (

@@ -1,7 +1,7 @@
 import { Leaf } from "lucide-react";
 import { IoPeopleOutline, IoCashOutline } from "react-icons/io5";
 import SharedStatCard from "@/components/shared/stat-card";
-import Analytics from "@/components/dashboard/analytics";
+import Analytics from "@/components/dashboard/analytics/analytics-charts";
 import { FadeIn } from "@/components/motion/fade-in";
 
 export default function AnalyticsPage() {

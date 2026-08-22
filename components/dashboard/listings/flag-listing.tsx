@@ -1,7 +1,7 @@
  
 "use client";
 
-import type { Listing } from "@/types/listings";
+import type { Listing } from "@/types/listing";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";

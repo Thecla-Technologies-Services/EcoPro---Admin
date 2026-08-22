@@ -13,7 +13,7 @@ import { DataState } from "@/components/shared/data-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useListing } from "@/hooks/admin/use-listings";
 import { toListingRow } from "@/lib/adapters/listing";
-import type { Listing } from "@/types/listings";
+import type { Listing } from "@/types/listing";
 
 interface ViewListingDialogProps {
   open: boolean;

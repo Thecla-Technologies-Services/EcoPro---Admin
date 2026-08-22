@@ -8,7 +8,7 @@ import { DataTable } from "@/components/shared/data-table";
 import { DataState } from "@/components/shared/data-state";
 import { RowActions } from "@/components/shared/row-actions";
 import { Skeleton } from "@/components/ui/skeleton";
-import TableDateFilter from "../../shared/table-date-filter";
+import TableDateFilter from "../../shared/date/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
 import { type Applicant } from "@/types/verification";
 

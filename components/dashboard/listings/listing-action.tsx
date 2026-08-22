@@ -17,7 +17,7 @@ import {
   useFlagListing,
   useUnflagListing,
 } from "@/hooks/admin/use-listings";
-import type { Listing } from "@/types/listings";
+import type { Listing } from "@/types/listing";
 
 interface ListingActionMenuProps {
   listing: Listing;

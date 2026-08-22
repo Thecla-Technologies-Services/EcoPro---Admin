@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { RoleSavedDialog } from "./success-dialog";
 import {
   makeDeleteRoleSchema,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/validations/permissions";
 import { useDeleteRole } from "@/hooks/admin/use-roles";
 import { toErrorMessage } from "@/lib/api/errors";
-import type { RoleRow } from "@/types/permission";
+import type { RoleRow } from "@/types/role";
 
 interface DeleteRoleDialogProps {
   open: boolean;

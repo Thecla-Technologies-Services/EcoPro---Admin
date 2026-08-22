@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FloatingLabelInput } from "../shared/floating-label-input";
+import { FloatingLabelInput } from "../shared/form/floating-label-input";
 import { Button } from "@/components/ui/button";
 import { AtSign, Lock } from "lucide-react";
 import { useLogin } from "@/hooks/auth/use-auth-mutations";

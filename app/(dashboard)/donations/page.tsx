@@ -1,5 +1,5 @@
 import { ShoppingCart, Package, Truck, FileCheck } from "lucide-react";
-import { DonationsTable } from "@/components/dashboard/donation/donation-table";
+import { DonationsTable } from "@/components/dashboard/donations/donation-table";
 import SharedStatCard from "@/components/shared/stat-card";
 import { IconType } from "react-icons/lib";
 import { FadeIn } from "@/components/motion/fade-in";

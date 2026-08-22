@@ -4,6 +4,35 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# Where a file goes
+
+`ls` shows the folders. What it cannot show is which one a new file belongs in,
+and three of them sort by what a file *is* rather than what it describes — so
+all three end up holding something named after the same entity:
+
+| Folder | Holds |
+| --- | --- |
+| `types/` | declarations only. One file per domain entity, named after it in the singular: `listing.ts` declares `Listing` |
+| `constants/` | closed option lists, their label maps, and the `to*Param` converters that drop a sentinel |
+| `data/` | fixture rows standing in for an endpoint that is not wired yet. Named for the rows in the plural, and the export is that name in caps: `applicants.ts` exports `APPLICANTS` |
+
+`components/` sorts by who calls a file:
+
+| Folder | Called by |
+| --- | --- |
+| `ui/` | anything. Vendored shadcn — change a primitive by re-adding it through `components.json`, since editing in place is lost on the next regeneration |
+| `layout/` | `app/(dashboard)/layout.tsx` alone: the chrome wrapping every page |
+| `shared/` | a module page, composing the compounds below |
+| `shared/form/` `shared/date/` | a form, or a date filter. Grouped because each set is only ever reached as a set |
+| `dashboard/<module>/` | one module. The folder carries its route segment's name, so `/swap-orders` is served out of `dashboard/swap-orders/` |
+
+A file two modules both need moves up to `shared/`. A file one module needs
+stays in that module's folder, however likely a second module looks to want it.
+
+In `lib/`, two functions format a date and the input tells them apart:
+`formatDayLabel` (`lib/date.ts`) takes a `Date`, for the picker; `formatDate`
+(`lib/adapters/shared.ts`) takes the API's timestamp string, for a table row.
+
 # Shared composition components
 
 Module pages under `app/(dashboard)/` are all the same shape, so the repeated
@@ -58,7 +87,7 @@ indirection:
 Reach for `useFixturePanel` rather than passing a constant array to a table.
 A constant has no loading, error or empty state, so a table fed one directly
 has to be rewritten when the endpoint arrives instead of having its adapter
-swapped. Keep the rows in `data/`, never in a `types/` module.
+swapped. The rows belong in `data/`.
 
 A page choosing a fixture must not change what a mutation does. Fixtures decide
 which rows are shown; buttons still call the API, so an action that cannot
@@ -66,8 +95,18 @@ succeed says so rather than reporting a success that never happened.
 
 ## Modules still fed by fixtures
 
-Wallet (overview, escrow), donations, marketing, analytics, swap-orders and the
-verification queue read from `data/` and `constants/`, as do the stat cards on
-disputes, swap-orders, donations, analytics and marketing — those figures are
-placeholders, not live metrics. Withdrawal requests and disputes have been moved
-behind `useFixturePanel`; the rest have not.
+Wallet (overview, escrow), donations, marketing, analytics and swap-orders read
+from `data/`, as do the stat cards on disputes, swap-orders, donations,
+analytics and marketing — those figures are placeholders, not live metrics.
+
+Marketing goes further than unwired: campaigns reach no endpoint at all — no
+DTO, no query key, no hook — so its Pause and Delete confirm, then fail with a
+message saying why. Proving that absence takes a repo-wide search, so take it
+from here rather than re-running one.
+
+Three modules are behind a seam already, and going live is a one-word edit for
+each: withdrawal requests and disputes through `useFixturePanel`, and the
+verification queue through `useVerificationQueue({ source: "fixture" })`
+(`hooks/admin/use-verification-queue.ts`), which is not a list panel — it is a
+selection and two decisions over a queue joined from three endpoints. The rest
+have not been moved.

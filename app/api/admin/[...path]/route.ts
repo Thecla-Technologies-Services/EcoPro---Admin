@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { forwardToApi } from "@/lib/api/proxy";
+import { forwardToApi } from "@/lib/api/forward";
 
 /**
  * Forwards `/api/admin/*` to the Ecoswap Admin API.

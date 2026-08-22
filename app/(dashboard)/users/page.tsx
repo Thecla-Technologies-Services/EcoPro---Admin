@@ -8,8 +8,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatGrid } from "@/components/shared/stat-grid";
 import { RowActions } from "@/components/shared/row-actions";
 import SharedStatCard from "@/components/shared/stat-card";
-import { UsersPanel } from "@/components/dashboard/user/users-panel";
-import { AddUserDialog } from "@/components/dashboard/user/add-user";
+import { UsersPanel } from "@/components/dashboard/users/users-panel";
+import { AddUserDialog } from "@/components/dashboard/users/add-user";
 import { useUsersPanel } from "@/hooks/admin/use-users-panel";
 import {
   IoPeopleOutline,

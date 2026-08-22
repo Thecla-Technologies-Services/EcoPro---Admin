@@ -71,7 +71,12 @@ export type AccountValidationStatus =
   | "success"
   | "error";
 
-export type OrderStatus =
+/**
+ * Where a Delivery has got to. Distinct from `OrderStatus` in `./order`: an
+ * Order can be Disputed, which is a state of the trade rather than the
+ * movement, and a Delivery can end Not Delivered while the Order stands.
+ */
+export type DeliveryStatus =
   | "Pending"
   | "In Transit"
   | "Delivered"
@@ -86,7 +91,7 @@ export interface DeliveryPartnerOrder {
   imageUrl: string;
   pickup: string;
   dropoff: string;
-  status: OrderStatus;
+  status: DeliveryStatus;
   reason?: string;
 }
 
@@ -189,8 +194,5 @@ export type ListingFilter =
   | "Sell"
   | "Swap"
   | "Donate"
-  | "Pending"
-  | "In Transit"
-  | "Delivered"
-  | "Not Delivered";
+  | DeliveryStatus;
 export type WalletFilter = "All" | "Credit" | "Debit";

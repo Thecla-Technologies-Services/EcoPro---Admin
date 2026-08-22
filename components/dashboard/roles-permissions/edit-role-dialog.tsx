@@ -22,10 +22,10 @@ import {
 } from "@/lib/validations/permissions";
 import { useRole, useUpdateRole } from "@/hooks/admin/use-roles";
 import { toErrorMessage } from "@/lib/api/errors";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingLabelTextarea } from "@/components/shared/floating-label-text-area";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingLabelTextarea } from "@/components/shared/form/floating-label-text-area";
 import type { RoleDetailsDto } from "@/types/api/admin";
-import type { RoleRow } from "@/types/permission";
+import type { RoleRow } from "@/types/role";
 
 interface EditRoleDialogProps {
   open: boolean;

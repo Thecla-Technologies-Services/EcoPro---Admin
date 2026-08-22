@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import SharedStatCard from "@/components/shared/stat-card";
 import { type Transaction } from "@/types/wallet";
-import { TRANSACTIONS } from "@/data/wallet";
+import { TRANSACTIONS } from "@/data/transactions";
 import { IconType } from "react-icons/lib";
 import { FadeIn } from "@/components/motion/fade-in";
 

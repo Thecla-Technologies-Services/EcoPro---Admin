@@ -1,3 +1,4 @@
+import type { DeliveryStatus } from "./user";
 
 
 export interface DeliveryTimelineStep {
@@ -9,12 +10,8 @@ export interface DeliveryTimelineStep {
 
 export type DonationType = "Material" | "Monetary";
 export type DeliveryMethod = "Home Delivery" | "Pickup";
-export type DonationStatus =
-  | "In Transit"
-  | "Pending"
-  | "Delivered"
-  | "Not Delivered"
-  | "Paid";
+/** A Delivery's states, plus the one a monetary Donation ends in. */
+export type DonationStatus = DeliveryStatus | "Paid";
 
 
 export interface PersonDetails {
