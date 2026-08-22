@@ -20,8 +20,8 @@ import {
   addMonths,
   endOfWeek,
   computeRange,
-  formatDate,
-} from "@/lib/helper";
+  formatDayLabel,
+} from "@/lib/date";
 import { Label } from "@/components/ui/label";
 import type {
   RangeType,
@@ -185,11 +185,11 @@ export function DateRangeFilter({
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
                     <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {customFrom ? formatDate(customFrom) : "Start date"}
+                    {customFrom ? formatDayLabel(customFrom) : "Start date"}
                   </div>
                   <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
                     <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {customTo ? formatDate(customTo) : "End date"}
+                    {customTo ? formatDayLabel(customTo) : "End date"}
                   </div>
                 </div>
               ) : (

@@ -6,11 +6,8 @@ import { Play, Eye, TrendingUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalyticsDialog } from "@/components/dashboard/marketing/marketing-analytics";
 import { CampaignsTable } from "@/components/dashboard/marketing/marketing-table";
-import {
-  SAMPLE_CAMPAIGNS,
-  type Campaign,
-  type CampaignStatus,
-} from "@/types/marketing";
+import { SAMPLE_CAMPAIGNS } from "@/data/marketing";
+import type { Campaign, CampaignStatus } from "@/types/marketing";
 import { FadeIn } from "@/components/motion/fade-in";
 import SharedStatCard from "@/components/shared/stat-card";
 

@@ -20,9 +20,7 @@ import {
   toRejectionReason,
   toVerificationQueue,
 } from "@/lib/adapters/verification";
-import {
-  FIXTURE_QUEUE,
-  } from "@/constants/verification";
+import { FIXTURE_QUEUE } from "@/data/verification";
 
 export default function VerificationPage() {
   const organizations = usePendingOrganizations();

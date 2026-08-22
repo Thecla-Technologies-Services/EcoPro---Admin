@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MONTH_LONG, WEEKDAY_SHORT } from "@/constants/date";
-import { isInRange, sameDay, addMonths, daysInMonth } from "@/lib/helper";
+import { isInRange, sameDay, addMonths, daysInMonth } from "@/lib/date";
 
 import { cn } from "@/lib/utils";
 

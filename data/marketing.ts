@@ -1,17 +1,80 @@
-import type { AppPlacement, TargetAudience } from "@/types/marketing";
+import type { Campaign } from "@/types/marketing";
 
-export const PLACEMENTS: AppPlacement[] = [
-  "Home Dashboard Top",
-  "Home Dashboard Middle",
-  "Home Dashboard Bottom",
-  "Listing Page Top",
-  "Listing Page Bottom",
-  "Swap Page Top",
-];
-
-export const AUDIENCES: TargetAudience[] = [
-  "All Users",
-  "Buyers Only",
-  "Sellers Only",
-  "New Users",
+/**
+ * Six campaigns covering all four statuses, so every badge style and the
+ * pause/delete row actions are reachable while the endpoints are unwired.
+ */
+export const SAMPLE_CAMPAIGNS: Campaign[] = [
+  {
+    id: "1",
+    campaignName: "Easy Laundry Campaign",
+    status: "Active",
+    placement: "Home Dashboard Top",
+    clicks: 12009,
+    ctr: 3.4,
+    startDate: "Feb 7, 2026, 11:23 PM",
+    endDate: "Feb 7, 2026, 11:23 PM",
+    targetAudience: "All Users",
+    destinationUrl: "/HomeDashboard",
+  },
+  {
+    id: "2",
+    campaignName: "Easy Laundry Campaign",
+    status: "Active",
+    placement: "Home Dashboard Top",
+    clicks: 12009,
+    ctr: 3.4,
+    startDate: "Feb 7, 2026, 11:23 PM",
+    endDate: "Feb 7, 2026, 11:23 PM",
+    targetAudience: "Buyers Only",
+    destinationUrl: "/HomeDashboard",
+  },
+  {
+    id: "3",
+    campaignName: "Easy Laundry Campaign",
+    status: "Scheduled",
+    placement: "Home Dashboard Top",
+    clicks: 0,
+    ctr: 0,
+    startDate: "Feb 7, 2026, 11:23 PM",
+    endDate: "Feb 7, 2026, 11:23 PM",
+    targetAudience: "Sellers Only",
+    destinationUrl: "/HomeDashboard",
+  },
+  {
+    id: "4",
+    campaignName: "Easy Laundry Campaign",
+    status: "Scheduled",
+    placement: "Listing Page Top",
+    clicks: 0,
+    ctr: 0,
+    startDate: "Feb 7, 2026, 11:23 PM",
+    endDate: "Feb 7, 2026, 11:23 PM",
+    targetAudience: "New Users",
+    destinationUrl: "/Listings",
+  },
+  {
+    id: "5",
+    campaignName: "Easy Laundry Campaign",
+    status: "Paused",
+    placement: "Home Dashboard Middle",
+    clicks: 12009,
+    ctr: 3.4,
+    startDate: "Feb 7, 2026, 11:23 PM",
+    endDate: "Feb 7, 2026, 11:23 PM",
+    targetAudience: "All Users",
+    destinationUrl: "/HomeDashboard",
+  },
+  {
+    id: "6",
+    campaignName: "Easy Laundry Campaign",
+    status: "Ended",
+    placement: "Swap Page Top",
+    clicks: 12009,
+    ctr: 3.4,
+    startDate: "Feb 7, 2026, 11:23 PM",
+    endDate: "Feb 7, 2026, 11:23 PM",
+    targetAudience: "All Users",
+    destinationUrl: "/Swap",
+  },
 ];

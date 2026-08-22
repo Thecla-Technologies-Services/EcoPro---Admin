@@ -1,34 +1,14 @@
-import { parsePhoneNumberFromString } from "libphonenumber-js";
-import type { Country } from "react-phone-number-input";
 import type { RangeType, DateRange } from "@/types/date";
 import { MONTH_SHORT, MONTH_LONG } from "@/constants/date";
 
 /**
- * Normalises a phone number for a controlled `react-phone-number-input`.
+ * Calendar arithmetic over native `Date`s, for the date-range picker.
  *
- * The library both emits and expects E.164, so anything already in that shape is
- * passed straight through — including the incomplete numbers it emits while
- * someone is still typing. Those must never be validated or "corrected" here: a
- * controlled value that rejects a half-typed number blanks the field on the
- * keystroke that made it incomplete, so deleting one digit wipes the whole
- * input. Validity is the form schema's job, on submit.
- *
- * Only a value from somewhere else is converted — an API record in national
- * format such as "08123456789" — and one that cannot be parsed is handed back
- * untouched rather than swallowed.
+ * Everything here works in local time on whole days — `stripTime` is applied on
+ * the way in — because the picker compares what a person clicked against what a
+ * cell shows. Formatting an API timestamp for a table row is a different job,
+ * and lives in `lib/adapters/shared.ts`.
  */
-export function toPhoneValue(
-  raw: string | undefined | null,
-  defaultCountry: Country = "NG",
-) {
-  if (!raw) return undefined;
-  if (raw.startsWith("+")) return raw;
-
-  const parsed = parsePhoneNumberFromString(raw, defaultCountry);
-  return parsed?.number ?? raw; // parsed.number is E.164
-}
-
-
 
 export function sameDay(a: Date, b: Date) {
   return (
@@ -46,6 +26,11 @@ export function startOfWeek(d: Date) {
   const s = stripTime(d);
   s.setDate(s.getDate() - s.getDay());
   return s;
+}
+
+export function endOfWeek(d: Date) {
+  const s = startOfWeek(d);
+  return addDays(s, 6);
 }
 
 export function startOfMonth(d: Date) {
@@ -70,25 +55,10 @@ export function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-export function formatDate(d: Date) {
-  return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-}
-
-export function formatRangeLabel(type: RangeType, range: DateRange) {
-  switch (type) {
-    case "day": return formatDate(range.from);
-    case "month": return `${MONTH_LONG[range.from.getMonth()]} ${range.from.getFullYear()}`;
-    case "year": return `${range.from.getFullYear()}`;
-    default: return `${formatDate(range.from)} - ${formatDate(range.to)}`;
-  }
-}
-
 export function isInRange(d: Date, from: Date, to: Date) {
   const t = stripTime(d).getTime();
   return t >= stripTime(from).getTime() && t <= stripTime(to).getTime();
 }
-
-
 
 export function computeRange(
   type: RangeType,
@@ -113,14 +83,34 @@ export function computeRange(
   }
 }
 
-
-
-
-export function endOfWeek(d: Date) {
-  const s = startOfWeek(d);
-  return addDays(s, 6);
+/**
+ * A `Date` as the picker labels it: `Mar 4, 2026`.
+ *
+ * Named for the label rather than the operation because `lib/adapters/shared.ts`
+ * exports a `formatDate` too — that one takes an API timestamp string and
+ * renders `04 Mar 2026` for a table row. Two different jobs; two names.
+ */
+export function formatDayLabel(d: Date) {
+  return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+export function formatRangeLabel(type: RangeType, range: DateRange) {
+  switch (type) {
+    case "day":
+      return formatDayLabel(range.from);
+    case "month":
+      return `${MONTH_LONG[range.from.getMonth()]} ${range.from.getFullYear()}`;
+    case "year":
+      return `${range.from.getFullYear()}`;
+    default:
+      return `${formatDayLabel(range.from)} - ${formatDayLabel(range.to)}`;
+  }
+}
+
+/**
+ * A chat message's time as the transcript reads it: the clock time for today,
+ * "Yesterday", then a day count.
+ */
 export function formatTimestamp(input: Date | string): string {
   const date = typeof input === "string" ? new Date(input) : input;
   const now = new Date();
@@ -138,7 +128,3 @@ export function formatTimestamp(input: Date | string): string {
   if (diffDays === 1) return "Yesterday";
   return `${diffDays} days ago`;
 }
-
-
-
- 

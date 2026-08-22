@@ -3,7 +3,7 @@ import { FloatingDatePicker } from "@/components/shared/floating-date-picker";
 import { FloatingLabelInput } from "@/components/shared/floating-label-input";
 import { FloatingSelect } from "@/components/shared/floating-select";
 import SectionCard from "./section-card";
-import { PLACEMENTS, AUDIENCES } from "@/data/marketing";
+import { PLACEMENTS, AUDIENCES } from "@/constants/marketing";
 import type { BannerFormValues } from "@/types/marketing";
 
 

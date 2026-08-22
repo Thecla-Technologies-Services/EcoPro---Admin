@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { formatTimestamp } from "@/lib/helper";
+import { formatTimestamp } from "@/lib/date";
 import { Download, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";

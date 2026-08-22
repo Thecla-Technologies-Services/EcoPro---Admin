@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { forwardToApi } from "@/lib/api/proxy";
+import { forwardToApi } from "@/lib/api/forward";
 
 /**
  * The only marketplace writes this proxy will forward.

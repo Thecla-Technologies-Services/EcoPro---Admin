@@ -4,7 +4,7 @@ import * as React from "react";
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 import PhoneInputBase, { type Value, type Country } from "react-phone-number-input/input";
-import { toPhoneValue } from "@/lib/helper";
+import { toPhoneValue } from "@/lib/phone";
 
 
 interface FloatingPhoneInputProps {
