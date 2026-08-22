@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -209,6 +210,13 @@ function CreateDeliveryPartnerDialogInner({
             </DialogTitle>
             <DialogClose className="text-muted-foreground hover:text-foreground" />
           </div>
+
+          {/* Radix warns when a dialog has no description; the steps are on
+              screen, so this is for screen readers only. */}
+          <DialogDescription className="sr-only">
+            Create a delivery partner in three steps: contact details,
+            documents, then location.
+          </DialogDescription>
 
           <div className="space-y-6 px-6 py-5">
             <FormStepper STEPS={DELIVERYSTEPS} current={step} />
