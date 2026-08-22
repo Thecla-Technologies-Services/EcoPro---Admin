@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataState } from "@/components/shared/data-state";
 import { Button } from "@/components/ui/button";
@@ -8,84 +8,20 @@ import QueueItem from "@/components/dashboard/verification/queue-item";
 import { VerificationDetail } from "@/components/dashboard/verification/verification-detail";
 import { ApproveDialog } from "@/components/dashboard/verification/approve-dialog";
 import { RejectDialog } from "@/components/dashboard/verification/reject-dialog";
-import {
-  usePendingOrganizations,
-  usePendingRiders,
-  useReviewOrganization,
-  useReviewRider,
-} from "@/hooks/admin/use-verification";
-import { useUserDirectory } from "@/hooks/admin/use-admin-users";
-import {
-  applicantKey,
-  toRejectionReason,
-  toVerificationQueue,
-} from "@/lib/adapters/verification";
-import { APPLICANTS } from "@/data/applicants";
+import { applicantKey } from "@/lib/adapters/verification";
+import { useVerificationQueue } from "@/hooks/admin/use-verification-queue";
 
 export default function VerificationPage() {
-  const organizations = usePendingOrganizations();
-  const riders = usePendingRiders();
-  // Rider profiles carry no name or email, so the directory is joined in to
-  // name them. Only the rider rows depend on it.
-  const users = useUserDirectory();
+  // The pending endpoints return nothing usable yet, so the rows are fixtures
+  // and this word is the whole change when they do. It chooses rows only:
+  // approving and rejecting call the API either way, so an application that
+  // cannot be reviewed says so rather than reporting a success that never
+  // happened.
+  const queue = useVerificationQueue({ source: "fixture" });
+  const { rows, selected } = queue;
 
-  const liveRows = useMemo(
-    () => toVerificationQueue(organizations.data, riders.data, users.data),
-    [organizations.data, riders.data, users.data],
-  );
-
-  /**
-   * The queue's data source, chosen here rather than by a shared flag.
-   *
-   * The pending endpoints return nothing usable yet, so the rows are fixtures
-   * and swapping this for `liveRows` is the whole change when they do. It is a
-   * choice of rows only: reviewing still calls the API below, so an application
-   * that cannot be reviewed says so instead of reporting a success that never
-   * happened.
-   */
-  const rows = APPLICANTS;
-
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
-
-  // Falling back to the first row rather than storing it means the panel is
-  // never blank, and a reviewed row dropping out of the queue advances to the
-  // next one instead of leaving a selection pointing at nothing.
-  const selected =
-    rows.find((row) => applicantKey(row) === selectedKey) ?? rows[0] ?? null;
-  const activeKey = selected ? applicantKey(selected) : null;
-
-  const reviewOrganization = useReviewOrganization();
-  const reviewRider = useReviewRider();
-
-  /**
-   * Both queues are reviewed the same way but through different endpoints, so
-   * the row's `kind` picks the mutation and the id it expects.
-   */
-  const review = async (approve: boolean, rejectionReason?: string) => {
-    if (!selected) return;
-
-    if (selected.kind === "organization") {
-      await reviewOrganization.mutateAsync({
-        organizationId: selected.id,
-        approve,
-        rejectionReason,
-      });
-      return;
-    }
-
-    await reviewRider.mutateAsync({
-      riderProfileId: selected.id,
-      approve,
-      rejectionReason,
-    });
-  };
-
-  // Fixture rows are in hand immediately; only a live queue can be in flight.
-  const isPending =
-    rows === liveRows &&
-    (organizations.isPending || riders.isPending || users.isPending);
 
   return (
     <div className="flex w-full flex-col gap-6 overflow-x-hidden lg:h-full lg:min-h-0">
@@ -99,17 +35,12 @@ export default function VerificationPage() {
       </PageHeader>
 
       <DataState>
-        {/* The directory only supplies rider names — a failure there leaves
-            nameless rows, which is worth showing rather than blocking on. */}
         <DataState.Error
-          when={rows === liveRows && (organizations.isError || riders.isError)}
-          error={organizations.error ?? riders.error}
-          onRetry={() => {
-            organizations.refetch();
-            riders.refetch();
-          }}
+          when={queue.query.isError}
+          error={queue.query.error}
+          onRetry={queue.query.refetch}
         />
-        <DataState.Loading when={isPending} rows={6} rowClassName="h-20" />
+        <DataState.Loading when={queue.query.isPending} rows={6} rowClassName="h-20" />
         <DataState.Empty when={!rows.length}>
           Nothing is waiting for review.
         </DataState.Empty>
@@ -132,8 +63,8 @@ export default function VerificationPage() {
                     <li key={key}>
                       <QueueItem
                         applicant={row}
-                        isSelected={key === activeKey}
-                        onClick={() => setSelectedKey(key)}
+                        isSelected={key === queue.activeKey}
+                        onClick={() => queue.select(key)}
                       />
                     </li>
                   );
@@ -168,7 +99,7 @@ export default function VerificationPage() {
         onOpenChange={setApproveOpen}
         applicantName={selected?.name || ""}
         accountType={selected?.accountType || ""}
-        onApprove={() => review(true)}
+        onApprove={queue.approve}
       />
 
       <RejectDialog
@@ -178,9 +109,7 @@ export default function VerificationPage() {
         applicationId={selected?.userCode || selected?.id || ""}
         orgName={selected?.name || ""}
         contactEmail={selected?.email || ""}
-        onReject={(reason, note) =>
-          review(false, toRejectionReason(reason, note))
-        }
+        onReject={queue.reject}
       />
     </div>
   );
