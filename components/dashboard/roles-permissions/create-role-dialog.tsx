@@ -22,8 +22,8 @@ import {
 } from "@/lib/validations/permissions";
 import { useCreateRole } from "@/hooks/admin/use-roles";
 import { toErrorMessage } from "@/lib/api/errors";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingLabelTextarea } from "@/components/shared/floating-label-text-area";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingLabelTextarea } from "@/components/shared/form/floating-label-text-area";
 
 interface CreateRoleDialogProps {
   open: boolean;

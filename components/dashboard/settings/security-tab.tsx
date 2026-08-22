@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 import { type PasswordForm, passwordSchema } from "@/lib/validations/settings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 
 const loginActivity = [
   {

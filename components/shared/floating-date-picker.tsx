@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { cn } from "@/lib/utils";
 
 interface FloatingDatePickerProps {

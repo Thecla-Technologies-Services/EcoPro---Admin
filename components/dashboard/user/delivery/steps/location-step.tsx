@@ -7,8 +7,8 @@ import {
   type UseFormSetValue,
 } from "react-hook-form";
 import { Switch } from "@/components/ui/switch";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingSelect } from "@/components/shared/floating-select";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingSelect } from "@/components/shared/form/floating-select";
 import { COUNTRIES, NIGERIAN_STATES_WITH_LGAS } from "@/constants/user";
 import type { DeliveryPartnerFormValues } from "@/types/user";
 

@@ -4,8 +4,8 @@ import { Camera } from "lucide-react";
 import Image from "next/image";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import type { NgoFormValues } from "@/types/user";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingPhoneInput } from "@/components/shared/floating-phone-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingPhoneInput } from "@/components/shared/form/floating-phone-input";
 
 interface ContactDetailsStepProps {
   control: Control<NgoFormValues>;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { OtpInput } from "../shared/otp-input";
+import { OtpInput } from "../shared/form/otp-input";
 import { Button } from "@/components/ui/button";
 import { useResendOtp, useVerifyOtp } from "@/hooks/auth/use-auth-mutations";
 import { ApiError, toErrorMessage } from "@/lib/api/errors";

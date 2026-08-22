@@ -2,9 +2,9 @@
 
 import { Controller } from "react-hook-form";
 
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingSelect } from "@/components/shared/floating-select";
-import { DocumentUpload } from "@/components/shared/document-upload";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingSelect } from "@/components/shared/form/floating-select";
+import { DocumentUpload } from "@/components/shared/form/document-upload";
 
 import { AccountValidationMessage } from "../account-validation-message";
 

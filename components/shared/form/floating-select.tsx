@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectValue,
   SelectTrigger,
-} from "../ui/select";
+} from "../../ui/select";
 
 interface FloatingSelectProps {
   label: string;

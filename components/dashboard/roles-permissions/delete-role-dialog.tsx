@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { RoleSavedDialog } from "./success-dialog";
 import {
   makeDeleteRoleSchema,

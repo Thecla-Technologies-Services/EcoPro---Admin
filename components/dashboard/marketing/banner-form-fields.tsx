@@ -1,7 +1,7 @@
 import { Control, Controller, FieldErrors } from "react-hook-form";
 import { FloatingDatePicker } from "@/components/shared/floating-date-picker";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingSelect } from "@/components/shared/floating-select";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingSelect } from "@/components/shared/form/floating-select";
 import SectionCard from "./section-card";
 import { PLACEMENTS, AUDIENCES } from "@/constants/marketing";
 import type { BannerFormValues } from "@/types/marketing";

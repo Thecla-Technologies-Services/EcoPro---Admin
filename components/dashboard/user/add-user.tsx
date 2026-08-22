@@ -15,11 +15,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
-import { FloatingSelect } from "@/components/shared/floating-select";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
+import { FloatingSelect } from "@/components/shared/form/floating-select";
 import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
 import { phoneNumberSchema } from "@/lib/validations/profile";
-import { FloatingPhoneInput } from "@/components/shared/floating-phone-input";
+import { FloatingPhoneInput } from "@/components/shared/form/floating-phone-input";
 import { useCreateUser } from "@/hooks/admin/use-users";
 import { useRoles } from "@/hooks/admin/use-roles";
 import { toErrorMessage } from "@/lib/api/errors";

@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FloatingSelect } from "@/components/shared/floating-select";
+import { FloatingSelect } from "@/components/shared/form/floating-select";
 import ImageUploader, {
   type PickedImage,
-} from "@/components/shared/image-uploader";
+} from "@/components/shared/form/image-uploader";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +15,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
 import { listingSchema } from "@/lib/validations/listings";
-import { FloatingLabelTextarea } from "@/components/shared/floating-label-text-area";
+import { FloatingLabelTextarea } from "@/components/shared/form/floating-label-text-area";
 import { useCreateListing } from "@/hooks/admin/use-listings";
 import {
   uploadListingImages,

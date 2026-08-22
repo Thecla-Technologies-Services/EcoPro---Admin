@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } fr
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
-import { FloatingLabelInput } from "@/components/shared/floating-label-input";
+import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import {
   useDeleteUser,
   useSuspendUser,
