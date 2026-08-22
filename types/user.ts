@@ -175,6 +175,8 @@ export interface NgoDocument {
   url: string;
 }
 
+export type NgoStep = "contact" | "documents";
+
 export interface NgoFormValues {
   profileImage?: File | null;
   organisationName: string;

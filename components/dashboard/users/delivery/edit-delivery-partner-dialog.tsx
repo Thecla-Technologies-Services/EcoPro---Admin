@@ -6,7 +6,7 @@ import { useForm,  type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { DeliveryPartnerStepper } from "../stepper";
+import { FormStepper } from "../stepper";
 import { ContactDetailsStep } from "./steps/contact-details-step";
 import { DocumentsStep } from "./steps/document-step";
 import { LocationStep } from "./steps/location-step";
@@ -177,7 +177,7 @@ function EditDeliveryPartnerDialogInner({
             </button>
           </div>
 
-          <DeliveryPartnerStepper STEPS={[{ label: "Contact Details", key: "contact" }, { label: "Documents", key: "documents" }, { label: "Location", key: "location" }]} current={step} />
+          <FormStepper STEPS={[{ label: "Contact Details", key: "contact" }, { label: "Documents", key: "documents" }, { label: "Location", key: "location" }]} current={step} />
 
           <div className="max-h-[60vh] overflow-y-auto pr-1">
             {step === "contact" && (

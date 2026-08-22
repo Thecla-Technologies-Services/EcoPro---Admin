@@ -10,6 +10,8 @@ import { RowActions } from "@/components/shared/row-actions";
 import SharedStatCard from "@/components/shared/stat-card";
 import { UsersPanel } from "@/components/dashboard/users/users-panel";
 import { AddUserDialog } from "@/components/dashboard/users/add-user";
+import { CreateNgoDialog } from "@/components/dashboard/users/ngo/create-ngo-dialog";
+import { CreateDeliveryPartnerDialog } from "@/components/dashboard/users/delivery/create-delivery-partner-dialog";
 import { useUsersPanel } from "@/hooks/admin/use-users-panel";
 import {
   IoPeopleOutline,
@@ -18,8 +20,22 @@ import {
   IoPersonAddOutline,
 } from "react-icons/io5";
 
+/**
+ * The admin API has no endpoint that creates a rider — it only reads the ones
+ * awaiting verification — so the dialog's submit rejects here rather than
+ * showing the credentials for an account that was never opened. Swap this for
+ * the mutation when the endpoint lands.
+ */
+async function createDeliveryPartner(): Promise<void> {
+  throw new Error(
+    "Delivery partners cannot be created yet — the admin API has no create-rider endpoint. The details above were not saved.",
+  );
+}
+
 export default function UsersManagementPage() {
   const [addOpen, setAddOpen] = useState(false);
+  const [ngoOpen, setNgoOpen] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
 
   // Staff accounts are managed in the roles module, so they are dropped here
   // rather than mixed in with the platform's own users.
@@ -43,8 +59,16 @@ export default function UsersManagementPage() {
             Add New User
           </Button>
           <RowActions>
-            <RowActions.Item icon={IoPersonAddOutline}>Add NGO</RowActions.Item>
-            <RowActions.Item icon={IoPeopleOutline}>
+            <RowActions.Item
+              icon={IoPersonAddOutline}
+              onSelect={() => setNgoOpen(true)}
+            >
+              Add NGO
+            </RowActions.Item>
+            <RowActions.Item
+              icon={IoPeopleOutline}
+              onSelect={() => setDeliveryOpen(true)}
+            >
               Add Delivery Partner
             </RowActions.Item>
           </RowActions>
@@ -82,6 +106,14 @@ export default function UsersManagementPage() {
       <UsersPanel panel={panel} />
 
       <AddUserDialog open={addOpen} onClose={() => setAddOpen(false)} />
+
+      <CreateNgoDialog open={ngoOpen} onOpenChange={setNgoOpen} />
+
+      <CreateDeliveryPartnerDialog
+        open={deliveryOpen}
+        onOpenChange={setDeliveryOpen}
+        onCreated={createDeliveryPartner}
+      />
     </div>
   );
 }

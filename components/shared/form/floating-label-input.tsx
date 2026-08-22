@@ -14,7 +14,7 @@ interface FloatingLabelInputProps
 const FloatingLabelInput = React.forwardRef<
   HTMLInputElement,
   FloatingLabelInputProps
->(({ className, label, icon, id, type, error, ...props }, ref) => {
+>(({ className, label, icon, id, type, error, placeholder, ...props }, ref) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const [hasValue, setHasValue] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -64,6 +64,9 @@ const FloatingLabelInput = React.forwardRef<
               else if (ref) ref.current = node;
             }}
             type={resolvedType}
+            // Held back until the label has floated clear, or the two sit on
+            // the same line and read as one garbled string.
+            placeholder={isFloating ? placeholder : undefined}
             className={cn(
               "w-full bg-transparent text-base outline-none",
               isFloating ? "pt-4" : "pt-0"
