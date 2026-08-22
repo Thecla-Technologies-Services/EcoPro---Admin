@@ -75,6 +75,7 @@ const navItems = [
     icon: IoFileTrayFullOutline,
     label: "Roles & Permissions",
     href: "/roles-permissions",
+    fullLabel: "Roles & Permissions",
   },
 ];
 
@@ -98,7 +99,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-4 md:space-y-6 overflow-auto max-h-[70vh]">
+            <SidebarMenu className="space-y-2 md:space-y-3">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (

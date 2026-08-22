@@ -89,6 +89,13 @@ export async function createSession(auth: AuthResponseDto) {
       ...baseCookieOptions,
       expires,
     });
+  } else {
+    // A session with no refresh token is a dead end: it works until the JWT
+    // expires and then every request 401s with nothing to exchange. Say so at
+    // sign-in rather than letting it surface as a random mid-session stall.
+    console.warn(
+      "[auth] sign-in returned no refreshToken; this session cannot be refreshed"
+    );
   }
 
   cookieStore.set(SESSION_COOKIE, JSON.stringify(toSessionPayload(auth)), {
@@ -112,6 +119,50 @@ export async function createSession(auth: AuthResponseDto) {
     ...baseCookieOptions,
     expires,
   });
+}
+
+/**
+ * Rewrites the session cookies after a refresh.
+ *
+ * Deliberately not `createSession`: the refresh endpoint is only contracted to
+ * return a token pair, so a response that omits the profile fields must leave
+ * the ones we already hold alone rather than blanking the admin's name, role
+ * and permissions halfway through the day.
+ */
+async function updateSessionTokens(auth: AuthResponseDto, token: string) {
+  const expires = resolveSessionExpiry(auth.refreshTokenExpiryTime);
+  const cookieStore = await cookies();
+
+  cookieStore.set(TOKEN_COOKIE, token, { ...baseCookieOptions, expires });
+
+  // Rotation is upstream's choice; keep the existing token when none comes back.
+  if (auth.refreshToken) {
+    cookieStore.set(REFRESH_TOKEN_COOKIE, auth.refreshToken, {
+      ...baseCookieOptions,
+      expires,
+    });
+  }
+
+  // Take the refreshed profile when there is one, otherwise re-stamp what we
+  // hold so these cookies never outlive — or die before — their tokens.
+  const profile = auth.email
+    ? JSON.stringify(toSessionPayload(auth))
+    : cookieStore.get(SESSION_COOKIE)?.value;
+
+  if (profile) {
+    cookieStore.set(SESSION_COOKIE, profile, { ...baseCookieOptions, expires });
+  }
+
+  const permissions = auth.permissions
+    ? JSON.stringify(auth.permissions)
+    : cookieStore.get(PERMISSIONS_COOKIE)?.value;
+
+  if (permissions && permissions.length <= MAX_COOKIE_BYTES) {
+    cookieStore.set(PERMISSIONS_COOKIE, permissions, {
+      ...baseCookieOptions,
+      expires,
+    });
+  }
 }
 
 export async function getToken() {
@@ -169,8 +220,11 @@ export async function deleteSession() {
  * would tear down the session that was just refreshed. Keying by token means
  * two different admins served by this instance never share a result. This
  * de-dupes within one server process, which is where the burst originates.
+ *
+ * The cached value is the API response only — never a cookie write. See
+ * `refreshSession`.
  */
-const pendingRefreshes = new Map<string, Promise<string | null>>();
+const pendingRefreshes = new Map<string, Promise<AuthResponseDto | null>>();
 
 /**
  * Exchanges the refresh token for a new JWT. Returns the new token, or null if
@@ -182,35 +236,59 @@ export async function refreshSession(): Promise<string | null> {
   const accessToken = cookieStore.get(TOKEN_COOKIE)?.value;
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
 
-  if (!accessToken || !refreshToken) return null;
+  // A token cookie with no refresh cookie beside it is unrecoverable. Leaving
+  // it in place is what strands the dashboard: the proxy gate keeps admitting
+  // the request, and every API call 401s until someone signs out by hand.
+  if (!accessToken || !refreshToken) {
+    await deleteSession();
+    return null;
+  }
 
-  const inFlight = pendingRefreshes.get(refreshToken);
-  if (inFlight) return inFlight;
+  let exchange = pendingRefreshes.get(refreshToken);
 
-  const exchange = exchangeRefreshToken(accessToken, refreshToken).finally(() => {
-    pendingRefreshes.delete(refreshToken);
-  });
+  if (!exchange) {
+    exchange = exchangeRefreshToken(accessToken, refreshToken).finally(() => {
+      pendingRefreshes.delete(refreshToken);
+    });
+    pendingRefreshes.set(refreshToken, exchange);
+  }
 
-  pendingRefreshes.set(refreshToken, exchange);
-  return exchange;
+  const auth = await exchange;
+
+  // Only the *response* is shared. The cookie writes happen here, per caller,
+  // because `cookies()` resolves against the request that is running now: were
+  // they done inside the shared promise they would land on the response of
+  // whichever request happened to start the exchange, and every other request —
+  // and the browser, if that one request is cancelled — would be left holding a
+  // refresh token upstream has already rotated away.
+  if (!auth?.token) {
+    await deleteSession();
+    return null;
+  }
+
+  await updateSessionTokens(auth, auth.token);
+  return auth.token;
 }
 
+/**
+ * The bare exchange: no cookie writes, so the result is safe to share between
+ * concurrent callers. Returns null when the refresh token is no longer accepted.
+ */
 async function exchangeRefreshToken(
   accessToken: string,
   refreshToken: string
-): Promise<string | null> {
+): Promise<AuthResponseDto | null> {
   const result = await apiRequest<AuthResponseDto>("/api/auth/refresh-token", {
     method: "POST",
     body: { accessToken, refreshToken },
   });
 
   if (!result.isSuccess || !result.data?.token) {
-    await deleteSession();
+    console.warn(`[auth] refresh rejected: ${result.message ?? "no token returned"}`);
     return null;
   }
 
-  await createSession(result.data);
-  return result.data.token;
+  return result.data;
 }
 
 export async function setPendingLoginEmail(email: string) {

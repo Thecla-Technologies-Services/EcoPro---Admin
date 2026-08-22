@@ -19,10 +19,7 @@ export async function forwardToApi(
   const token = await getToken();
 
   if (!token) {
-    return NextResponse.json(
-      { isSuccess: false, message: "Not authenticated." },
-      { status: 401 }
-    );
+    return unauthorized("Not authenticated.");
   }
 
   const target = `${API_BASE_URL}${prefix}/${segments
@@ -41,16 +38,20 @@ export async function forwardToApi(
     await upstream.body?.cancel();
 
     // refreshSession() de-dupes concurrent exchanges for the same token.
-    const refreshedToken = await refreshSession();
+    // Anything it throws has to become a 401 rather than escaping as a 500: the
+    // client can only recognise an expired session from a 401, so a 500 here
+    // leaves the query parked in an error state that never signs the admin out
+    // and never retries.
+    let refreshedToken: string | null = null;
+
+    try {
+      refreshedToken = await refreshSession();
+    } catch (reason) {
+      console.error("[api] token refresh failed", reason);
+    }
 
     if (!refreshedToken) {
-      return NextResponse.json(
-        {
-          isSuccess: false,
-          message: "Your session has expired. Please sign in again.",
-        },
-        { status: 401 }
-      );
+      return unauthorized("Your session has expired. Please sign in again.");
     }
 
     upstream = await forward(target, request, refreshedToken, body);
@@ -63,6 +64,19 @@ export async function forwardToApi(
       "content-type": upstream.headers.get("content-type") ?? "application/json",
     },
   });
+}
+
+/**
+ * `statusCode` is spelled out because that is what the client keys its
+ * sign-out on; leaving it to be inferred from the HTTP status is one indirection
+ * away from a session that fails silently instead of returning to the login
+ * screen.
+ */
+function unauthorized(message: string) {
+  return NextResponse.json(
+    { isSuccess: false, statusCode: "Unauthorized", message, data: null },
+    { status: 401 }
+  );
 }
 
 function forward(

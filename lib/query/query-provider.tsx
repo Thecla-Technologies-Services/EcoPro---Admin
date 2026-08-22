@@ -10,6 +10,7 @@ import {
   isServer,
 } from "@tanstack/react-query";
 import { ApiError, isUnauthorized } from "@/lib/api/errors";
+import { logout } from "@/app/actions/auth";
 
 const LOGIN_ROUTE = "/";
 
@@ -66,10 +67,24 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // A page usually has several queries in flight, and a rejected session
+    // fails all of them; sign out on the first one only.
+    let signingOut = false;
+
     handleUnauthorized = () => {
+      if (signingOut) return;
+      signingOut = true;
+
       queryClient.clear();
-      router.replace(LOGIN_ROUTE);
-      router.refresh();
+
+      // Clear the cookies server-side *before* navigating. Redirecting on its
+      // own is a no-op while a token cookie survives: the proxy gate sends any
+      // signed-in visitor from the login route straight back to the dashboard,
+      // stranding the admin in a shell whose every query fails.
+      void logout().finally(() => {
+        router.replace(LOGIN_ROUTE);
+        router.refresh();
+      });
     };
 
     return () => {
