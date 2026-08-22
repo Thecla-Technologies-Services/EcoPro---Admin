@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Eye, Clock, Package } from "lucide-react";
-import { Listing } from "@/types/listings";
+import { Listing } from "@/types/listing";
 import { StatusBadge } from "@/components/shared/status-badge";
 import ListingActionMenu from "./listing-action";
 

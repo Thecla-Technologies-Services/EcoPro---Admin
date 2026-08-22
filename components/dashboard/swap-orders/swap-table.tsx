@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
-import { type Order, type OrderStatus } from "@/types/order-swap";
+import { type Order, type OrderStatus } from "@/types/order";
 import { ORDERS } from "@/data/swap";
 import OrderDetailDialog from "./order-detail-dialog";
 import {

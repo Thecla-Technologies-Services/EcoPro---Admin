@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { type BadgeStatus } from "@/types/order-swap";
+import { type BadgeStatus } from "@/types/order";
 
 const badgeVariants = {
   blue: { bg: "bg-blue-50", text: "text-blue-600" },

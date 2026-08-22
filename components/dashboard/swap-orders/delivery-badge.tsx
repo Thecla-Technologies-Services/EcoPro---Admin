@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { type DeliveryType } from "@/types/order-swap";
+import { type DeliveryType } from "@/types/order";
 
 export default function DeliveryBadge({ type }: { type: DeliveryType }) {
   const color = type === "Doorstep Delivery" ? "text-blue-500 border-blue-200 bg-blue-50"

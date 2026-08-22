@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
-import { type OrderStatus } from "@/types/order-swap";
+import { type OrderStatus } from "@/types/order";
 import { DataTable } from "@/components/shared/data-table";
 import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
 import { RowActions } from "@/components/shared/row-actions";

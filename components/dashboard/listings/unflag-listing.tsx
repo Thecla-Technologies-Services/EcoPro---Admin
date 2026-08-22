@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Flag } from "lucide-react";
 import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
 import { toErrorMessage } from "@/lib/api/errors";
-import type { Listing } from "@/types/listings";
+import type { Listing } from "@/types/listing";
 
 interface UnflagListingDialogProps {
   open: boolean;

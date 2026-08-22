@@ -3,7 +3,7 @@ import DeliveryBadge from "./delivery-badge";
 import { StatusBadge } from "../../shared/status-badge";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { type Order } from "@/types/order-swap";
+import { type Order } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonCard } from "@/components/shared/person-card";
 

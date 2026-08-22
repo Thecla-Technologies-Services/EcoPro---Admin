@@ -1,4 +1,4 @@
-import { type DeliveryType, type Order, type OrderStatus, type TrackingStep } from "@/types/order-swap";
+import { type DeliveryType, type Order, type OrderStatus, type TrackingStep } from "@/types/order";
 const DOORSTEP_STEPS: TrackingStep[] = [
   { label: "Order Placed", status: "done" },
   { label: "Deposit Secured", status: "done" },

@@ -1,4 +1,4 @@
-import type { Listing } from "@/types/listings";
+import type { Listing } from "@/types/listing";
 import type {
   AdminListingItemDto,
   ItemCondition,
