@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCountUp } from "@/hooks/animations/useCountUp";
+import { useCountUp } from "@/hooks/animations/use-count-up";
 import type { DashboardPendingCountersDto } from "@/types/api/admin";
 
 interface SideStatProps {
