@@ -34,8 +34,8 @@ const navItems = [
   { icon: HiOutlineQueueList, label: "Listing", href: "/listings" },
   {
     icon: HiOutlineCheckBadge,
-    label: "Verification",
-    href: "/verification",
+    label: "Independent Riders",
+    href: "/independent-riders",
   },
   {
     icon: IoDocumentTextOutline,

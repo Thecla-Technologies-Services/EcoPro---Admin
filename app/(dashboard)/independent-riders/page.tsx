@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Package, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 import { IoCartOutline } from "react-icons/io5";
 import { HiOutlineDocumentCheck } from "react-icons/hi2";
 import { PageHeader } from "@/components/shared/page-header";
@@ -17,8 +17,9 @@ import { toVerificationQueue } from "@/lib/adapters/verification";
 
 /**
  * Stands in for counters the Admin API does not expose. Only the two pending
- * queues are readable — there is no endpoint for approved or rejected history,
- * so those cards show a placeholder rather than a number we cannot source.
+ * queues are readable — there is no endpoint for application totals or for
+ * approved and rejected history, so these cards show a placeholder rather than
+ * a number we cannot source.
  */
 const UNAVAILABLE = "—";
 
@@ -39,10 +40,6 @@ export default function VerificationPage() {
       ? riders
       : null;
 
-  const pendingCount = rows.filter(
-    (row) => row.status === "Pending Review",
-  ).length;
-
   const isPending = organizations.isPending || riders.isPending;
 
   const retry = () => {
@@ -54,27 +51,22 @@ export default function VerificationPage() {
     <div className="space-y-6 w-full overflow-x-hidden">
       <PageHeader>
         <PageHeader.Heading>
-          <PageHeader.Title>Verification Queue</PageHeader.Title>
+          <PageHeader.Title>Independent Riders</PageHeader.Title>
           <PageHeader.Description>
-            Review and approve partner applications
+            View independent rider applications
           </PageHeader.Description>
         </PageHeader.Heading>
       </PageHeader>
 
-      {/* Only the pending figure is fetched; the placeholder cards have nothing
-          in flight, so showing them a skeleton would promise a number that is
-          never coming. */}
-      <StatGrid>
+      {/* None of these figures are fetched, so the cards have nothing in
+          flight — a skeleton would promise a number that is never coming. */}
+      {/* Three cards, so the shared 2-up-below-lg grid would leave a hole:
+          stack them full-width on phones and go straight to 3-up at md. */}
+      <StatGrid columns={3} className="grid-cols-1 md:grid-cols-3">
         <SharedStatCard
           label="Total Applications"
           value={UNAVAILABLE}
           icon={IoCartOutline}
-        />
-        <SharedStatCard
-          label="Pending Review"
-          value={pendingCount}
-          icon={Package}
-          isLoading={isPending}
         />
         <SharedStatCard label="Approved" value={UNAVAILABLE} icon={Truck} />
         <SharedStatCard

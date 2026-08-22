@@ -58,7 +58,7 @@ export function SideStats({ counters, isLoading }: SideStatsProps) {
         number={counters?.pendingVerificationsCount ?? 0}
         label="Pending Verifications"
         actionLabel="Review Now"
-        href="/verification"
+        href="/independent-riders"
       />
       <SideStat
         number={counters?.withdrawalRequestsCount ?? 0}

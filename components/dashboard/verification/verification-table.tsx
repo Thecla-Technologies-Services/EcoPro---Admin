@@ -179,7 +179,7 @@ export default function VerificationTable({
                   setDialogOpen(true);
                 }}
               >
-                View Details
+                View Account
               </RowActions.Item>
             </RowActions>
           );
