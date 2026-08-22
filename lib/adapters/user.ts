@@ -4,6 +4,7 @@ import type {
   AdminUserSummaryDto,
   UserDto,
 } from "@/types/api/admin";
+import { humanise, toLabel } from "@/lib/adapters/shared";
 
 /**
  * The dashboard's role labels and the API's role names are different
@@ -25,8 +26,7 @@ const ROLE_LABELS: Record<string, UserRole> = {
 };
 
 export function toRoleLabel(role: string | null | undefined): UserRole | string {
-  if (!role) return "Individual";
-  return ROLE_LABELS[role.replace(/[\s_-]/g, "").toLowerCase()] ?? role;
+  return toLabel(ROLE_LABELS, role, "Individual");
 }
 
 /**
@@ -190,7 +190,7 @@ export function toLocation(dto: UserDto | undefined): string | undefined {
   const parts = [
     dto?.address,
     dto?.state,
-    dto?.country?.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
+    dto?.country ? humanise(dto.country) : undefined,
     dto?.postalCode,
   ]
     .map((part) => part?.trim())

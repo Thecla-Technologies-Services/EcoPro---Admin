@@ -9,26 +9,12 @@ import type {
   ApplicantDocument,
   ApplicantStatus,
 } from "@/types/verification";
-
-const PLACEHOLDER = "—";
+import { PLACEHOLDER, formatDate, humanise, toLabel } from "@/lib/adapters/shared";
 
 /** Rows with no submission date sort last rather than being dropped. */
 function toTime(iso: string | null | undefined): number {
   const time = iso ? new Date(iso).getTime() : NaN;
   return Number.isNaN(time) ? -Infinity : time;
-}
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return PLACEHOLDER;
-
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return PLACEHOLDER;
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 /**
@@ -49,13 +35,7 @@ const STATUS_LABELS: Record<string, ApplicantStatus> = {
 };
 
 function toStatus(status: string | null | undefined): ApplicantStatus | string {
-  if (!status) return "Pending Review";
-  return STATUS_LABELS[status.replace(/[\s_-]/g, "").toLowerCase()] ?? status;
-}
-
-/** Splits a PascalCase API token ("DriversLicense") into words for display. */
-function humanise(value: string): string {
-  return value.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  return toLabel(STATUS_LABELS, status, "Pending Review");
 }
 
 /**
