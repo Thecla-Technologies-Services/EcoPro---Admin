@@ -99,8 +99,13 @@ Wallet (overview, escrow), donations, marketing, analytics and swap-orders read
 from `data/`, as do the stat cards on disputes, swap-orders, donations,
 analytics and marketing — those figures are placeholders, not live metrics.
 
-Three are behind a seam already, and going live is a one-word edit for each:
-withdrawal requests and disputes through `useFixturePanel`, and the
+Marketing goes further than unwired: campaigns reach no endpoint at all — no
+DTO, no query key, no hook — so its Pause and Delete confirm, then fail with a
+message saying why. Proving that absence takes a repo-wide search, so take it
+from here rather than re-running one.
+
+Three modules are behind a seam already, and going live is a one-word edit for
+each: withdrawal requests and disputes through `useFixturePanel`, and the
 verification queue through `useVerificationQueue({ source: "fixture" })`
 (`hooks/admin/use-verification-queue.ts`), which is not a list panel — it is a
 selection and two decisions over a queue joined from three endpoints. The rest
