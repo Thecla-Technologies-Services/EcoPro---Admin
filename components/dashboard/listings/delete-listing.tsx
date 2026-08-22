@@ -49,7 +49,10 @@ export function DeleteListingDialog({
   return (
     <>
       <Dialog key={listing?.id} open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-sm gap-0 p-0 overflow-hidden"
+        >
           <DialogClose className="absolute right-4 top-4 z-10 text-white bg-black/30 rounded-full size-6 flex items-center justify-center hover:bg-black/50 transition-colors">
             <X className="size-3" />
           </DialogClose>

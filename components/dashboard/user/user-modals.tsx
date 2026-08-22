@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,6 +27,24 @@ interface UserActionModalsProps {
 
 
 
+/**
+ * These modals stay mounted for the life of the row, so their confirm → success
+ * state outlives the flow it tracks: without this, a modal reopens on the
+ * success screen it was left on. Clearing on open rather than on close keeps
+ * the success copy on screen through the dialog's exit animation.
+ */
+function useResetOnOpen(open: boolean, reset: () => void) {
+  // Held in a ref so only `open` drives the effect — depending on the callback
+  // itself would re-run it on every render and clear the success state as soon
+  // as the mutation set it.
+  const latest = useRef(reset);
+  latest.current = reset;
+
+  useEffect(() => {
+    if (open) latest.current();
+  }, [open]);
+}
+
 function UserAvatar({ user }: { user: User }) {
   return (
     <Avatar className="size-20 mb-5">
@@ -52,9 +70,10 @@ function SuspendModal({
   const [confirmed, setConfirmed] = useState(false);
   const suspendUser = useSuspendUser();
 
-  if (open && confirmed) {
+  useResetOnOpen(open, () => {
     setConfirmed(false);
-  }
+    suspendUser.reset();
+  });
 
   const handleSuspend = () => {
     // SuspendUserRequestDto accepts an optional `reason`, which this dialog
@@ -136,6 +155,11 @@ function UnsuspendModal({
 }) {
   const [confirmed, setConfirmed] = useState(false);
   const unsuspendUser = useUnsuspendUser();
+
+  useResetOnOpen(open, () => {
+    setConfirmed(false);
+    unsuspendUser.reset();
+  });
 
   const handleUnsuspend = () => {
     unsuspendUser.mutate(user.id, { onSuccess: () => setConfirmed(true) });
@@ -228,10 +252,17 @@ function DeleteModal({
   const {
     register,
     handleSubmit,
+    reset: resetForm,
     formState: { errors, isValid },
   } = useForm<DeleteForm>({
     defaultValues: { email: user.email },
     resolver: zodResolver(deleteSchema),
+  });
+
+  useResetOnOpen(open, () => {
+    setConfirmed(false);
+    deleteUser.reset();
+    resetForm();
   });
 
   const onSubmit = (data: DeleteForm) => {

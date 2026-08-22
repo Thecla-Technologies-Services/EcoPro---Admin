@@ -134,13 +134,23 @@
 }
 
 .loader {
-  color: #fff;
+  /* Inherit the button's text colour — a hardcoded white dot vanishes on
+     outline, ghost and other light-background buttons. */
+  color: currentColor;
   font-size: 7px;
   position: relative;
   display: inline-block;
   text-indent: -9999em;
-  transform: translateZ(0);
+  /* The dots are box-shadows offset 1em below this box (an outer shadow is
+     clipped inside its own border-box, so the offset is what makes them
+     visible at all). Lift the box by that 1em so the dots paint on the centre
+     line — a transform moves the paint without disturbing layout. */
+  transform: translateY(-1em) translateZ(0);
   animation-delay: -0.16s;
+  /* The :before / :after dots sit 1.5em outside this 1em-wide box, so the
+     cluster is really 4em across. Reserve that, symmetrically, or the outer
+     dots overlap whatever sits beside the loader. */
+  margin-inline: 1.5em;
 }
 
 .loader:before,
