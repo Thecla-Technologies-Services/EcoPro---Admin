@@ -5,7 +5,6 @@ export const API_BASE_URL =
 
 interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
-  /** Bearer token to send with the request. */
   token?: string;
 }
 
