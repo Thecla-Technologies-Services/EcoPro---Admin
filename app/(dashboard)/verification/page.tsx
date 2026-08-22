@@ -20,7 +20,7 @@ import {
   toRejectionReason,
   toVerificationQueue,
 } from "@/lib/adapters/verification";
-import { FIXTURE_QUEUE } from "@/data/verification";
+import { APPLICANTS } from "@/data/applicants";
 
 export default function VerificationPage() {
   const organizations = usePendingOrganizations();
@@ -43,7 +43,7 @@ export default function VerificationPage() {
    * that cannot be reviewed says so instead of reporting a success that never
    * happened.
    */
-  const rows = FIXTURE_QUEUE;
+  const rows = APPLICANTS;
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);

@@ -49,7 +49,7 @@ const NAMES = [
  * Twelve pending applications, alternating between the two account types so both
  * badge styles and both document layouts are on screen.
  */
-export const FIXTURE_QUEUE: Applicant[] = NAMES.map((name, index) => {
+export const APPLICANTS: Applicant[] = NAMES.map((name, index) => {
   const isOrganization = index % 2 === 0;
 
   return {

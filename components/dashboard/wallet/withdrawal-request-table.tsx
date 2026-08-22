@@ -6,7 +6,7 @@ import { Eye, CheckCircle, XCircle } from "lucide-react";
 import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
 import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
-import { WITHDRAWAL_REQUESTS } from "@/data/withdrawals";
+import { WITHDRAWAL_REQUESTS } from "@/data/withdrawal-requests";
 import DateRangeFilter from "@/components/shared/date/date-range-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ViewWithdrawalDialog } from "./view-withdrawal-dialog";

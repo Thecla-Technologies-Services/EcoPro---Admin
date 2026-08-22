@@ -6,7 +6,7 @@ import { Play, Eye, TrendingUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalyticsDialog } from "@/components/dashboard/marketing/marketing-analytics";
 import { CampaignsTable } from "@/components/dashboard/marketing/marketing-table";
-import { SAMPLE_CAMPAIGNS } from "@/data/marketing";
+import { CAMPAIGNS } from "@/data/campaigns";
 import type { Campaign, CampaignStatus } from "@/types/marketing";
 import { FadeIn } from "@/components/motion/fade-in";
 import SharedStatCard from "@/components/shared/stat-card";
@@ -49,7 +49,7 @@ function StatCards() {
 
 export default function MarketingPage() {
   const [campaigns, setCampaigns] =
-    React.useState<Campaign[]>(SAMPLE_CAMPAIGNS);
+    React.useState<Campaign[]>(CAMPAIGNS);
   const [analyticsOpen, setAnalyticsOpen] = React.useState(false);
   const [selectedCampaign, setSelectedCampaign] =
     React.useState<Campaign | null>(null);

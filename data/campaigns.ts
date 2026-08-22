@@ -4,7 +4,7 @@ import type { Campaign } from "@/types/marketing";
  * Six campaigns covering all four statuses, so every badge style and the
  * pause/delete row actions are reachable while the endpoints are unwired.
  */
-export const SAMPLE_CAMPAIGNS: Campaign[] = [
+export const CAMPAIGNS: Campaign[] = [
   {
     id: "1",
     campaignName: "Easy Laundry Campaign",

@@ -1,6 +1,6 @@
 import type { DeliveryPartnerOrder } from "@/types/user";
 
-export const deliveryPartnerOrders: DeliveryPartnerOrder[] = [
+export const DELIVERY_PARTNER_ORDERS: DeliveryPartnerOrder[] = [
   {
     id: "ORD-001",
     itemName: "Office Chair",

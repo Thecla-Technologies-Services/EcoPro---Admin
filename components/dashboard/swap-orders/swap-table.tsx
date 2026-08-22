@@ -5,7 +5,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
 import { type Order, type OrderStatus } from "@/types/order";
-import { ORDERS } from "@/data/swap";
+import { ORDERS } from "@/data/orders";
 import OrderDetailDialog from "./order-detail-dialog";
 import {
   DataTable } from "@/components/shared/data-table"; // ← reusable component

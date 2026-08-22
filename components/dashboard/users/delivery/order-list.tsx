@@ -5,15 +5,15 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { FilterPills, ListingTypeBadge } from "../pills";
 import type { ListingFilter } from "@/types/user";
-import { deliveryPartnerOrders } from "@/data/user";
+import { DELIVERY_PARTNER_ORDERS } from "@/data/delivery-partner-orders";
 
 export function OrderList() {
   const [filter, setFilter] = useState<ListingFilter>("All");
 
   const displayed =
     filter === "All"
-      ? deliveryPartnerOrders
-      : deliveryPartnerOrders.filter((l) => l.status === filter);
+      ? DELIVERY_PARTNER_ORDERS
+      : DELIVERY_PARTNER_ORDERS.filter((l) => l.status === filter);
 
   return (
     <div className="space-y-4">
