@@ -98,12 +98,25 @@ const contactNGODetailsShape = {
     .regex(/^\+?[0-9]{10,14}$/, "Enter a valid phone number"),
 };
 
+// An NGO's second step asks for the organisation's address and its
+// verification documents — not the bank and CAC fields a delivery partner
+// needs — so it has its own shape rather than reusing `documentsShape`.
+const ngoDocumentsShape = {
+  organizationAddress: z.string().min(2, "Enter the organisation's address"),
+  postalCode: z.string().min(3, "Enter the postal code"),
+  documents: z.array(z.instanceof(File)),
+  existingDocuments: z.array(
+    z.object({ id: z.string(), name: z.string(), url: z.string() }),
+  ),
+};
+
 export const contactNGODetailsSchema = z.object(contactNGODetailsShape);
+export const ngoDocumentsSchema = z.object(ngoDocumentsShape);
 
 export const ngoFormSchema = z
   .object({
-    ...contactDetailsShape,
-    ...documentsShape,
+    ...contactNGODetailsShape,
+    ...ngoDocumentsShape,
   })
   .superRefine((values, ctx) => {
     if (
@@ -118,7 +131,7 @@ export const ngoFormSchema = z
     }
   });
 
-export type ContactNGODetailsValues = z.infer<typeof contactDetailsSchema>;
+export type ContactNGODetailsValues = z.infer<typeof contactNGODetailsSchema>;
 export type NgoFormSchema = z.infer<typeof ngoFormSchema>;
 
 export type ContactDetailsValues = z.infer<typeof contactDetailsSchema>;

@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, X } from "lucide-react";
-import { useForm , type Resolver } from "react-hook-form";
-import { zodResolver} from "@hookform/resolvers/zod";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ChevronLeft } from "lucide-react";
+import { useForm, type Resolver } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { DeliveryPartnerStepper } from "../stepper";
+import { FormStepper } from "../stepper";
 import { ContactDetailsStep } from "./steps/contact-details-step";
 import { DocumentsStep } from "./steps/document-step";
 import { LocationStep } from "./steps/location-step";
@@ -15,6 +21,7 @@ import {
   RiderCreatedManualVerifyDialog,
 } from "./rider-created-dialogs";
 import { deliveryPartnerFormSchema } from "@/lib/validations/user";
+import { toErrorMessage } from "@/lib/api/errors";
 import { DELIVERYSTEPS, generateRiderPassword } from "@/constants/user";
 import type {
   AccountValidationStatus,
@@ -73,7 +80,12 @@ const DEFAULT_VALUES: DeliveryPartnerFormValues = {
 interface CreateDeliveryPartnerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (values: DeliveryPartnerFormValues) => void;
+  /**
+   * Persists the partner. The success dialogs are shown only once this
+   * resolves — a rejection keeps the form on its last step and puts the
+   * reason under it, rather than announcing a rider that was never created.
+   */
+  onCreated: (values: DeliveryPartnerFormValues) => Promise<void>;
 }
 
 export function CreateDeliveryPartnerDialog({
@@ -104,6 +116,8 @@ function CreateDeliveryPartnerDialogInner({
   );
   const [credentials, setCredentials] =
     useState<CreatedRiderCredentials | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
@@ -113,7 +127,9 @@ function CreateDeliveryPartnerDialogInner({
     watch,
     formState: { errors },
   } = useForm<DeliveryPartnerFormValues>({
-    resolver: zodResolver(deliveryPartnerFormSchema) as Resolver<DeliveryPartnerFormValues>,
+    resolver: zodResolver(
+      deliveryPartnerFormSchema,
+    ) as Resolver<DeliveryPartnerFormValues>,
     defaultValues: DEFAULT_VALUES,
     mode: "onSubmit",
   });
@@ -139,11 +155,22 @@ function CreateDeliveryPartnerDialogInner({
 
   function goBack() {
     if (stepIndex === 0) return;
+    setSubmitError(null);
     setStep(STEP_ORDER[stepIndex - 1]);
   }
 
-  function onSubmit(values: DeliveryPartnerFormValues) {
-    onCreated(values);
+  async function onSubmit(values: DeliveryPartnerFormValues) {
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      await onCreated(values);
+    } catch (error) {
+      setSubmitError(toErrorMessage(error));
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
+
     if (values.verifyEmailAutomatically) {
       setSuccessStage("auto");
     } else {
@@ -161,80 +188,94 @@ function CreateDeliveryPartnerDialogInner({
         open={open && successStage === "none"}
         onOpenChange={onOpenChange}
       >
-        <DialogContent showCloseButton={false} className="max-w-md gap-6 p-6">
-          <div className="flex items-center gap-2">
+        {/* 580px wide, per the Create New Delivery Partner frame. The `sm:`
+            prefix is what beats DialogContent's own `sm:max-w-sm` default. */}
+        <DialogContent
+          showCloseButton={false}
+          className="gap-0 overflow-hidden p-0 sm:max-w-[580px]"
+        >
+          <div className="flex items-center gap-2 border-b border-border px-6 py-5">
             {stepIndex > 0 && (
               <button
                 type="button"
                 onClick={goBack}
                 aria-label="Back"
-                className="text-neutral-500"
+                className="text-muted-foreground hover:text-foreground"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="size-5" />
               </button>
             )}
-            <h2 className="flex-1 text-base font-semibold text-neutral-900">
+            <DialogTitle className="text-lg font-semibold">
               Create New Delivery Partner
-            </h2>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              aria-label="Close"
-              className="text-neutral-400"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            </DialogTitle>
+            <DialogClose className="text-muted-foreground hover:text-foreground" />
           </div>
 
-          <DeliveryPartnerStepper
-            STEPS={DELIVERYSTEPS}
-            current={step}
-          />
+          {/* Radix warns when a dialog has no description; the steps are on
+              screen, so this is for screen readers only. */}
+          <DialogDescription className="sr-only">
+            Create a delivery partner in three steps: contact details,
+            documents, then location.
+          </DialogDescription>
 
-          <div className="max-h-[60vh] overflow-y-auto pr-1">
-            {step === "contact" && (
-              <ContactDetailsStep control={control} errors={errors} />
-            )}
-            {step === "documents" && (
-              <DocumentsStep
-                control={control}
-                errors={errors}
-                setValue={setValue}
-                documents={documents}
-                existingDocuments={existingDocuments}
-                bankAccountNumber={bankAccountNumber}
-                validationStatus={validationStatus}
-                onValidationStatusChange={(status, holderName) => {
-                  setValidationStatus(status);
-                  if (holderName) setValue("accountHolderName", holderName);
-                }}
-              />
-            )}
-            {step === "location" && (
-              <LocationStep
-                control={control}
-                errors={errors}
-                setValue={setValue}
-                country={country}
-                state={state}
-              />
-            )}
-          </div>
+          <div className="space-y-6 px-6 py-5">
+            <FormStepper STEPS={DELIVERYSTEPS} current={step} />
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => (stepIndex === 0 ? onOpenChange(false) : goBack())}
-            >
-              {stepIndex === 0 ? "Cancel" : "Back"}
-            </Button>
-            <Button
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-              onClick={goNext}
-            >
-              {step === "location" ? "Create User" : "Continue"}
-            </Button>
+            <div className="max-h-[55vh] overflow-y-auto pr-1">
+              {step === "contact" && (
+                <ContactDetailsStep control={control} errors={errors} />
+              )}
+              {step === "documents" && (
+                <DocumentsStep
+                  control={control}
+                  errors={errors}
+                  setValue={setValue}
+                  documents={documents}
+                  existingDocuments={existingDocuments}
+                  bankAccountNumber={bankAccountNumber}
+                  validationStatus={validationStatus}
+                  onValidationStatusChange={(status, holderName) => {
+                    setValidationStatus(status);
+                    if (holderName) setValue("accountHolderName", holderName);
+                  }}
+                />
+              )}
+              {step === "location" && (
+                <LocationStep
+                  control={control}
+                  errors={errors}
+                  setValue={setValue}
+                  country={country}
+                  state={state}
+                />
+              )}
+            </div>
+
+            {submitError && (
+              <p role="alert" className="text-sm text-destructive">
+                {submitError}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                className="flex-1 rounded-full"
+                onClick={() =>
+                  stepIndex === 0 ? onOpenChange(false) : goBack()
+                }
+                disabled={isSubmitting}
+              >
+                {stepIndex === 0 ? "Cancel" : "Back"}
+              </Button>
+              <Button
+                className="flex-1 rounded-full bg-primary text-white"
+                onClick={goNext}
+                isLoading={isSubmitting}
+              >
+                {step === "location" ? "Create User" : "Continue"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

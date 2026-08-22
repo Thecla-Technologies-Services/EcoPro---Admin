@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Download, Trash2, Upload, Info } from "lucide-react";
+import { Download, Plus, Trash2, Upload, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DeliveryPartnerDocument } from "@/types/user";
 
@@ -29,6 +30,8 @@ export function DocumentUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  const hasFiles = existingDocuments.length > 0 || newFiles.length > 0;
+
   function handleFiles(fileList: FileList | null) {
     if (!fileList) return;
     const valid = Array.from(fileList).filter(
@@ -44,9 +47,10 @@ export function DocumentUpload({
         Upload Verification Document
       </p>
 
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
+      {/* The drop zone is a div carrying its own button rather than being one
+          itself: the field takes more than one document, and the button is
+          what says so — a whole-panel button cannot hold a nested one. */}
+      <div
         onDragOver={(event) => {
           event.preventDefault();
           setIsDragging(true);
@@ -61,7 +65,7 @@ export function DocumentUpload({
           "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors",
           isDragging
             ? "border-emerald-500 bg-emerald-50"
-            : "border-neutral-200 hover:bg-neutral-50",
+            : "border-neutral-200",
           error && "border-red-300",
         )}
       >
@@ -74,7 +78,21 @@ export function DocumentUpload({
         <span className="text-xs text-neutral-400">
           PDF, JPG or PNG — Max 5mb
         </span>
-      </button>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-1 rounded-full"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Plus className="size-4" />
+          {hasFiles ? "Add Another Document" : "Choose Files"}
+        </Button>
+        <span className="text-xs text-neutral-400">
+          You can upload more than one file
+        </span>
+      </div>
 
       <input
         ref={inputRef}
@@ -82,7 +100,11 @@ export function DocumentUpload({
         multiple
         accept={ACCEPTED_TYPES.join(",")}
         className="hidden"
-        onChange={(event) => handleFiles(event.target.files)}
+        onChange={(event) => {
+          handleFiles(event.target.files);
+          // Reset, or picking the same file again fires no change event.
+          event.target.value = "";
+        }}
       />
 
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -96,7 +118,7 @@ export function DocumentUpload({
         </span>
       </div>
 
-      {(existingDocuments.length > 0 || newFiles.length > 0) && (
+      {hasFiles && (
         <div className="flex flex-wrap gap-3">
           {existingDocuments.map((doc) => (
             <DocumentThumbnail

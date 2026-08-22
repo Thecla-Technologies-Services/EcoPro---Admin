@@ -1,6 +1,8 @@
 "use client";
 
-import { Camera } from "lucide-react";
+import { AtSign, Camera, Phone } from "lucide-react";
+import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
+import { IoIdCardOutline, IoPersonOutline } from "react-icons/io5";
 import Image from "next/image";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import type { DeliveryPartnerFormValues } from "@/types/user";
@@ -29,7 +31,7 @@ export function ContactDetailsStep({
             : existingImageUrl;
           return (
             <label className="flex cursor-pointer items-center gap-3">
-              <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-neutral-100">
+              <div className="relative flex size-25 items-center justify-center overflow-hidden rounded-full bg-neutral-100">
                 {previewUrl ? (
                   <Image
                     src={previewUrl}
@@ -38,7 +40,7 @@ export function ContactDetailsStep({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <Camera className="h-5 w-5 text-neutral-400" />
+                  <Camera className="size-7 text-neutral-400" />
                 )}
               </div>
               <span className="text-sm text-neutral-400">
@@ -63,6 +65,7 @@ export function ContactDetailsStep({
         render={({ field }) => (
           <FloatingLabelInput
             label="Contact Person Name"
+            icon={<IoPersonOutline className="size-5" />}
             error={errors.contactPersonName?.message}
             {...field}
           />
@@ -75,6 +78,7 @@ export function ContactDetailsStep({
         render={({ field }) => (
           <FloatingLabelInput
             label="Email Address"
+            icon={<AtSign className="size-5" />}
             error={errors.email?.message}
             {...field}
           />
@@ -87,8 +91,10 @@ export function ContactDetailsStep({
         render={({ field }) => (
           <FloatingPhoneInput
             label="Phone Number"
+            icon={<Phone className="size-5" />}
+            value={field.value}
+            onChange={field.onChange}
             error={errors.phone?.message}
-            {...field}
           />
         )}
       />
@@ -99,6 +105,7 @@ export function ContactDetailsStep({
         render={({ field }) => (
           <FloatingLabelInput
             label="Business Name"
+            icon={<HiOutlineBuildingOffice2 className="size-5" />}
             id="businessName"
             placeholder="e.g. GIG Logistics"
             error={errors.businessName?.message}
@@ -113,6 +120,7 @@ export function ContactDetailsStep({
         render={({ field }) => (
           <FloatingLabelInput
             label="UTR Number"
+            icon={<IoIdCardOutline className="size-5" />}
             error={errors.utrNumber?.message}
             {...field}
           />

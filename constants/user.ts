@@ -1,4 +1,4 @@
-import { DeliveryPartnerStep } from "@/types/user";
+import { DeliveryPartnerStep, NgoStep } from "@/types/user";
 export const NIGERIAN_BANKS = [
   "Access Bank PLC",
   "Zenith Bank",
@@ -49,4 +49,9 @@ export const DELIVERYSTEPS: { key: DeliveryPartnerStep; label: string }[] = [
   { key: "contact", label: "Contact Details" },
   { key: "documents", label: "Documents" },
   { key: "location", label: "Location" },
+];
+
+export const NGOSTEPS: { key: NgoStep; label: string }[] = [
+  { key: "contact", label: "Contact Details" },
+  { key: "documents", label: "Documents" },
 ];
