@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Package, Box } from "lucide-react";
 import { SearchDropDown } from "@/components/shared/form/search-dropdown";
 import { DateRangeFilter } from "@/components/shared/date/date-range-filter";
@@ -20,6 +20,7 @@ import { useListings } from "@/hooks/admin/use-listings";
 import { useListPanel } from "@/hooks/shared/use-list-panel";
 import type { AdminListingMetricsDto } from "@/types/api/admin";
 import { cn } from "@/lib/utils";
+import { endOfDay } from "@/lib/date";
 import type { DateRangeFilterValue } from "@/types/date";
 import {
   LISTING_TAB_PARAMS,
@@ -56,6 +57,11 @@ function filterSelectClass(unfiltered: boolean) {
 
 export default function ListingsPage() {
   const [addOpen, setAddOpen] = useState(false);
+  /**
+   * This page scrolls in its own box rather than in `main`, and the pagination
+   * sits outside that box — so paging has to be pointed at it explicitly.
+   */
+  const scrollBoxRef = useRef<HTMLDivElement>(null);
   /**
    * The picker deals in `Date`s and the panel's filters in strings, so the
    * chosen range is kept here for the trigger's label and sent to the API as
@@ -110,10 +116,10 @@ export default function ListingsPage() {
 
   const changeDateFilter = (next: DateRangeFilterValue) => {
     setDateFilter(next);
-    // The endpoint types both bounds as date-time, so the range is sent as
-    // full ISO timestamps rather than bare dates.
+    // The endpoint types both bounds as date-time, so the range is sent as full
+    // ISO timestamps rather than bare dates.
     setFilter("fromDate", next.range.from.toISOString());
-    setFilter("toDate", next.range.to.toISOString());
+    setFilter("toDate", endOfDay(next.range.to).toISOString());
   };
 
   return (
@@ -121,7 +127,10 @@ export default function ListingsPage() {
     // pagination below is simply outside that box — no sticky offsets to fight
     // with `main`'s padding.
     <div className="flex h-full w-full flex-col">
-      <div className="scrollbar-hide min-h-0 flex-1 space-y-6 overflow-y-auto pb-8">
+      <div
+        ref={scrollBoxRef}
+        className="scrollbar-hide min-h-0 flex-1 space-y-6 overflow-y-auto pb-8"
+      >
         <PageHeader>
           <PageHeader.Heading className="gap-0.5">
             <PageHeader.Title className="font-semibold">
@@ -176,7 +185,10 @@ export default function ListingsPage() {
               onChange={panel.table.onTabChange}
             >
               <FilterTabs.Tab value="all">All Listings</FilterTabs.Tab>
-              <FilterTabs.Tab value="active" count={metrics?.activeListings ?? 0}>
+              <FilterTabs.Tab
+                value="active"
+                count={metrics?.activeListings ?? 0}
+              >
                 Active
               </FilterTabs.Tab>
               <FilterTabs.Tab
@@ -193,7 +205,9 @@ export default function ListingsPage() {
               value={panel.filters.country}
               onValueChange={(next) => setFilter("country", next)}
               aria-label="Filter by country"
-              className={filterSelectClass(panel.filters.country === ALL_COUNTRIES)}
+              className={filterSelectClass(
+                panel.filters.country === ALL_COUNTRIES,
+              )}
             />
 
             <SimpleSelect
@@ -270,6 +284,7 @@ export default function ListingsPage() {
             pageSize={PAGE_SIZE}
             rowsOnPage={listings.length}
             rowLabel="listings"
+            scrollAnchorRef={scrollBoxRef}
           />
         </div>
       )}

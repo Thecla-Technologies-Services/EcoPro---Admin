@@ -22,15 +22,18 @@ import {
 } from "./rider-created-dialogs";
 import { deliveryPartnerFormSchema } from "@/lib/validations/user";
 import { toErrorMessage } from "@/lib/api/errors";
-import { DELIVERYSTEPS, generateRiderPassword } from "@/constants/user";
+import { useAccountValidation } from "@/hooks/use-account-validation";
+import { DELIVERYSTEPS } from "@/constants/user";
+import type { DeliveryPartnerCreatedResponseDto } from "@/types/api/admin";
 import type {
-  AccountValidationStatus,
   CreatedRiderCredentials,
   DeliveryPartnerFormValues,
   DeliveryPartnerStep,
 } from "@/types/user";
 
-const STEP_ORDER: DeliveryPartnerStep[] = ["contact", "documents", "location"];
+// Mirrors DELIVERYSTEPS: Location precedes Documents because the bank list on
+// the Documents step is fetched for the country chosen on Location.
+const STEP_ORDER: DeliveryPartnerStep[] = ["contact", "location", "documents"];
 
 const STEP_FIELDS: Record<
   DeliveryPartnerStep,
@@ -42,17 +45,11 @@ const STEP_FIELDS: Record<
     "documents",
     "existingDocuments",
     "bankName",
+    "bankCode",
     "bankAccountNumber",
-  ],
-  location: [
-    "country",
-    "state",
-    "lga",
-    "region",
-    "city",
-    "area",
     "verifyEmailAutomatically",
   ],
+  location: ["country", "state", "lga", "region", "city", "area"],
 };
 
 const DEFAULT_VALUES: DeliveryPartnerFormValues = {
@@ -66,6 +63,7 @@ const DEFAULT_VALUES: DeliveryPartnerFormValues = {
   documents: [],
   existingDocuments: [],
   bankName: "",
+  bankCode: "",
   bankAccountNumber: "",
   accountHolderName: undefined,
   country: "Nigeria",
@@ -77,6 +75,20 @@ const DEFAULT_VALUES: DeliveryPartnerFormValues = {
   verifyEmailAutomatically: true,
 };
 
+/**
+ * What creating a partner produced.
+ *
+ * The create endpoint takes no documents — they go up one at a time against the
+ * new account through `upload-document` — so the two can succeed separately.
+ * A partner created without its documents is still created, and reporting that
+ * as a failed submit would be wrong; `failedDocuments` is how the success
+ * dialog says which ones did not make it.
+ */
+export interface DeliveryPartnerCreatedResult {
+  response: DeliveryPartnerCreatedResponseDto;
+  failedDocuments?: string[];
+}
+
 interface CreateDeliveryPartnerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -84,8 +96,14 @@ interface CreateDeliveryPartnerDialogProps {
    * Persists the partner. The success dialogs are shown only once this
    * resolves — a rejection keeps the form on its last step and puts the
    * reason under it, rather than announcing a rider that was never created.
+   *
+   * Which success dialog to show is the API's answer, not the form's: it
+   * reports whether it emailed the credentials and, when it did not, the
+   * password it issued. So the response is returned rather than discarded.
    */
-  onCreated: (values: DeliveryPartnerFormValues) => Promise<void>;
+  onCreated: (
+    values: DeliveryPartnerFormValues,
+  ) => Promise<DeliveryPartnerCreatedResult>;
 }
 
 export function CreateDeliveryPartnerDialog({
@@ -109,13 +127,12 @@ function CreateDeliveryPartnerDialogInner({
   onCreated,
 }: CreateDeliveryPartnerDialogProps) {
   const [step, setStep] = useState<DeliveryPartnerStep>("contact");
-  const [validationStatus, setValidationStatus] =
-    useState<AccountValidationStatus>("idle");
   const [successStage, setSuccessStage] = useState<"none" | "auto" | "manual">(
     "none",
   );
   const [credentials, setCredentials] =
     useState<CreatedRiderCredentials | null>(null);
+  const [documentWarning, setDocumentWarning] = useState<string>();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -137,16 +154,27 @@ function CreateDeliveryPartnerDialogInner({
   const documents = watch("documents");
   const existingDocuments = watch("existingDocuments");
   const bankAccountNumber = watch("bankAccountNumber");
+  const bankCode = watch("bankCode");
+  const accountHolderName = watch("accountHolderName");
   const country = watch("country");
   const state = watch("state");
 
+  const validation = useAccountValidation({
+    accountNumber: bankAccountNumber,
+    bankCode,
+    country,
+  });
+
   const stepIndex = STEP_ORDER.indexOf(step);
+  // Derived rather than named, so reordering the steps cannot leave the form
+  // submitting from the middle of the wizard.
+  const isLastStep = stepIndex === STEP_ORDER.length - 1;
 
   async function goNext() {
     const valid = await trigger(STEP_FIELDS[step]);
     if (!valid) return;
 
-    if (step === "location") {
+    if (isLastStep) {
       handleSubmit(onSubmit)();
       return;
     }
@@ -162,8 +190,16 @@ function CreateDeliveryPartnerDialogInner({
   async function onSubmit(values: DeliveryPartnerFormValues) {
     setSubmitError(null);
     setIsSubmitting(true);
+
+    let result: DeliveryPartnerCreatedResult;
+
     try {
-      await onCreated(values);
+      // The name the bank gave is what the create body carries, so it is
+      // merged in here rather than mirrored into the form as it resolves.
+      result = await onCreated({
+        ...values,
+        accountHolderName: validation.accountName ?? values.accountHolderName,
+      });
     } catch (error) {
       setSubmitError(toErrorMessage(error));
       return;
@@ -171,15 +207,28 @@ function CreateDeliveryPartnerDialogInner({
       setIsSubmitting(false);
     }
 
-    if (values.verifyEmailAutomatically) {
+    // The API decides which of these is true, so neither dialog claims
+    // something it was not told. A partner created with no emailed credentials
+    // and no returned password has neither to show — the manual dialog says so
+    // rather than displaying a password nobody issued.
+    const { response, failedDocuments } = result;
+
+    setDocumentWarning(
+      failedDocuments?.length
+        ? `The partner was created, but ${failedDocuments.length === 1 ? "this document" : "these documents"} could not be uploaded: ${failedDocuments.join(", ")}. Add them from the partner's profile.`
+        : undefined,
+    );
+
+    if (response.credentialsEmailed) {
       setSuccessStage("auto");
-    } else {
-      setCredentials({
-        email: values.email,
-        password: generateRiderPassword(),
-      });
-      setSuccessStage("manual");
+      return;
     }
+
+    setCredentials({
+      email: response.profile?.email ?? values.email,
+      password: response.generatedPassword ?? "",
+    });
+    setSuccessStage("manual");
   }
 
   return (
@@ -232,12 +281,9 @@ function CreateDeliveryPartnerDialogInner({
                   setValue={setValue}
                   documents={documents}
                   existingDocuments={existingDocuments}
-                  bankAccountNumber={bankAccountNumber}
-                  validationStatus={validationStatus}
-                  onValidationStatusChange={(status, holderName) => {
-                    setValidationStatus(status);
-                    if (holderName) setValue("accountHolderName", holderName);
-                  }}
+                  country={country}
+                  validation={validation}
+                  accountHolderName={accountHolderName}
                 />
               )}
               {step === "location" && (
@@ -273,7 +319,7 @@ function CreateDeliveryPartnerDialogInner({
                 onClick={goNext}
                 isLoading={isSubmitting}
               >
-                {step === "location" ? "Create User" : "Continue"}
+                {isLastStep ? "Create User" : "Continue"}
               </Button>
             </div>
           </div>
@@ -288,6 +334,7 @@ function CreateDeliveryPartnerDialogInner({
             onOpenChange(false);
           }
         }}
+        warning={documentWarning}
       />
 
       {credentials && (
@@ -300,6 +347,7 @@ function CreateDeliveryPartnerDialogInner({
             }
           }}
           credentials={credentials}
+          warning={documentWarning}
         />
       )}
     </>

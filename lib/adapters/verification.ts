@@ -1,4 +1,6 @@
 import type {
+  AdminUserDetailsDto,
+  AdminVerificationItemDto,
   BankDetailsDto,
   OrganizationDto,
   RiderProfileDto,
@@ -87,10 +89,18 @@ function toRiderDocuments(dto: RiderProfileDto): ApplicantDocument[] {
   ];
 }
 
-/** Maps a row from `GET /verification/organizations/pending` onto a queue row. */
-function toOrganizationApplicant(dto: OrganizationDto): Applicant {
+/**
+ * Maps an organization onto a queue row.
+ *
+ * Serves both `GET /verification/organizations/pending` and the per-record
+ * `GET /verification/organizations/{organizationId}`, which returns the same
+ * shape with more of it filled in — the payout account, the profile image and
+ * who reviewed it come back only from the second.
+ */
+export function toOrganizationApplicant(dto: OrganizationDto): Applicant {
   return {
     id: dto.id ?? "",
+    referenceNumber: dto.referenceNumber ?? undefined,
     kind: "organization",
     name: dto.organizationName ?? dto.contactPersonName ?? "Unnamed organization",
     userId: dto.userId ?? PLACEHOLDER,
@@ -102,8 +112,7 @@ function toOrganizationApplicant(dto: OrganizationDto): Applicant {
       [dto.organizationAddress, dto.postalCode].filter(Boolean).join(", ") ||
       PLACEHOLDER,
     status: toStatus(dto.status),
-    // The API records when a decision was made but not who made it.
-    reviewer: PLACEHOLDER,
+    reviewer: dto.reviewedBy ?? PLACEHOLDER,
     reviewDate: formatDate(dto.reviewedOn),
     details: [
       {
@@ -113,8 +122,135 @@ function toOrganizationApplicant(dto: OrganizationDto): Applicant {
       { label: "Registration Number", value: dto.registrationNumber ?? PLACEHOLDER },
       { label: "Contact Person", value: dto.contactPersonName ?? PLACEHOLDER },
     ],
+    // The pending list omits the payout account; the detail endpoint carries it
+    // as loose fields rather than the `BankDetailsDto` a user record uses.
+    bank: toOrganizationBankAccount(dto),
     documents: toOrganizationDocuments(dto),
     rejectionReason: dto.rejectionReason ?? undefined,
+    avatarUrl: dto.profileImageUrl ?? undefined,
+  };
+}
+
+/**
+ * An organization's payout account.
+ *
+ * `GET /verification/organizations/{organizationId}` carries it as loose
+ * fields rather than the `BankDetailsDto` a user record uses, and the pending
+ * list omits it entirely — so with none of them set the section is left out
+ * rather than shown as three dashes.
+ */
+function toOrganizationBankAccount(
+  dto: OrganizationDto
+): Applicant["bank"] | undefined {
+  const accountName = dto.accountName?.trim();
+  const accountNumber = dto.accountNumber?.trim();
+  const bankName = dto.bankName?.trim();
+
+  if (!accountName && !accountNumber && !bankName) return undefined;
+
+  return {
+    accountName: accountName || PLACEHOLDER,
+    accountNumber: accountNumber || PLACEHOLDER,
+    bankName: bankName || PLACEHOLDER,
+  };
+}
+
+/**
+ * Which queue an applicant belongs to, from the joined queue's `applicantType`.
+ *
+ * Typed as free text in the swagger, so matched on a normalised token against
+ * both vocabularies. An unrecognised value is not forced into either: sending a
+ * decision to the wrong review endpoint would act on a different record.
+ */
+const ORGANIZATION_TYPES = new Set([
+  "organization",
+  "organisation",
+  "charitypartner",
+  "charity",
+  "ngo",
+]);
+
+const RIDER_KINDS = new Set([
+  "rider",
+  "independentrider",
+  "logisticspartner",
+  "delivery",
+  "deliverypartner",
+]);
+
+export function toApplicantKind(
+  applicantType: string | null | undefined
+): Applicant["kind"] {
+  if (!applicantType) return "unknown";
+  const token = applicantType.replace(/[\s_-]/g, "").toLowerCase();
+  if (ORGANIZATION_TYPES.has(token)) return "organization";
+  if (RIDER_KINDS.has(token)) return "rider";
+  return "unknown";
+}
+
+/**
+ * Maps a row from `GET /verification/queue` onto a queue row.
+ *
+ * This is a summary: the endpoint reports who applied, when, and what was
+ * decided, but none of the evidence a decision rests on — no documents, no
+ * payout account, no ID number. Those come from the per-kind endpoints once a
+ * row is selected, which is why `documents` is empty here rather than absent.
+ *
+ * It is also the only list that reports `reviewedBy`, and the only one that
+ * includes applications already decided — the two pending endpoints drop a row
+ * the moment it is reviewed.
+ */
+export function toQueueApplicant(dto: AdminVerificationItemDto): Applicant {
+  const kind = toApplicantKind(dto.applicantType);
+
+  return {
+    id: dto.id ?? "",
+    referenceNumber: dto.referenceNumber ?? undefined,
+    kind,
+    name: dto.applicantName ?? "Unnamed applicant",
+    // The queue keys rows by their application, not their account, so nothing
+    // here can be handed to the user endpoints.
+    userId: PLACEHOLDER,
+    accountType: kind === "organization" ? "NGO" : "Delivery",
+    date: formatDate(dto.submissionDate),
+    email: dto.contactEmail ?? PLACEHOLDER,
+    phone: dto.contactPhoneNumber ?? PLACEHOLDER,
+    address: PLACEHOLDER,
+    status: toStatus(dto.status),
+    reviewer: dto.reviewedBy ?? PLACEHOLDER,
+    reviewDate: formatDate(dto.reviewDate),
+    documents: [],
+  };
+}
+
+/**
+ * Fills a rider's queue row in from its verification profile and user record.
+ *
+ * The queue row supplies the identity, the profile the evidence. Neither is
+ * complete on its own: `RiderProfileDto` carries no name or email, and the
+ * queue carries no documents.
+ */
+export function withRiderDetail(
+  base: Applicant,
+  profile: RiderProfileDto | undefined,
+  user: UserDto | undefined
+): Applicant {
+  if (!profile) return base;
+
+  const detailed = toRiderApplicant(user ?? {}, profile);
+
+  return {
+    ...detailed,
+    // The queue is the better source for these: it names the reviewer, and its
+    // status covers decided applications the pending profile cannot describe.
+    referenceNumber: base.referenceNumber ?? detailed.referenceNumber,
+    name: user ? detailed.name : base.name,
+    email: user ? detailed.email : base.email,
+    phone: user ? detailed.phone : base.phone,
+    status: base.status,
+    reviewer: base.reviewer,
+    reviewDate: base.reviewDate,
+    date: base.date,
   };
 }
 
@@ -257,6 +393,59 @@ export function toVerificationQueue(
   return rows.sort((a, b) => b.at - a.at).map((row) => row.applicant);
 }
 
+/** A v4/v7 uuid, which is never a person's name. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The account to look up to put a name to a decision, or undefined when
+ * `reviewedBy` is already readable.
+ *
+ * The field is documented only as a string, and the API sends the reviewing
+ * admin's id — but it is free to send a name or an email instead, so only a
+ * value shaped like an id is treated as one.
+ */
+export function toReviewerId(
+  reviewer: string | null | undefined
+): string | undefined {
+  const value = reviewer?.trim();
+  return value && UUID.test(value) ? value : undefined;
+}
+
+/**
+ * The name of whoever decided an application.
+ *
+ * `record` is that reviewer's account, fetched by `toReviewerId`. Until it
+ * arrives the placeholder stands in — the id it replaces is not a name, and
+ * showing it would be the thing this exists to avoid.
+ */
+export function toReviewerName(
+  reviewer: string | null | undefined,
+  record: AdminUserDetailsDto | undefined
+): string {
+  const value = reviewer?.trim();
+  if (!value || value === PLACEHOLDER) return PLACEHOLDER;
+  if (!UUID.test(value)) return value;
+
+  return (
+    record?.name ||
+    [record?.firstName, record?.lastName].filter(Boolean).join(" ") ||
+    record?.email ||
+    PLACEHOLDER
+  );
+}
+
+/**
+ * Whether an application is still open to a decision.
+ *
+ * Only a pending one can be approved or rejected — a decided row is in the
+ * queue to be read, not re-decided. An unrecognised status counts as decided:
+ * `toStatus` passes an undocumented label straight through, and treating what
+ * we cannot read as pending would offer buttons that act on a settled record.
+ */
+export function isAwaitingReview(applicant: Applicant | null): boolean {
+  return applicant?.status === "Pending Review";
+}
+
 /**
  * A queue row's stable identity. Organization ids and rider-profile ids come
  * from different tables, so the kind has to be part of the key.
@@ -291,10 +480,35 @@ export function toBankAccount(
 }
 
 /**
+ * `rejectionReason`'s documented ceiling, on both review endpoints.
+ */
+export const REJECTION_REASON_MAX = 1000;
+
+/** The separator between the picked reason and the free-text note. */
+const REASON_SEPARATOR = " — ";
+
+/**
  * Combines the dialog's picked reason with its free-text note into the single
  * `rejectionReason` string both review endpoints accept.
+ *
+ * The organization endpoint also takes the two apart — `rejectionCategory` and
+ * `additionalNotes` — and is sent those as well; this string is what the rider
+ * endpoint has room for, and what reads back as one sentence either way.
  */
 export function toRejectionReason(reason: string, note: string): string {
   const trimmed = note.trim();
-  return trimmed ? `${reason} — ${trimmed}` : reason;
+  return trimmed ? `${reason}${REASON_SEPARATOR}${trimmed}` : reason;
+}
+
+/**
+ * How much note still fits once the picked reason and its separator are in.
+ *
+ * The combined string is what has to clear `REJECTION_REASON_MAX`, so the
+ * budget is the note's alone — which is why the form caps on this rather than
+ * on the limit itself. Never negative: a reason longer than the whole ceiling
+ * would otherwise hand a negative `maxLength` to the textarea.
+ */
+export function rejectionNoteLimit(reason: string | null): number {
+  const spent = reason ? reason.length + REASON_SEPARATOR.length : 0;
+  return Math.max(0, REJECTION_REASON_MAX - spent);
 }

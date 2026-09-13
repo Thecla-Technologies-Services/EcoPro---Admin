@@ -58,32 +58,46 @@ export function ListingTypeBadge({ type }: { type: ListingFilter | string }) {
   );
 }
 
+/**
+ * An option whose stored value differs from what the admin reads — a delivery
+ * status sent as `InTransit` and shown as "In Transit". A bare string is still
+ * accepted for the lists where the two are the same.
+ */
+export type FilterPillOption<T extends string> = T | { value: T; label: string };
+
 export function FilterPills<T extends string>({
   options,
   active,
   onChange,
 }: {
-  options: T[];
+  options: readonly FilterPillOption<T>[];
   active: T;
   onChange: (v: T) => void;
 }) {
   return (
     <div className="flex gap-2 flex-wrap">
-      {options.map((o) => (
-        <button
-          key={o}
-          type="button"
-          onClick={() => onChange(o)}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
-            active === o
-              ? "bg-primary text-white border-primary"
-              : "bg-transparent text-gray-500 border-gray-200 hover:border-gray-300",
-          )}
-        >
-          {o}
-        </button>
-      ))}
+      {options.map((option) => {
+        const { value, label } =
+          typeof option === "string"
+            ? { value: option, label: option }
+            : option;
+
+        return (
+          <button
+            key={value}
+            type="button"
+            onClick={() => onChange(value)}
+            className={cn(
+              "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
+              active === value
+                ? "bg-primary text-white border-primary"
+                : "bg-transparent text-gray-500 border-gray-200 hover:border-gray-300",
+            )}
+          >
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }

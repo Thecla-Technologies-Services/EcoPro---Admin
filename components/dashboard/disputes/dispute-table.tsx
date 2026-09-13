@@ -13,6 +13,7 @@ import TableDateFilter from "../../shared/date/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
 import type { Dispute } from "@/types/dispute";
 import { DISPUTES } from "@/data/disputes";
+import { Amount } from "@/components/shared/amount";
 
 const STATUS_FILTERS = [
   "All Disputes",
@@ -106,7 +107,7 @@ export default function DisputeTable() {
         header: "Amount",
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground font-medium">
-            ₦{getValue<number>().toLocaleString()}.00
+            <Amount amount={getValue<number>()} />
           </span>
         ),
       },

@@ -3,7 +3,11 @@
 import { IconType } from "react-icons";
 
 interface StatCardProps {
-  value: string;
+  /**
+   * A string is rendered as given; a node is how a figure that converts between
+   * currencies brings its own markup.
+   */
+  value: React.ReactNode;
   label: string;
   icon: IconType;
   color: "green" | "blue" | "emerald" | "orange";

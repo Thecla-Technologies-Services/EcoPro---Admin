@@ -6,6 +6,7 @@ import { FilterPills, ListingTypeBadge } from "./pills";
 import { DataState } from "@/components/shared/data-state";
 import { useUserListings } from "@/hooks/admin/use-users";
 import type { ListingFilter } from "@/types/user";
+import { Amount } from "@/components/shared/amount";
 
 /** Placeholder for a listing the API returns without an image. */
 const FALLBACK_IMAGE = "/assets/images/all-listing-empty.png";
@@ -95,7 +96,7 @@ export function ListingTab({ userId }: { userId?: string }) {
               <div className="text-right shrink-0 flex flex-col justify-end">
                 {item.price ? (
                   <p className="text-sm md:text-base font-extrabold mb-3 text-primary">
-                    ₦{item.price.toLocaleString()}
+                    <Amount amount={item.price} />
                   </p>
                 ) : null}
                 <p className="text-xs text-[#868686] font-medium">

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type Order } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonCard } from "@/components/shared/person-card";
+import { Amount } from "@/components/shared/amount";
 
 export default function OrderDetailDialog({
   order,
@@ -106,7 +107,7 @@ export default function OrderDetailDialog({
                 {[
                   {
                     label: "Amount",
-                    value: `₦${order.amount.toLocaleString()}.00`,
+                    value: <Amount amount={order.amount} />,
                   },
                   { label: "Payment Method", value: order.paymentMethod },
                   { label: "Paid Status", value: order.paidStatus },

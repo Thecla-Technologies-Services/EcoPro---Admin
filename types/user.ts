@@ -1,3 +1,5 @@
+import type { Country } from "@/types/api/admin";
+
 /**
  * The account kinds the dashboard filters and badges by. "Admin" covers staff
  * accounts, which are listed in the roles module rather than alongside platform
@@ -72,9 +74,10 @@ export type AccountValidationStatus =
   | "error";
 
 /**
- * Where a Delivery has got to. Distinct from `OrderStatus` in `./order`: an
- * Order can be Disputed, which is a state of the trade rather than the
- * movement, and a Delivery can end Not Delivered while the Order stands.
+ * Where a Delivery has got to, as the cards read it. Distinct from
+ * `OrderStatus` in `./order`: an Order can be Disputed, which is a state of the
+ * trade rather than the movement, and a Delivery can end Not Delivered while
+ * the Order stands.
  */
 export type DeliveryStatus =
   | "Pending"
@@ -82,23 +85,52 @@ export type DeliveryStatus =
   | "Delivered"
   | "Not Delivered";
 
+/**
+ * One of a delivery partner's orders, as its card renders it.
+ *
+ * Mapped from `DeliveryPartnerOrderDto` in `lib/adapters/delivery-partner.ts`.
+ * The endpoint names the item and the two ends of the journey and nothing else
+ * about the goods — no photo, no condition, no second line — so those are
+ * absent here rather than optional fields the card would always draw empty.
+ */
 export interface DeliveryPartnerOrder {
   id: string;
+  /** The short order number the API assigns, e.g. `1042`. */
+  orderNumber?: number;
   itemName: string;
-  itemSubtitle: string;
-  condition: string;
   price: number;
-  imageUrl: string;
+  currency: string;
   pickup: string;
   dropoff: string;
-  status: DeliveryStatus;
+  status: DeliveryStatus | string;
+  /** Set only when the delivery ended Not Delivered. */
   reason?: string;
+  date: string;
 }
 
+/** A file already uploaded, as the create/edit form lists it. */
 export interface DeliveryPartnerDocument {
   id: string;
   name: string;
   url: string;
+}
+
+/**
+ * A file on a delivery partner's record, as the Documents tab renders it.
+ *
+ * Mapped from `DeliveryPartnerDocumentDto` — which, unlike a rider's
+ * verification profile, carries a real URL, so the row can offer the file
+ * rather than only reporting that one was submitted.
+ */
+export interface DeliveryPartnerDocumentRow {
+  id: string;
+  /** The document type, humanised — "Proof Of Address". */
+  label: string;
+  fileName?: string;
+  /** Absent when the API stored the record without a retrievable file. */
+  url?: string;
+  size?: string;
+  uploadedOn: string;
 }
 
 export interface DeliveryPartner {
@@ -125,7 +157,8 @@ export interface DeliveryPartner {
     swiftCode?: string;
   };
   location: {
-    country: string;
+    /** The API's own enum member, as the create and update bodies expect. */
+    country: Country;
     state?: string;
     lga?: string;
     region?: string;
@@ -152,10 +185,18 @@ export interface DeliveryPartnerFormValues {
   documents: File[];
   existingDocuments: DeliveryPartnerDocument[];
   bankName: string;
+  /**
+   * The payment gateway's code for the bank, from
+   * `GET /api/admin/delivery-partners/banks`. Resolving an account number and
+   * creating the partner both key off this rather than the name.
+   */
+  bankCode: string;
   bankAccountNumber: string;
+  /** The name the bank holds for the account, once resolved. */
   accountHolderName?: string;
 
-  country: string;
+  /** The API's own enum member, so `UnitedKingdom` is stored unspaced. */
+  country: Country;
   state?: string;
   lga?: string;
   region?: string;
@@ -184,6 +225,8 @@ export interface NgoFormValues {
   contactEmail: string;
   contactPhone: string;
 
+  /** Required by the create endpoint, so the form has to collect it. */
+  registrationNumber: string;
   postalCode: string;
   organizationAddress: string;
   documents: File[];

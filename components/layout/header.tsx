@@ -10,6 +10,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useState } from "react";
 import { useLogout } from "@/hooks/auth/use-auth-mutations";
 import type { AdminSession } from "@/types/auth";
+import { CurrencySelect } from "@/components/shared/currency-select";
 
 function initialsOf(name: string) {
   return (
@@ -56,6 +57,11 @@ export function Header({ session }: { session: AdminSession | null }) {
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-4">
+        {/* The currency every page reads its money in. Here rather than on a
+            page, because the choice is the reader's and holds wherever they
+            navigate. */}
+        <CurrencySelect />
+
         <Button variant="ghost" size="icon" className="relative shrink-0">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />

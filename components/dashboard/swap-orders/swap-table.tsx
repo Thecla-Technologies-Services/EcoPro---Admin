@@ -5,7 +5,8 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { StatusBadge } from "../../shared/status-badge";
 import { type Order, type OrderStatus } from "@/types/order";
-import { ORDERS } from "@/data/orders";
+import { DataState } from "@/components/shared/data-state";
+import { useSwapOrdersPanel } from "@/hooks/admin/use-swap-orders";
 import OrderDetailDialog from "./order-detail-dialog";
 import {
   DataTable } from "@/components/shared/data-table"; // ← reusable component
@@ -13,6 +14,7 @@ import { RowActions,
 } from "@/components/shared/row-actions";
 import TableDateFilter from "../../shared/date/table-date-filter";
 import { DateRangeFilterValue } from "@/types/date";
+import { Amount } from "@/components/shared/amount";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const STATUS_FILTERS = [
@@ -25,15 +27,15 @@ const STATUS_FILTERS = [
 
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
-const FILTER_COUNTS: Record<StatusFilter, number> = {
-  "All Orders": 300,
-  Delivered: 20,
-  "In Transit": 23,
-  "Pending Pickup": 18,
-  Disputed: 5,
-};
+/**
+ * The tabs are kept for the design's sake but filter nothing: the list behind
+ * them is `GET /swaps/disputed`, which takes no status parameter and returns
+ * only disputed rows — so every tab shows the same list, and no counts are
+ * claimed. They start meaning something when an all-swaps endpoint exists.
+ */
 
 export default function SwapTable() {
+  const panel = useSwapOrdersPanel({ pageSize: 7 });
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [dateFilter, setDateFilter] = useState<
     DateRangeFilterValue | undefined
@@ -83,7 +85,7 @@ export default function SwapTable() {
         header: "Amount",
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground font-medium">
-            ₦{getValue<number>().toLocaleString()}.00
+            <Amount amount={getValue<number>()} />
           </span>
         ),
       },
@@ -135,20 +137,37 @@ export default function SwapTable() {
 
   return (
     <>
-      <DataTable
-        data={ORDERS}
-        headerExtra={
-          <TableDateFilter selected={dateFilter} setSelected={setDateFilter} />
-        }
-        columns={columns}
-        title="Recent Orders"
-        rowLabel="orders"
-        pageSize={7}
-        filterTabs={STATUS_FILTERS}
-        filterCounts={FILTER_COUNTS}
-        filterColumnKey="status"
-        allTabValue="All Orders"
-      />
+      <DataState>
+        <DataState.Error
+          when={panel.query.isError}
+          error={panel.query.error}
+          onRetry={panel.query.refetch}
+        />
+        <DataState.Content>
+          <DataTable
+            data={panel.table.data}
+            manualPagination
+            pagination={panel.table.pagination}
+            onPaginationChange={panel.table.onPaginationChange}
+            totalPages={panel.table.totalPages}
+            totalCount={panel.table.totalCount}
+            activeTab={panel.table.activeTab}
+            onTabChange={panel.table.onTabChange}
+            headerExtra={
+              <TableDateFilter
+                selected={dateFilter}
+                setSelected={setDateFilter}
+              />
+            }
+            columns={columns}
+            title="Recent Orders"
+            rowLabel="orders"
+            pageSize={7}
+            filterTabs={STATUS_FILTERS}
+            allTabValue="All Orders"
+          />
+        </DataState.Content>
+      </DataState>
 
       <OrderDetailDialog
         order={selectedOrder}

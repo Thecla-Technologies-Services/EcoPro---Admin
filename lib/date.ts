@@ -22,6 +22,20 @@ export function stripTime(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+/**
+ * The last instant of a day, for the closing bound of a range.
+ *
+ * `stripTime` gives midnight, which as a `to` bound excludes the whole of the
+ * day the person picked — a single-day range would then match nothing at all.
+ * Local time, like the rest of this file: the admin picked a day in their own
+ * calendar, and converting to an instant is the caller's job.
+ */
+export function endOfDay(d: Date) {
+  const e = stripTime(d);
+  e.setHours(23, 59, 59, 999);
+  return e;
+}
+
 export function startOfWeek(d: Date) {
   const s = stripTime(d);
   s.setDate(s.getDate() - s.getDay());

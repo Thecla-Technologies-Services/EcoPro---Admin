@@ -8,7 +8,11 @@ export default function SharedStatCard({
   ref,
 }: {
   label: string;
-  value: string | number;
+  /**
+   * A number or string is formatted here; a node is rendered as given — which
+   * is how a figure that converts between currencies brings its own markup.
+   */
+  value: React.ReactNode;
   icon: React.ElementType;
   /** Shows a placeholder in place of the figure while it is being fetched. */
   isLoading?: boolean;
@@ -29,7 +33,7 @@ export default function SharedStatCard({
             ref={ref}
             className="truncate text-2xl md:text-[32px]  font-bold text-[#1B1C1E]"
           >
-            {value.toLocaleString()}
+            {typeof value === "number" ? value.toLocaleString() : value}
           </p>
         )}
         <p className="text-sm text-muted-foreground font-medium">{label}</p>

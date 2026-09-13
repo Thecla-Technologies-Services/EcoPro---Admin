@@ -1,9 +1,8 @@
 import { Badge } from "@/components/ui/badge";
+import { useUserTransactions } from "@/hooks/admin/use-users";
 import { cn } from "@/lib/utils";
 import type { User } from "@/types/user";
-
-const currency = (value: number | undefined) =>
-  `₦${(value ?? 0).toLocaleString()}`;
+import { Amount } from "@/components/shared/amount";
 
 const kycVariants: Record<string, string> = {
   verified: "bg-green-50 text-primary",
@@ -12,6 +11,25 @@ const kycVariants: Record<string, string> = {
 };
 
 export function ProfileView({ user }: { user: User }) {
+  /**
+   * The transaction count, which `GET /api/admin/users/{userId}` does not
+   * carry — the only place it exists is the total on the user's transactions
+   * page, so one row is fetched for the count alone.
+   */
+  const transactions = useUserTransactions(user.id, undefined, {
+    pageNumber: 1,
+    pageSize: 1,
+  });
+
+  /**
+   * Absent while the count is in flight and if the request fails, which the
+   * card shows as a dash. Rendering `0` for either would claim this user has no
+   * transactions, and that is a different statement from not knowing yet.
+   */
+  const transactionCount = transactions.data?.totalRecords;
+  const transactionsValue =
+    transactionCount === undefined ? "—" : String(transactionCount);
+
   /**
    * Which figures are shown depends on the role, but every value now comes from
    * `GET /api/admin/users/{userId}`. The detail DTO has no donation or order
@@ -22,16 +40,19 @@ export function ProfileView({ user }: { user: User }) {
       { label: "Total Listings", value: String(user.totalListings ?? 0) },
       { label: "Total Sold", value: String(user.totalSold ?? 0) },
       { label: "Total Purchased", value: String(user.totalPurchased ?? 0) },
-      { label: "Wallet Funds", value: currency(user.balance) },
+      { label: "Transactions", value: transactionsValue },
+      { label: "Wallet Funds", value: <Amount amount={user.balance} /> },
     ],
     NGO: [
       { label: "Total Listings", value: String(user.totalListings ?? 0) },
-      { label: "Wallet Funds", value: currency(user.balance) },
+      { label: "Transactions", value: transactionsValue },
+      { label: "Wallet Funds", value: <Amount amount={user.balance} /> },
     ],
     Delivery: [
       { label: "Total Listings", value: String(user.totalListings ?? 0) },
       { label: "Total Sold", value: String(user.totalSold ?? 0) },
-      { label: "Wallet Funds", value: currency(user.balance) },
+      { label: "Transactions", value: transactionsValue },
+      { label: "Wallet Funds", value: <Amount amount={user.balance} /> },
     ],
   };
 
@@ -40,12 +61,9 @@ export function ProfileView({ user }: { user: User }) {
 
   return (
     <div className=" space-y-5 ">
-      <div
-        className={cn(
-          "grid  gap-2",
-          user?.role === "NGO" ? "grid-cols-2" : "grid-cols-3"
-        )}
-      >
+      {/* Three across for every role now that NGO has a third card — it was
+          the only one with two. */}
+      <div className="grid grid-cols-3 gap-2">
         {roleStats.map((s) => (
           <div
             key={s.label}
@@ -59,7 +77,10 @@ export function ProfileView({ user }: { user: User }) {
         ))}
       </div>
 
-      <div className="space-y-5 max-h-60 overflow-y-auto">
+      {/* No scroll box of its own — the sheet body this sits in already
+          scrolls, and a 240px window inside it meant the details were cut off
+          with a second scrollbar to find. */}
+      <div className="space-y-5">
         <div>
           <p className="text-sm font-semibold text-gray-800 mb-3">
             Basic Information

@@ -9,6 +9,7 @@ import {
   IoDocumentTextOutline,
   IoWalletOutline,
   IoFileTrayFullOutline,
+  IoHelpBuoyOutline,
 } from "react-icons/io5";
 import { BiDonateHeart } from "react-icons/bi";
 import {
@@ -46,6 +47,7 @@ const navItems = [
   { icon: IoAnalyticsOutline, label: "Analytics", href: "/analytics" },
   { icon: IoFileTrayFullOutline, label: "Marketing", href: "/marketing" },
   { icon: IoFileTrayFullOutline, label: "Roles & Permissions", href: "/roles-permissions" },
+  { icon: IoHelpBuoyOutline, label: "Support", href: "/support" },
 ];
 
 export function AppSidebar() {

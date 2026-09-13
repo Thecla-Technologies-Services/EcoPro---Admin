@@ -1,3 +1,5 @@
+"use client";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WalletOverview } from "@/components/dashboard/wallet/wallet-overview";
 import { WithdrawalRequestTable } from "@/components/dashboard/wallet/withdrawal-request-table";

@@ -14,7 +14,7 @@ import { FloatingPhoneInput } from "@/components/shared/form/floating-phone-inpu
 import { QueryError } from "@/components/shared/query-error";
 import { profileSchema, type ProfileFormData } from "@/lib/validations/profile";
 import { useUpdateUser, useUser } from "@/hooks/admin/use-users";
-import { useUserDirectory } from "@/hooks/admin/use-admin-users";
+import { useUserDirectory } from "@/hooks/admin/use-user-directory";
 import { toLocation, toRoleLabel } from "@/lib/adapters/user";
 import { toErrorMessage } from "@/lib/api/errors";
 import type { AdminSession } from "@/types/auth";

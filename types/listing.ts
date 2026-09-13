@@ -26,8 +26,6 @@ export interface Listing {
   /** Pre-formatted by the API, e.g. "2.5kg". */
   co2Impact: string;
   price: number;
-  /** Pre-formatted price when the API supplies one. */
-  formattedPrice?: string;
   views: number;
   /** Relative time from the API, e.g. "2 hours ago". */
   createdAt: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useUserDirectory } from "@/hooks/admin/use-admin-users";
+import { useUserDirectory } from "@/hooks/admin/use-user-directory";
 import { usePendingRiders } from "@/hooks/admin/use-verification";
 import { toRiderQueue } from "@/lib/adapters/verification";
 import type { Applicant } from "@/types/verification";

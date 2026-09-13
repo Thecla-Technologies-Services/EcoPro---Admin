@@ -15,7 +15,7 @@ const endpoints = vi.hoisted(() => {
   return { users: blank(), riders: blank() };
 });
 
-vi.mock("@/hooks/admin/use-admin-users", () => ({
+vi.mock("@/hooks/admin/use-user-directory", () => ({
   useUserDirectory: () => endpoints.users,
 }));
 

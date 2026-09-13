@@ -7,7 +7,7 @@ import {
   DetailBlock,
   DocumentList,
   FactCard,
-  useApplicantBank,
+  useApplicantRecord,
 } from "@/components/dashboard/verification/applicant-detail";
 import { type Applicant } from "@/types/verification";
 
@@ -28,7 +28,21 @@ export default function DetailPanel({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  const bank = useApplicantBank(applicant);
+  const { bank, userCode, accountStatus, isPending } =
+    useApplicantRecord(applicant);
+
+  /**
+   * The badge on this panel is the rider's account standing, not the state of a
+   * verification application: the pending-rider queue drops a profile the moment
+   * it is decided, so a rider's application status is unknowable here for anyone
+   * already reviewed. `accountStatus` is a fact about the account itself and is
+   * answerable for every rider.
+   */
+  const record = applicant && {
+    ...applicant,
+    userCode,
+    status: accountStatus ?? applicant.status,
+  };
 
   return (
     // Wider than the shell's default: the header runs a name and a full email
@@ -39,7 +53,8 @@ export default function DetailPanel({
       className="max-w-3xl!"
     >
       <ApplicantDetail
-        applicant={applicant}
+        applicant={record}
+        isPending={isPending}
         titleAs={DialogTitle}
         descriptionAs={DialogDescription}
         // Every row on this page is a rider, so an account-type pill beside the
@@ -48,6 +63,7 @@ export default function DetailPanel({
       >
         <DetailBlock title="Bank Accounts">
           <FactCard
+            loading={isPending}
             items={[
               { label: "Account Name:", value: bank?.accountName ?? "—" },
               { label: "Account Number:", value: bank?.accountNumber ?? "—" },

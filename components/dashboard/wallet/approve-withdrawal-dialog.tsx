@@ -5,6 +5,10 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { AmountBanner } from "./amount-banner";
 import { DetailRow, SuccessState } from "./detail-row";
 import { type WithdrawalRequest } from "@/types/wallet";
+import { formatWithdrawalAmount } from "@/lib/adapters/wallet";
+import { useApproveWithdrawal } from "@/hooks/admin/use-payouts";
+import { useAsyncAction } from "@/hooks/use-async-action";
+import { toErrorMessage } from "@/lib/api/errors";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +17,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-type ApproveStep = "confirm" | "success";
-
 interface ApproveWithdrawalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,24 +30,27 @@ export function ApproveWithdrawalDialog({
   request,
   onReject,
 }: ApproveWithdrawalDialogProps) {
-  const [step, setStep] = React.useState<ApproveStep>("confirm");
-  const [loading, setLoading] = React.useState(false);
+  const approveWithdrawal = useApproveWithdrawal();
+  const requestId = request?.id;
+
+  // `useAsyncAction` owns the confirm → loading → success steps, which is what
+  // keeps a rejected approval on the confirm step with its reason instead of
+  // announcing a payout the gateway refused.
+  const approve = useAsyncAction(async () => {
+    if (!requestId) throw new Error("This request has no id to approve.");
+    await approveWithdrawal.mutateAsync(requestId);
+  });
 
   if (!request) return null;
 
-  async function handleApprove() {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200)); // simulate API
-    setLoading(false);
-    setStep("success");
-  }
+  const loading = approve.isLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="max-w-sm gap-0">
         <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" />
 
-        {step === "confirm" ? (
+        {!approve.isSuccess ? (
           <>
             <DialogTitle className="text-base font-semibold mb-0.5">
               Approve Withdrawal
@@ -57,18 +62,36 @@ export function ApproveWithdrawalDialog({
             <AmountBanner amount={request.amount} />
 
             <div className="flex flex-col">
-              <DetailRow label="Request ID" value={request.requestId} />
-              <DetailRow label="User ID" value={request.userId} />
-              <DetailRow label="User" value={request.user} />
-              <DetailRow label="Full Name" value={request.fullName} />
-              <DetailRow label="Bank Name" value={request.bankName} />
-              <DetailRow label="Account Number" value={request.accountNumber} />
-              <DetailRow
-                label="Status"
-                value={<StatusBadge status={request.status} />}
-              />
-              <DetailRow label="Date" value={request.date} />
+            <DetailRow label="Request ID" value={request.reference} />
+            <DetailRow label="Account Name" value={request.accountName} />
+            <DetailRow label="Bank Name" value={request.bankName} />
+            <DetailRow label="Account Number" value={request.accountNumber} />
+            {request.sortCode && (
+              <DetailRow label="Sort Code" value={request.sortCode} />
+            )}
+            <DetailRow
+              label="Fee"
+              value={formatWithdrawalAmount(request.fee, request.currency)}
+            />
+            <DetailRow
+              label="Total Deducted"
+              value={formatWithdrawalAmount(
+                request.totalDeducted,
+                request.currency,
+              )}
+            />
+            <DetailRow
+              label="Status"
+              value={<StatusBadge status={request.status} />}
+            />
+            <DetailRow label="Date" value={request.date} />
             </div>
+
+            {approve.error && (
+              <p role="alert" className="mt-4 text-xs text-destructive">
+                {toErrorMessage(approve.error)}
+              </p>
+            )}
 
             <div className="flex gap-2 mt-5">
               <Button
@@ -81,7 +104,7 @@ export function ApproveWithdrawalDialog({
               </Button>
               <Button
                 className="flex-1 rounded-full bg-[#2D7A4F] hover:bg-[#235f3d] text-white"
-                onClick={handleApprove}
+                onClick={() => approve.run()}
                 disabled={loading}
               >
                 {loading ? (
@@ -109,7 +132,10 @@ export function ApproveWithdrawalDialog({
             <SuccessState
               title="Withdrawal Approved Successfully"
               description="Your payment request has been approved successfully. Go back to your dashboard."
-              onDone={() => onOpenChange(false)}
+              onDone={() => {
+                approve.reset();
+                onOpenChange(false);
+              }}
             />
           </>
         )}

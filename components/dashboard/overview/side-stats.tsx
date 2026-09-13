@@ -3,22 +3,22 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCountUp } from "@/hooks/animations/use-count-up";
 import type { DashboardPendingCountersDto } from "@/types/api/admin";
+import { Amount } from "@/components/shared/amount";
 
 interface SideStatProps {
-  number: string | number;
+  /** A node, so a figure that converts between currencies brings its markup. */
+  number: React.ReactNode;
   label: string;
-  ref?: React.RefObject<HTMLParagraphElement | null>;
   actionLabel: string;
   href: string;
 }
 
-function SideStat({ number, label, actionLabel, ref, href }: SideStatProps) {
+function SideStat({ number, label, actionLabel, href }: SideStatProps) {
   return (
     <div className="flex justify-between items-center bg-background rounded-md p-3 md:p-5">
       <div className="grid gap-2 lg:gap-3 xl:gap-4">
-        <p ref={ref} className="text-4xl md:text-5xl font-bold text-foreground">
+        <p className="text-4xl md:text-5xl font-bold text-foreground">
           {number}
         </p>
         <p className="text-sm text-muted-foreground">{label}</p>
@@ -38,10 +38,6 @@ interface SideStatsProps {
 }
 
 export function SideStats({ counters, isLoading }: SideStatsProps) {
-  // Re-runs when the target changes, so the figure counts up once data lands.
-  const payoutRef = useCountUp({ target: counters?.totalUserPayout ?? 0 });
-  const formattedPayout = counters?.formattedTotalUserPayout ?? null;
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
@@ -68,12 +64,20 @@ export function SideStats({ counters, isLoading }: SideStatsProps) {
       />
       <div className="xl:col-span-2">
         <SideStat
-          // The count-up animation writes raw digits into this element, which
-          // would overwrite the API's pre-formatted figure ("₦340.2M"). So the
-          // two are exclusive: animate only when there is nothing formatted to
-          // show. Without the ref the hook's effect bails out, so it stays idle.
-          number={formattedPayout ?? 0}
-          ref={formattedPayout ? undefined : payoutRef}
+          // The raw figure rather than `formattedTotalUserPayout`: a
+          // pre-formatted string cannot be converted to the header's currency.
+          //
+          // This also retires the count-up animation on this card. The hook
+          // writes raw digits straight into the element, which would overwrite
+          // the rendered figure — and it was already idle whenever the API sent
+          // a formatted string, which it does.
+          number={
+            counters?.totalUserPayout === undefined ? (
+              (counters?.formattedTotalUserPayout ?? "—")
+            ) : (
+              <Amount amount={counters.totalUserPayout} compact />
+            )
+          }
           label="Total User Payout"
           actionLabel="Review Now"
           href="/wallet"

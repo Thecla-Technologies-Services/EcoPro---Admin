@@ -15,6 +15,12 @@ export type Country =
   | "Nigeria"
   | "Ghana";
 
+export type DeliveryStatus =
+  | "Pending"
+  | "InTransit"
+  | "Delivered"
+  | "NotDelivered";
+
 export type EditRequestStatus =
   | "Pending"
   | "Approved"
@@ -48,16 +54,38 @@ export type ListingReportStatus =
   | "Dismissed"
   | "ActionTaken";
 
+export type ListingStatus =
+  | "Draft"
+  | "Active"
+  | "Reserved"
+  | "Completed"
+  | "Removed"
+  | "Flagged"
+  | "Sold"
+  | "Swapped"
+  | "Donated"
+  | "Collected";
+
 export type ListingType =
   | "Sell"
   | "Swap"
-  | "Donate";
+  | "Donate"
+  | "Free";
+
+export type OrganizationDocumentType =
+  | "CacCertificate"
+  | "RegistrationProof";
 
 export type ReportStatus =
   | "Pending"
   | "Reviewed"
   | "Dismissed"
   | "Actioned";
+
+export type SupportTicketStatus =
+  | "Open"
+  | "InProgress"
+  | "Resolved";
 
 export type SwapDisputeResolution =
   | "CompleteSwap"
@@ -79,9 +107,44 @@ export type VerificationMethod =
   | "Passport"
   | "Pin";
 
+export type WithdrawalStatus =
+  | "Pending"
+  | "PendingReview"
+  | "Approved"
+  | "Processing"
+  | "Completed"
+  | "Failed"
+  | "Rejected";
+
 // ---------------------------------------------------------------------------
 // Models
 // ---------------------------------------------------------------------------
+
+export interface AdminDeliveryPartnerProfileDto {
+  userId?: string;
+  businessName?: string | null;
+  contactPersonName?: string | null;
+  email?: string | null;
+  phoneNumber?: string | null;
+  profilePictureUrl?: string | null;
+  registrationNumber?: string | null;
+  utr?: string | null;
+  bankName?: string | null;
+  bankCode?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  country?: string | null;
+  state?: string | null;
+  lga?: string | null;
+  city?: string | null;
+  area?: string | null;
+  kycStatus?: string | null;
+  isActive?: boolean;
+  createdOn?: string;
+  walletFunds?: number;
+  totalOrders?: number;
+  documents?: DeliveryPartnerDocumentDto[] | null;
+}
 
 export interface AdminEditUserRequestDto {
   firstName?: string | null;
@@ -98,6 +161,12 @@ export interface AdminListingItemDto {
   description?: string | null;
   categoryName?: string | null;
   condition?: string | null;
+  size?: string | null;
+  colour?: string | null;
+  quantity?: number;
+  brand?: string | null;
+  ecoBenefit?: string | null;
+  listingType?: string | null;
   status?: string | null;
   listedBy?: string | null;
   customerAccountCode?: string | null;
@@ -206,6 +275,7 @@ export interface AdminUserSummaryDto {
   status?: string | null;
   isActive?: boolean;
   createdOn?: string;
+  lastActive?: string | null;
 }
 
 export interface AdminUserSummaryDtoPaginatedResponseDto {
@@ -238,6 +308,47 @@ export interface AdminUserTransactionDtoPaginatedResponseDto {
   hasNext?: boolean;
 }
 
+export interface AdminVerificationItemDto {
+  id?: string;
+  referenceNumber?: string | null;
+  applicantName?: string | null;
+  applicantType?: string | null;
+  contactEmail?: string | null;
+  contactPhoneNumber?: string | null;
+  submissionDate?: string;
+  reviewedBy?: string | null;
+  reviewDate?: string | null;
+  status?: string | null;
+}
+
+export interface AdminVerificationItemDtoPaginatedResponseDto {
+  data?: AdminVerificationItemDto[] | null;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  totalRecords?: number;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
+}
+
+export interface AdminVerificationListResponseDto {
+  metrics?: AdminVerificationMetricsDto;
+  queue?: AdminVerificationItemDtoPaginatedResponseDto;
+}
+
+export interface AdminVerificationMetricsDto {
+  totalApplications?: number;
+  pendingReview?: number;
+  approved?: number;
+  rejected?: number;
+}
+
+export interface BankAccountResolutionResult {
+  success?: boolean;
+  accountName?: string | null;
+  message?: string | null;
+}
+
 export interface BankDetailsDto {
   accountHolderName?: string | null;
   accountNumber?: string | null;
@@ -245,6 +356,14 @@ export interface BankDetailsDto {
   sortCode?: string | null;
   iban?: string | null;
   swiftBicCode?: string | null;
+}
+
+export interface BankDto {
+  name?: string | null;
+  code?: string | null;
+  slug?: string | null;
+  country?: string | null;
+  currency?: string | null;
 }
 
 export interface CreateAdminListingRequestDto {
@@ -257,6 +376,11 @@ export interface CreateAdminListingRequestDto {
   price?: number | null;
   estimatedValue?: number | null;
   country?: Country;
+  colour?: string | null;
+  quantity?: number;
+  brandId?: string | null;
+  customBrandName?: string | null;
+  ecoBenefitId?: string | null;
 }
 
 export interface CreateAdminUserRequestDto {
@@ -268,6 +392,33 @@ export interface CreateAdminUserRequestDto {
   roleId?: string | null;
   verifyEmailAutomatically?: boolean;
   country?: Country;
+}
+
+export interface CreateDeliveryPartnerRequestDto {
+  contactPersonName: string;
+  email: string;
+  phoneNumber?: string | null;
+  businessName: string;
+  registrationNumber: string;
+  utr?: string | null;
+  bankName?: string | null;
+  bankCode?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  country: Country;
+  state?: string | null;
+  lga?: string | null;
+  city?: string | null;
+  area?: string | null;
+  password?: string | null;
+  verifyEmailAutomatically?: boolean;
+}
+
+export interface CreateFaqArticleRequestDto {
+  category: string;
+  question: string;
+  answer: string;
+  sortOrder?: number;
 }
 
 export interface CreateRoleRequestDto {
@@ -327,6 +478,44 @@ export interface DeleteUserRequestDto {
   targetEmail?: string | null;
 }
 
+export interface DeliveryPartnerCreatedResponseDto {
+  profile?: AdminDeliveryPartnerProfileDto;
+  generatedPassword?: string | null;
+  credentialsEmailed?: boolean;
+}
+
+export interface DeliveryPartnerDocumentDto {
+  id?: string;
+  documentType?: string | null;
+  fileName?: string | null;
+  url?: string | null;
+  fileSizeBytes?: number;
+  createdOn?: string;
+}
+
+export interface DeliveryPartnerOrderDto {
+  orderId?: string;
+  orderNumber?: number;
+  itemTitle?: string | null;
+  itemPrice?: number;
+  currency?: string | null;
+  pickupLabel?: string | null;
+  dropoffLabel?: string | null;
+  deliveryStatus?: string | null;
+  notDeliveredReason?: string | null;
+  createdOn?: string;
+}
+
+export interface DeliveryPartnerOrderDtoPaginatedResponseDto {
+  data?: DeliveryPartnerOrderDto[] | null;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  totalRecords?: number;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
+}
+
 export interface EditRequestDto {
   id?: string;
   userId?: string;
@@ -341,6 +530,32 @@ export interface EditRequestDto {
   reviewedOn?: string | null;
   reviewedBy?: string | null;
   rejectionReason?: string | null;
+}
+
+export interface FaqArticleDto {
+  id?: string;
+  category?: string | null;
+  question?: string | null;
+  answer?: string | null;
+  sortOrder?: number;
+}
+
+export interface FeatureSuggestionDto {
+  id?: string;
+  title?: string | null;
+  description?: string | null;
+  status?: string | null;
+  createdOn?: string;
+}
+
+export interface FeatureSuggestionDtoPaginatedResponseDto {
+  data?: FeatureSuggestionDto[] | null;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  totalRecords?: number;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 export interface FlagListingRequestDto {
@@ -394,6 +609,7 @@ export interface OrganizationDocumentDto {
 export interface OrganizationDto {
   id?: string;
   userId?: string;
+  referenceNumber?: string | null;
   organizationType?: string | null;
   organizationName?: string | null;
   registrationNumber?: string | null;
@@ -402,11 +618,33 @@ export interface OrganizationDto {
   contactPersonName?: string | null;
   contactPhoneNumber?: string | null;
   contactEmail?: string | null;
+  profileImageUrl?: string | null;
+  totalListings?: number;
+  totalDonations?: number;
+  signupDate?: string | null;
+  lastActive?: string | null;
+  accountStatus?: string | null;
+  emailVerified?: boolean;
+  kycStatus?: string | null;
+  bankName?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  sortCode?: string | null;
+  iban?: string | null;
+  swiftCode?: string | null;
   status?: string | null;
   submittedOn?: string | null;
   reviewedOn?: string | null;
+  reviewedBy?: string | null;
   rejectionReason?: string | null;
   documents?: OrganizationDocumentDto[] | null;
+}
+
+export interface PayoutSettingsDto {
+  reviewThresholdAmount?: number;
+  currency?: string | null;
+  isInstantPayoutEnabled?: boolean;
+  lastUpdatedOn?: string;
 }
 
 export interface PermissionDto {
@@ -437,6 +675,12 @@ export interface ReportDtoPaginatedResponseDto {
   hasNext?: boolean;
 }
 
+export interface ResolveBankAccountRequestDto {
+  accountNumber: string;
+  bankCode: string;
+  country?: Country;
+}
+
 export interface ResolveListingReportRequestDto {
   removeListing?: boolean;
   note?: string | null;
@@ -444,6 +688,11 @@ export interface ResolveListingReportRequestDto {
 
 export interface ResolveReportRequestDto {
   status: ReportStatus;
+}
+
+export interface ResolveSupportTicketRequestDto {
+  status: SupportTicketStatus;
+  note?: string | null;
 }
 
 export interface ResolveSwapDisputeRequestDto {
@@ -458,6 +707,8 @@ export interface ReviewEditRequestDto {
 
 export interface ReviewOrganizationRequestDto {
   approve: boolean;
+  rejectionCategory?: string | null;
+  additionalNotes?: string | null;
   rejectionReason?: string | null;
 }
 
@@ -534,6 +785,26 @@ export interface RoleSummaryDtoPaginatedResponseDto {
   hasNext?: boolean;
 }
 
+export interface SupportTicketDto {
+  id?: string;
+  category?: string | null;
+  description?: string | null;
+  attachmentUrl?: string | null;
+  status?: string | null;
+  createdOn?: string;
+  reviewedOn?: string | null;
+}
+
+export interface SupportTicketDtoPaginatedResponseDto {
+  data?: SupportTicketDto[] | null;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  totalRecords?: number;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
+}
+
 export interface SuspendUserRequestDto {
   reason?: string | null;
 }
@@ -544,6 +815,7 @@ export interface SwapEscrowSettingsDto {
   platformFeeRefundable?: boolean;
   bothPartiesPayPlatformFee?: boolean;
   depositWindowHours?: number;
+  escrowConfirmationWindowDays?: number;
 }
 
 export interface SwapPartyTermsDto {
@@ -587,6 +859,30 @@ export interface SwapProposalDtoPaginatedResponseDto {
   hasNext?: boolean;
 }
 
+export interface UpdateDeliveryPartnerRequestDto {
+  contactPersonName: string;
+  email: string;
+  phoneNumber?: string | null;
+  businessName: string;
+  registrationNumber: string;
+  utr?: string | null;
+  bankName?: string | null;
+  bankCode?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  country: Country;
+  state?: string | null;
+  lga?: string | null;
+  city?: string | null;
+  area?: string | null;
+}
+
+export interface UpdatePayoutSettingsRequestDto {
+  reviewThresholdAmount?: number;
+  currency?: string | null;
+  isInstantPayoutEnabled?: boolean;
+}
+
 export interface UpdateRoleRequestDto {
   name: string;
   description?: string | null;
@@ -599,6 +895,7 @@ export interface UpdateSwapEscrowSettingsRequestDto {
   platformFeeRefundable?: boolean;
   bothPartiesPayPlatformFee?: boolean;
   depositWindowHours?: number;
+  escrowConfirmationWindowDays?: number;
 }
 
 export interface UpdateVerificationMethodRequestDto {
@@ -651,4 +948,20 @@ export interface VerificationMethodConfigDto {
   requiresDocumentUpload?: boolean;
   requiresSelfie?: boolean;
   requiresProofOfAddress?: boolean;
+}
+
+export interface WithdrawalRequestDto {
+  id?: string;
+  reference?: string | null;
+  amount?: number;
+  fee?: number;
+  totalDeducted?: number;
+  currency?: string | null;
+  status?: WithdrawalStatus;
+  bankName?: string | null;
+  sortCode?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  requestedOn?: string;
+  processedOn?: string | null;
 }

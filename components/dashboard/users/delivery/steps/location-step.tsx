@@ -6,17 +6,18 @@ import {
   type FieldErrors,
   type UseFormSetValue,
 } from "react-hook-form";
-import { Switch } from "@/components/ui/switch";
 import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { FloatingSelect } from "@/components/shared/form/floating-select";
-import { COUNTRIES, NIGERIAN_STATES_WITH_LGAS } from "@/constants/user";
+import { COUNTRY_OPTIONS } from "@/constants/country";
+import { NIGERIAN_STATES_WITH_LGAS } from "@/constants/user";
+import type { Country } from "@/types/api/admin";
 import type { DeliveryPartnerFormValues } from "@/types/user";
 
 interface LocationStepProps {
   control: Control<DeliveryPartnerFormValues>;
   errors: FieldErrors<DeliveryPartnerFormValues>;
   setValue: UseFormSetValue<DeliveryPartnerFormValues>;
-  country: string;
+  country: Country;
   state?: string;
 }
 
@@ -39,13 +40,21 @@ export function LocationStep({
         render={({ field }) => (
           <FloatingSelect
             label="Country"
-            options={COUNTRIES}
+            options={COUNTRY_OPTIONS}
             value={field.value}
             onChange={(value) => {
               field.onChange(value);
               setValue("state", undefined);
               setValue("lga", undefined);
               setValue("region", undefined);
+              // The gateway serves a different bank list per country, so a
+              // code picked for the old one would no longer resolve — and the
+              // account number and the holder name the bank returned for it
+              // belong to that bank, not this one.
+              setValue("bankName", "");
+              setValue("bankCode", "");
+              setValue("bankAccountNumber", "");
+              setValue("accountHolderName", undefined);
             }}
             error={errors.country?.message}
           />
@@ -129,21 +138,6 @@ export function LocationStep({
             error={errors.area?.message}
             {...field}
           />
-        )}
-      />
-
-      {/* Auto Verify Email */}
-      <Controller
-        control={control}
-        name="verifyEmailAutomatically"
-        render={({ field }) => (
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-sm text-neutral-600">
-              Verify Email Automatically
-            </span>
-
-            <Switch checked={field.value} onCheckedChange={field.onChange} />
-          </div>
         )}
       />
     </div>

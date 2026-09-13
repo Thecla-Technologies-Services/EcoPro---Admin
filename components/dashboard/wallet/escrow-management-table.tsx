@@ -13,6 +13,7 @@ import { type EscrowTransaction } from "@/types/wallet";
 import { ForceReleaseDialog } from "./force-release-dialog";
 import { PauseEscrowDialog } from "./pause-escrow-dialog";
 import { OpenDisputeDialog } from "./open-dispute-dialog";
+import { Amount } from "@/components/shared/amount";
 import { StatusBadge } from "@/components/shared/status-badge";
 
 type EscrowDialog = "dispute" | "release" | "pause" | null;
@@ -59,8 +60,7 @@ function buildColumns(
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) =>
-        `₦${row.original.amount.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`,
+      cell: ({ row }) => <Amount amount={row.original.amount} />,
     },
     {
       accessorKey: "status",

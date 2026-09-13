@@ -3,6 +3,7 @@ import { Eye, Clock, Package } from "lucide-react";
 import { Listing } from "@/types/listing";
 import { StatusBadge } from "@/components/shared/status-badge";
 import ListingActionMenu from "./listing-action";
+import { Amount } from "@/components/shared/amount";
 
 export default function ListingRow({ listing }: { listing: Listing }) {
   return (
@@ -53,7 +54,9 @@ export default function ListingRow({ listing }: { listing: Listing }) {
           <span className="text-xs bg-background font-medium rounded-full px-2.5 py-0.5 text-foreground">
             {listing.condition}
           </span>
-          <StatusBadge status={listing.status} />
+          {/* Sized down to the category and condition pills beside it, which
+              stay at text-xs on every breakpoint. */}
+          <StatusBadge status={listing.status} className="py-0.5 md:text-xs" />
         </div>
 
         <hr className="border-border mt-3" />
@@ -70,7 +73,9 @@ export default function ListingRow({ listing }: { listing: Listing }) {
             <div>
               <p className="text-xs text-muted-foreground">Price</p>
               <p className="text-sm md:text-base text-foreground font-bold">
-                {listing.formattedPrice ?? `₦${listing.price.toLocaleString()}`}
+                {/* The raw figure, not `formattedPrice`: a pre-formatted
+                    string cannot be converted to the header's currency. */}
+                <Amount amount={listing.price} />
               </p>
             </div>
             <div>

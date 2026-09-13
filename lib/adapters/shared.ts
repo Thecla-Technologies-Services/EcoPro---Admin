@@ -55,3 +55,22 @@ export function toLabel<T extends string>(
   if (!value) return fallback;
   return labels[value.replace(/[\s_-]/g, "").toLowerCase()] ?? value;
 }
+
+/**
+ * A person's initials, for an avatar with no photo behind it.
+ *
+ * One letter per word rather than the first two characters of the string:
+ * "Priya IndependentRider" is PI, not PR. Capped at two so a three-part name
+ * still fits the circle, and empty for a name that is blank or punctuation —
+ * a caller can then show an icon rather than an empty disc.
+ */
+export function toInitials(name: string | null | undefined): string {
+  return (name ?? "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .filter((letter) => /\p{L}|\p{N}/u.test(letter))
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}

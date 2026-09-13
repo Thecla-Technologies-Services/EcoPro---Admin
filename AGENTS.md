@@ -81,7 +81,7 @@ indirection:
 | Adapter | For |
 | --- | --- |
 | `useListPanel({ paging: "server" })` | an endpoint that pages and searches — `GET /api/admin/listings` |
-| `useListPanel({ paging: "client" })` | one that accepts neither, so both happen in memory — `GET /api/user/get-all` |
+| `useListPanel({ paging: "client" })` | one that accepts neither, so both happen in memory — `GET /api/admin/payout-settings/withdrawals/pending` |
 | `useFixturePanel` | rows already in hand, for a module whose endpoints are not wired yet |
 
 Reach for `useFixturePanel` rather than passing a constant array to a table.
@@ -104,9 +104,31 @@ DTO, no query key, no hook — so its Pause and Delete confirm, then fail with a
 message saying why. Proving that absence takes a repo-wide search, so take it
 from here rather than re-running one.
 
-Three modules are behind a seam already, and going live is a one-word edit for
-each: withdrawal requests and disputes through `useFixturePanel`, and the
-verification queue through `useVerificationQueue({ source: "fixture" })`
-(`hooks/admin/use-verification-queue.ts`), which is not a list panel — it is a
-selection and two decisions over a queue joined from three endpoints. The rest
-have not been moved.
+Disputes is behind a seam already, through `useFixturePanel`, and going live is
+a one-word edit. The rest have not been moved.
+
+Withdrawal requests and the verification queue used to sit behind the same seam
+and are now live. The queue kept its option —
+`useVerificationQueue({ source: "fixture" })`
+(`hooks/admin/use-verification-queue.ts`) — because it is not a list panel: it
+is a selection and two decisions over `GET /verification/queue`, whose rows
+carry no documents, so the selected one is filled in from its own record.
+
+## What the Admin API will not tell you
+
+Endpoints are wired for every operation the Admin swagger documents. Four gaps
+are the API's, not this app's, and each is worth knowing before redesigning
+around it:
+
+| Gap | Consequence |
+| --- | --- |
+| FAQ articles are written but never read — no list or detail endpoint | the FAQ tab is a form addressed by id, not a table |
+| `withdrawals/pending` serves only undecided requests, and nothing reads a decided one back | the wallet table's tabs come from the statuses present, so no tab sits permanently empty |
+| Withdrawals name the payout account but not the account holder | the table lost its User and User ID columns rather than showing dashes |
+| Feature suggestions are listed but no endpoint changes one | that table has no kebab column |
+
+Two request bodies are multipart and declared inline in the swagger, so the
+generated DTOs do not cover them: both organization writes, whose input types
+live beside their hooks in `hooks/admin/use-organizations.ts`. `buildFormData`
+(`lib/api/params.ts`) is what drops an empty field, because a multipart PUT
+treats a field it received as one the admin meant to clear.
