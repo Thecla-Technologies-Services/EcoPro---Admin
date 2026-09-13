@@ -127,7 +127,7 @@ around it:
 | Withdrawals name the payout account but not the account holder | the table lost its User and User ID columns rather than showing dashes |
 | Feature suggestions are listed but no endpoint changes one | that table has no kebab column |
 
-Two request bodies are multipart and declared inline in the swagger, so the
+NB: Two request bodies are multipart and declared inline in the swagger, so the
 generated DTOs do not cover them: both organization writes, whose input types
 live beside their hooks in `hooks/admin/use-organizations.ts`. `buildFormData`
 (`lib/api/params.ts`) is what drops an empty field, because a multipart PUT
