@@ -30,10 +30,13 @@ export function toRoleLabel(role: string | null | undefined): UserRole | string 
 }
 
 /**
+ * An account's own standing — Active or Suspended — as opposed to the status of
+ * anything it has applied for.
+ *
  * The row action menu keys off Active/Suspended, so `isActive` is the source of
  * truth when present and the API's own status text is the fallback.
  */
-function toStatus(
+export function toAccountStatus(
   status: string | null | undefined,
   isActive: boolean | undefined
 ): UserStatus | string {
@@ -54,7 +57,7 @@ export function toUserRow(dto: AdminUserSummaryDto): User {
     email: dto.email ?? "",
     balance: dto.balance ?? 0,
     ecoPoints: dto.ecoPoints ?? 0,
-    status: toStatus(dto.status, dto.isActive),
+    status: toAccountStatus(dto.status, dto.isActive),
     // The list endpoint carries no listings indicator and no trend direction,
     // so both are left unset and the table renders a placeholder.
   };
@@ -83,7 +86,7 @@ export function toUserDetails(dto: AdminUserDetailsDto, row?: User): User {
     phone: dto.phoneNumber ?? row?.phone,
     balance: dto.walletFunds ?? row?.balance ?? 0,
     ecoPoints: dto.ecoPoints ?? row?.ecoPoints ?? 0,
-    status: toStatus(dto.accountStatus, dto.isActive),
+    status: toAccountStatus(dto.accountStatus, dto.isActive),
     totalListings: dto.totalListings,
     totalSold: dto.totalSold,
     totalPurchased: dto.totalPurchased,
@@ -119,8 +122,10 @@ export type UserFilterTab = (typeof USER_FILTER_TABS)[number];
  * documented, since `Tab` is typed as a bare string and an unrecognised value
  * would quietly return an unfiltered list instead of failing.
  *
- * Note what is missing: there is no tab for staff accounts, and no parameter
- * that excludes them, so `All` includes admins. See `isAdminRole`.
+ * Note what is missing: there is no tab for staff accounts. Selecting or
+ * excluding them is the endpoint's separate `Role` / `ExcludeAdmins`
+ * parameters, not a tab, so `All` here means every account kind including
+ * admins.
  */
 export const USER_TAB_PARAMS: Record<UserFilterTab, string | undefined> = {
   "All Users": "All",
@@ -129,54 +134,6 @@ export const USER_TAB_PARAMS: Record<UserFilterTab, string | undefined> = {
   Delivery: "Delivery",
   Suspended: "Suspended",
 };
-
-/**
- * Whether a row is a staff account.
- *
- * The users list has no way to filter admins out, so the Users page drops them
- * here after the fact. One consequence is visible: a page of ten that contains
- * admins renders fewer than ten rows.
- */
-export function isAdminRole(role: string | null | undefined) {
-  return toRoleLabel(role) === "Admin";
-}
-
-/**
- * Maps a staff account from `GET /api/user/get-all` onto the same row shape the
- * users table renders.
- *
- * That endpoint returns the identity service's `UserDto` rather than the admin
- * service's summary, so it carries no wallet balance, eco-points or listing
- * flag. The balance and eco-points columns are hidden on that table rather than
- * shown as zero; the fields below only exist to satisfy the row type.
- */
-export function toAdminUserRow(dto: UserDto): User {
-  const name =
-    [dto.firstName, dto.lastName].filter(Boolean).join(" ") ||
-    dto.email ||
-    "Unnamed user";
-
-  return {
-    id: dto.id ?? "",
-    name,
-    avatar: dto.profilePictureUrl ?? undefined,
-    role: toRoleLabel(dto.userType),
-    code: dto.userCode ?? "—",
-    email: dto.email ?? "",
-    phone: dto.phoneNumber ?? undefined,
-    balance: 0,
-    ecoPoints: 0,
-    status: toStatus(undefined, dto.isActive),
-    signupDate: dto.createdOn ?? undefined,
-    lastActive: dto.lastLoginDate ?? undefined,
-    emailVerified: dto.emailConfirmed,
-  };
-}
-
-/** Picks the staff accounts out of the identity service's full user list. */
-export function selectAdminUsers(users: UserDto[] = []) {
-  return users.filter((dto) => toRoleLabel(dto.userType) === "Admin");
-}
 
 /**
  * The admin's location as one line, from the identity service's user record.

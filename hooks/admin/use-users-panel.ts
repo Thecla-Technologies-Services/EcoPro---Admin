@@ -1,6 +1,5 @@
 "use client";
 
-import { useAdminUsers } from "@/hooks/admin/use-admin-users";
 import { useUsers } from "@/hooks/admin/use-users";
 import {
   useListPanel,
@@ -8,7 +7,6 @@ import {
 } from "@/hooks/shared/use-list-panel";
 import {
   USER_TAB_PARAMS,
-  isAdminRole,
   toUserRow,
   type UserFilterTab,
 } from "@/lib/adapters/user";
@@ -16,6 +14,12 @@ import type { AdminUserMetricsDto } from "@/types/api/admin";
 import type { User } from "@/types/user";
 
 const DEFAULT_TAB: UserFilterTab = "All Users";
+
+/**
+ * The `Role` value that selects staff accounts — a `UserType` member, spelled as
+ * the swagger spells it.
+ */
+const ADMIN_ROLE_PARAM = "Admin";
 
 /** What `UsersPanel` needs, whoever assembled it. */
 export type UsersPanelState = ListPanelState<User, AdminUserMetricsDto> & {
@@ -27,6 +31,9 @@ export type UsersPanelState = ListPanelState<User, AdminUserMetricsDto> & {
  *
  * `metrics` is returned rather than rendered because the Users page needs it for
  * its stat cards, and because the filter counts come from it.
+ *
+ * `excludeAdmins` is the endpoint's own `ExcludeAdmins` parameter, so the server
+ * both filters and counts — a full page of rows, and a total that matches them.
  */
 export function useUsersPanel({
   excludeAdmins = false,
@@ -43,6 +50,7 @@ export function useUsersPanel({
           pageNumber: pagination.pageIndex + 1,
           pageSize: pagination.pageSize,
           searchTerm: search || undefined,
+          excludeAdmins: excludeAdmins || undefined,
         },
       );
 
@@ -52,9 +60,6 @@ export function useUsersPanel({
         rows: page?.data ?? [],
         meta: query.data?.metrics,
         totalPages: page?.totalPages,
-        // CAVEAT: with `excludeAdmins` the server still counts staff accounts
-        // in `totalRecords`, so the row summary can read a little high.
-        // Correcting it needs a list filter the API does not expose.
         totalCount: page?.totalRecords,
         isPending: query.isPending,
         isFetching: query.isFetching,
@@ -64,11 +69,6 @@ export function useUsersPanel({
       };
     },
     toRow: toUserRow,
-    // The endpoint has no filter that excludes staff accounts, so they are
-    // dropped here — which is why a page can come back short.
-    select: excludeAdmins
-      ? (rows) => rows.filter((row) => !isAdminRole(row.role))
-      : undefined,
   });
 
   /**
@@ -94,24 +94,40 @@ export function useUsersPanel({
 }
 
 /**
- * The staff accounts list for the roles module.
+ * The staff accounts list for the roles module: `GET /api/admin/users?Role=Admin`.
  *
- * `GET /api/user/get-all` accepts no pagination or search, so both happen in the
- * panel over the full set. The counts and row numbers are therefore exact —
- * unlike the platform list, nothing is being filtered out from under the
- * server's totals.
+ * Paged and searched by the API, like the platform list. This used to read the
+ * identity service's whole user list and narrow it here, because the admin users
+ * endpoint had no way to ask for staff; it since grew a `Role` parameter, and
+ * asking the server is both correct and cheaper than filtering every account on
+ * the platform in the browser.
  */
 export function useAdminUsersPanel({
   pageSize,
 }: { pageSize?: number } = {}): UsersPanelState {
   return useListPanel({
     pageSize,
-    paging: "client",
-    useQuery: () => {
-      const query = useAdminUsers();
+    useQuery: ({ pagination, search }) => {
+      // No `Tab`: the list is already pinned to one role, and the tab values
+      // (All / Individual / NGO / Delivery / Suspended) have nothing to say
+      // about staff accounts.
+      const query = useUsers(undefined, {
+        role: ADMIN_ROLE_PARAM,
+        // Sent explicitly rather than left to the endpoint's default, which is
+        // undocumented: if it excludes staff, asking for `Role=Admin` and
+        // saying nothing here would return an empty list.
+        excludeAdmins: false,
+        pageNumber: pagination.pageIndex + 1,
+        pageSize: pagination.pageSize,
+        searchTerm: search || undefined,
+      });
+
+      const page = query.data?.users;
 
       return {
-        rows: query.data ?? [],
+        rows: page?.data ?? [],
+        totalPages: page?.totalPages,
+        totalCount: page?.totalRecords,
         isPending: query.isPending,
         isFetching: query.isFetching,
         isError: query.isError,
@@ -119,10 +135,6 @@ export function useAdminUsersPanel({
         refetch: () => void query.refetch(),
       };
     },
-    toRow: (row: User) => row,
-    matches: (row, term) =>
-      [row.name, row.email, row.code].some((field) =>
-        field?.toLowerCase().includes(term),
-      ),
+    toRow: toUserRow,
   });
 }

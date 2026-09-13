@@ -4,6 +4,7 @@ import { AmountBanner } from "./amount-banner";
 import { DetailRow } from "./detail-row";
 
 import { type WithdrawalRequest } from "@/types/wallet";
+import { formatWithdrawalAmount } from "@/lib/adapters/wallet";
 import {
   Dialog,
   DialogContent,
@@ -38,26 +39,38 @@ export function ViewWithdrawalDialog({
           Withdrawal Details
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Details for withdrawal request {request.requestId}
+          Details for withdrawal request {request.reference}
         </DialogDescription>
         <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" />
 
         <AmountBanner amount={request.amount} />
 
         <div className="flex flex-col">
-          <DetailRow label="Request ID" value={request.requestId} />
-          <DetailRow label="User ID" value={request.userId} />
-          <DetailRow label="User" value={request.user} />
-          <DetailRow label="Full Name" value={request.fullName} />
+          <DetailRow label="Request ID" value={request.reference} />
+          <DetailRow label="Account Name" value={request.accountName} />
           <DetailRow label="Bank Name" value={request.bankName} />
           <DetailRow label="Account Number" value={request.accountNumber} />
+          {request.sortCode && (
+            <DetailRow label="Sort Code" value={request.sortCode} />
+          )}
+          <DetailRow
+            label="Fee"
+            value={formatWithdrawalAmount(request.fee, request.currency)}
+          />
+          <DetailRow
+            label="Total Deducted"
+            value={formatWithdrawalAmount(
+              request.totalDeducted,
+              request.currency,
+            )}
+          />
           <DetailRow
             label="Status"
             value={<StatusBadge status={request.status} />}
           />
           <DetailRow label="Date" value={request.date} />
-          {isRejected && request.note && (
-            <DetailRow label="Note" value={request.note} />
+          {request.processedDate && (
+            <DetailRow label="Processed" value={request.processedDate} />
           )}
         </div>
 

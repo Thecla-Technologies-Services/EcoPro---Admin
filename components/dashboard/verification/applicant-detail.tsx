@@ -11,7 +11,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/hooks/admin/use-users";
+import { toAccountStatus } from "@/lib/adapters/user";
 import { toBankAccount } from "@/lib/adapters/verification";
 import { type Applicant, type ApplicantFact } from "@/types/verification";
 import { cn } from "@/lib/utils";
@@ -93,10 +95,32 @@ export function DetailBlock({
 export function FactCard({
   items,
   empty,
+  loading = false,
 }: {
   items: readonly ApplicantFact[];
   empty?: React.ReactNode;
+  /** Draws the rows as placeholders — the labels are known, the values are not. */
+  loading?: boolean;
 }) {
+  if (loading) {
+    // `aria-busy` sits on a wrapper rather than on DetailList, which takes a
+    // fixed set of props and would drop it.
+    return (
+      <div aria-busy>
+        <DetailList boxed className={CARD}>
+          <DetailList.Rows
+            items={items.map((item) => ({
+              label: item.label,
+              value: <Skeleton className="h-5 w-32" />,
+            }))}
+            labelClassName={LABEL}
+            valueClassName={VALUE}
+          />
+        </DetailList>
+      </div>
+    );
+  }
+
   if (!items.length && empty) {
     return (
       <p className="rounded-xl bg-white px-4 py-6 text-base text-muted-foreground">
@@ -187,28 +211,59 @@ export function DocumentList({
 }
 
 /**
- * The applicant's payout account.
+ * The applicant's account record — `GET /api/admin/users/{userId}`.
  *
- * Fetched from the user detail endpoint only when the applicant did not already
- * bring one — organizations always do. `fact` guards the placeholder id a rider
- * gets when no directory record matched: it is truthy, so without it the hook
- * would request a user called "—".
+ * The endpoints an application comes from identify it by application id and
+ * carry none of this: `RiderProfileDto` has no name or code at all, and
+ * `OrganizationDto` and `AdminVerificationItemDto` have no `userCode` field.
+ * The account record has all three — the payout account, the short code, and
+ * the account's own standing — so it is fetched once and the panels take what
+ * they need.
+ *
+ * `fact` guards the placeholder id an applicant gets when no record matched: it
+ * is truthy, so without it the hook would request a user called "—".
  */
-export function useApplicantBank(applicant: Applicant | null) {
-  const details = useUser(
-    applicant?.bank ? undefined : fact(applicant?.userId),
-  );
-  return applicant?.bank ?? toBankAccount(details.data?.bankDetails);
+export function useApplicantRecord(applicant: Applicant | null) {
+  const details = useUser(fact(applicant?.userId));
+  const dto = details.data;
+
+  return {
+    /**
+     * The first fetch only. A query with no id to ask about is disabled rather
+     * than pending, so an applicant carrying no user id reports false here and
+     * the panel renders what it has instead of waiting for a call never made.
+     */
+    isPending: details.isLoading,
+    /** An organization brings its own; a rider's hangs off the account. */
+    bank: applicant?.bank ?? toBankAccount(dto?.bankDetails),
+    /** The short, human-facing code. Undefined falls back to the clipped uuid. */
+    userCode: applicant?.userCode ?? dto?.userCode ?? undefined,
+    /**
+     * Active / Suspended — the account, not the application. Undefined until the
+     * record arrives, so a panel keeps showing whatever it had rather than
+     * claiming an account is Active while the answer is still in flight.
+     */
+    accountStatus: dto
+      ? toAccountStatus(dto.accountStatus, dto.isActive)
+      : undefined,
+  };
 }
 
 export function ApplicantDetail({
   applicant,
+  isPending = false,
   titleAs: Title = "h2",
   descriptionAs: Description = "p",
   badge = <StatusBadge status={applicant?.accountType || "Delivery"} />,
   children,
 }: {
   applicant: Applicant | null;
+  /**
+   * The account record is still in flight. Only the code and the status wait on
+   * it — the name and contact facts came with the row, so blanking those would
+   * hide what is already known.
+   */
+  isPending?: boolean;
   /** `DialogTitle` inside a dialog, a heading on a page. */
   titleAs?: React.ElementType;
   descriptionAs?: React.ElementType;
@@ -249,6 +304,13 @@ export function ApplicantDetail({
                 <Description className={cn(ID_CLASS, "break-words")}>
                   {applicant.userCode}
                 </Description>
+              ) : isPending ? (
+                // The uuid is the fallback for an account with no code, not a
+                // stand-in while we find out — showing it here would swap to a
+                // different string a moment later.
+                <Description className={ID_CLASS}>
+                  <Skeleton className="h-5 w-32" />
+                </Description>
               ) : (
                 <Description className={ID_CLASS}>
                   <Tooltip>
@@ -265,11 +327,15 @@ export function ApplicantDetail({
               )
             }
           >
-            {status && (
+            {status ? (
               <div className="mt-2">
                 <StatusBadge status={status} />
               </div>
-            )}
+            ) : isPending ? (
+              <div className="mt-2">
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+            ) : null}
           </EntityHeader.Identity>
 
           {/* `pr-8` keeps the first fact clear of a dialog's close button. */}

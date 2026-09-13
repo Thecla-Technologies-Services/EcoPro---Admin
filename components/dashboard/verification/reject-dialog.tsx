@@ -12,6 +12,7 @@ import { REJECTION_REASONS } from "@/constants/swap-order";
 import { ActionDialog } from "@/components/shared/action-dialog";
 import { ChoiceList } from "@/components/shared/choice-list";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { rejectionNoteLimit } from "@/lib/adapters/verification";
 
 interface RejectDialogProps {
   open: boolean;
@@ -36,6 +37,15 @@ function RejectDialogContent({
 
   const reject = useAsyncAction(onReject);
   const canSubmit = selectedReason !== null;
+
+  /**
+   * The reason and the note are sent to the API as one string with a documented
+   * ceiling, so what is left for the note depends on which reason was picked.
+   * Capped here rather than validated on submit: an admin who has typed 1200
+   * characters should have been stopped at the keystroke, not at the button.
+   */
+  const noteLimit = rejectionNoteLimit(selectedReason);
+  const noteRemaining = noteLimit - note.length;
 
   const submit = () => {
     if (!selectedReason) return;
@@ -82,7 +92,12 @@ function RejectDialogContent({
       <div className="flex-1 overflow-y-auto px-3 md:px-4">
         <ChoiceList
           value={selectedReason}
-          onChange={setSelectedReason}
+          onChange={(next) => {
+            setSelectedReason(next);
+            // A longer reason shrinks the note's budget, so an already-typed
+            // note is trimmed to fit rather than being rejected on submit.
+            setNote((current) => current.slice(0, rejectionNoteLimit(next)));
+          }}
           className="mb-5"
         >
           <ChoiceList.Options items={REJECTION_REASONS} />
@@ -98,10 +113,21 @@ function RejectDialogContent({
           <textarea
             id="rejection-note"
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(e) => setNote(e.target.value.slice(0, noteLimit))}
+            maxLength={noteLimit}
             rows={3}
             className="w-full rounded-md bg-input px-3 py-4 text-sm outline-none resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 transition-all"
           />
+          {/* Only once it is close enough to matter — a counter on an empty
+              field is noise. */}
+          {noteRemaining <= 100 && (
+            <p
+              className="mt-1 text-xs text-muted-foreground"
+              aria-live="polite"
+            >
+              {noteRemaining} characters left
+            </p>
+          )}
         </div>
       </div>
 

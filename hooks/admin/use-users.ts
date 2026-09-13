@@ -48,7 +48,13 @@ export function useUser(userId: string | undefined) {
   });
 }
 
-/** GET /api/admin/users/{userId}/listings */
+/**
+ * GET /api/admin/users/{userId}/listings
+ *
+ * `listingType` is lowercase here and `ListingType` on the platform listings
+ * endpoint — the swagger documents them that way, so the parameter is sent per
+ * hook rather than from the shared filter set.
+ */
 export function useUserListings(
   userId: string | undefined,
   listingType?: string,

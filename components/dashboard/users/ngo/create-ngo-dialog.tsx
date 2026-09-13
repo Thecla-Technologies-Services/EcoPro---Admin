@@ -17,6 +17,8 @@ import { NGOContactDetailsStep } from "./steps/contact-details-step";
 import { NGODocumentsStep } from "./steps/documents-step";
 import { ngoFormSchema } from "@/lib/validations/user";
 import { NGOSTEPS } from "@/constants/user";
+import { toErrorMessage } from "@/lib/api/errors";
+import { OrganizationCreatedDialog } from "./organization-created-dialog";
 import type { NgoFormValues, NgoStep } from "@/types/user";
 
 const STEP_ORDER: NgoStep[] = ["contact", "documents"];
@@ -29,6 +31,7 @@ const STEP_FIELDS: Record<NgoStep, (keyof NgoFormValues)[]> = {
     "contactPhone",
   ],
   documents: [
+    "registrationNumber",
     "organizationAddress",
     "postalCode",
     "documents",
@@ -42,39 +45,49 @@ const DEFAULT_VALUES: NgoFormValues = {
   contactPersonName: "",
   contactEmail: "",
   contactPhone: "",
+  registrationNumber: "",
   organizationAddress: "",
   postalCode: "",
   documents: [],
   existingDocuments: [],
 };
 
-/**
- * The Admin API has no endpoint that creates an organisation — it only reads
- * the ones awaiting verification — so the form validates and then says so
- * rather than reporting an NGO that was never created.
- */
-const NO_ENDPOINT_MESSAGE =
-  "NGO accounts cannot be created yet — the admin API has no create-organisation endpoint. The details above were not saved.";
-
 interface CreateNgoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Persists the organisation. The success dialog is shown only once this
+   * resolves — a rejection keeps the form on its last step and puts the reason
+   * under it, rather than reporting an NGO that was never created.
+   */
+  onCreated: (values: NgoFormValues) => Promise<void>;
 }
 
-export function CreateNgoDialog({ open, onOpenChange }: CreateNgoDialogProps) {
+export function CreateNgoDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: CreateNgoDialogProps) {
   // Remounting on open resets the step and every field without a manual reset.
   return (
     <CreateNgoDialogInner
       key={String(open)}
       open={open}
       onOpenChange={onOpenChange}
+      onCreated={onCreated}
     />
   );
 }
 
-function CreateNgoDialogInner({ open, onOpenChange }: CreateNgoDialogProps) {
+function CreateNgoDialogInner({
+  open,
+  onOpenChange,
+  onCreated,
+}: CreateNgoDialogProps) {
   const [step, setStep] = useState<NgoStep>("contact");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [created, setCreated] = useState(false);
 
   const {
     control,
@@ -100,10 +113,24 @@ function CreateNgoDialogInner({ open, onOpenChange }: CreateNgoDialogProps) {
     if (!valid) return;
 
     if (isLastStep) {
-      handleSubmit(() => setSubmitError(NO_ENDPOINT_MESSAGE))();
+      handleSubmit(onSubmit)();
       return;
     }
     setStep(STEP_ORDER[stepIndex + 1]);
+  }
+
+  async function onSubmit(values: NgoFormValues) {
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      await onCreated(values);
+    } catch (error) {
+      setSubmitError(toErrorMessage(error));
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
+    setCreated(true);
   }
 
   function goBack() {
@@ -113,7 +140,8 @@ function CreateNgoDialogInner({ open, onOpenChange }: CreateNgoDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open && !created} onOpenChange={onOpenChange}>
       {/* 580px wide, per the Create NGO frame. The `sm:` prefix is what beats
           DialogContent's own `sm:max-w-sm` default. */}
       <DialogContent
@@ -173,12 +201,14 @@ function CreateNgoDialogInner({ open, onOpenChange }: CreateNgoDialogProps) {
               variant="secondary"
               className="flex-1 rounded-full"
               onClick={() => (stepIndex === 0 ? onOpenChange(false) : goBack())}
+              disabled={isSubmitting}
             >
               {stepIndex === 0 ? "Cancel" : "Back"}
             </Button>
             <Button
               className="flex-1 rounded-full bg-primary text-white"
               onClick={goNext}
+              isLoading={isSubmitting}
             >
               {isLastStep ? "Create NGO" : "Continue"}
             </Button>
@@ -186,5 +216,17 @@ function CreateNgoDialogInner({ open, onOpenChange }: CreateNgoDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
+
+    <OrganizationCreatedDialog
+      open={created}
+      onOpenChange={(next) => {
+        if (!next) {
+          setCreated(false);
+          onOpenChange(false);
+        }
+      }}
+      organizationName={watch("organisationName")}
+    />
+    </>
   );
 }

@@ -17,18 +17,25 @@ import { type Transaction } from "@/types/wallet";
 import { TRANSACTIONS } from "@/data/transactions";
 import { IconType } from "react-icons/lib";
 import { FadeIn } from "@/components/motion/fade-in";
+import { Amount } from "@/components/shared/amount";
 
 interface StatCard {
   label: string;
   value: string;
   icon: IconType;
   delay?: number;
+  /**
+   * The figure as a number, for the cards that hold money. Set here so the card
+   * can convert; the counts beside them have no currency and keep their string.
+   */
+  amount?: number;
 }
 
 const OVERVIEW_STATS: StatCard[] = [
   {
     label: "Total Balance",
     value: "₦235.8M",
+    amount: 235_800_000,
     icon: Wallet,
     delay: 0.1,
   },
@@ -47,6 +54,7 @@ const OVERVIEW_STATS: StatCard[] = [
   {
     label: "Total Paid out",
     value: "₦15.8M",
+    amount: 15_800_000,
     icon: DollarSign,
     delay: 0.4,
   },
@@ -60,7 +68,14 @@ function StatCards({ stats }: { stats: StatCard[] }) {
           <SharedStatCard
             key={s.label}
             label={s.label}
-            value={s.value}
+            // A money card converts; a count is a count in every currency.
+            value={
+              s.amount === undefined ? (
+                s.value
+              ) : (
+                <Amount amount={s.amount} compact />
+              )
+            }
             icon={s.icon}
           />
         </FadeIn>
@@ -125,11 +140,11 @@ export function WalletOverview() {
 
   const filters: TxFilter[] = ["All", "Credit", "Debit", "On Hold"];
 
-  function formatAmount(tx: Transaction) {
-    const abs = Math.abs(tx.amount).toLocaleString();
-    if (tx.amountType === "credit") return `+${abs}`;
-    if (tx.amountType === "debit") return `-${abs}`;
-    return abs;
+  /** Ledger rows carry their direction in the sign, not in the figure. */
+  function amountSign(tx: Transaction) {
+    if (tx.amountType === "credit") return "+";
+    if (tx.amountType === "debit") return "-";
+    return "";
   }
 
   return (
@@ -184,7 +199,7 @@ export function WalletOverview() {
                   tx.amountType === "neutral" && "text-gray-600",
                 )}
               >
-                {formatAmount(tx)}
+                <Amount amount={Math.abs(tx.amount)} sign={amountSign(tx)} />
               </span>
             </div>
           ))}

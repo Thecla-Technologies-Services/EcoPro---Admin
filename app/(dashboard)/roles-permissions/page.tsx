@@ -62,9 +62,8 @@ export default function RolesPermissionsPage() {
     toRow: toRoleRow,
   });
 
-  // Staff accounts come from the identity service, since the admin users list
-  // has no tab for them — so there is nothing for the table's own account-kind
-  // filters to switch between either.
+  // Pinned to `Role=Admin`, so there is nothing for the table's own
+  // account-kind filters to switch between.
   const adminUsers = useAdminUsersPanel();
 
   const metrics: RoleMetricsDto | undefined = roles.meta;
@@ -133,9 +132,6 @@ export default function RolesPermissionsPage() {
           panel={adminUsers}
           showFilterTabs={false}
           rowLabel="admin users"
-          // Balance, eco-points and listed have no source for a staff account —
-          // the identity service carries none of them, so they would only ever
-          // render zeroes and placeholders. Code is dropped as noise here.
           hiddenColumns={["code", "balance", "ecoPoints", "listed"]}
           showChangePassword
         />

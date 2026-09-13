@@ -16,6 +16,7 @@ import { DataState } from "@/components/shared/data-state";
 import { useUserTransactions } from "@/hooks/admin/use-users";
 import type { WalletFilter } from "@/types/user";
 import { cn } from "@/lib/utils";
+import { Amount } from "@/components/shared/amount";
 
 /**
  * Each kind of transaction carries its own glyph and tint in the design: money
@@ -80,7 +81,7 @@ export function WalletHistoryTab({
         <div className="bg-background rounded-md py-3 md:py-5 px-3 md:px-4 text-left">
           <p className="text-xs font-medium text-[#6C6C6C]">Total Balance</p>
           <p className="text-xl font-bold text-gray-900">
-            ₦{(balance ?? 0).toLocaleString()}
+            <Amount amount={balance ?? 0} />
           </p>
         </div>
         <div className="bg-background rounded-md py-3 md:py-5 px-3 md:px-4 text-left">
@@ -148,7 +149,7 @@ export function WalletHistoryTab({
                   )}
                 >
                   {isCredit ? "+" : ""}
-                  {(tx.amount ?? 0).toLocaleString()}
+                  <Amount amount={tx.amount ?? 0} />
                 </span>
               </div>
             );

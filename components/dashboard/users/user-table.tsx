@@ -15,10 +15,12 @@ import { RowActions } from "@/components/shared/row-actions";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TableSearchInput } from "@/components/shared/table-search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toInitials } from "@/lib/adapters/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PaginationState } from "@tanstack/react-table";
 import type { User, ModalType } from "@/types/user";
 import { USER_FILTER_TABS } from "@/lib/adapters/user";
+import { Amount } from "@/components/shared/amount";
 
 interface UserTableProps {
   data: User[];
@@ -106,8 +108,10 @@ export function UserTable({
         <div className="flex items-center gap-2">
           <Avatar className="size-8 shrink-0">
             <AvatarImage src={row.original.avatar} alt={row.original.name} />
+            {/* Initials, not the first two characters — the photo is the
+                point, and this is what stands in when there is none. */}
             <AvatarFallback className="text-xs font-bold bg-muted">
-              {row.original.name.slice(0, 2).toUpperCase()}
+              {toInitials(row.original.name)}
             </AvatarFallback>
           </Avatar>
           <span className="text-sm font-medium text-gray-900">
@@ -142,7 +146,7 @@ export function UserTable({
       header: "Balance",
       cell: ({ row }) => (
         <span className="text-sm font-medium">
-          ₦{row.original.balance.toLocaleString()}.00
+          <Amount amount={row.original.balance} />
         </span>
       ),
     },

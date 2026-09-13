@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Table } from "@tanstack/react-table";
 import { Button } from "../ui/button";
@@ -7,6 +8,14 @@ interface BaseProps {
   rowLabel?: string;
   maxVisible?: number; // how many page buttons to show, default 5
   className?: string;
+  /**
+   * Any element inside the region that scrolls — the list itself will do.
+   * Changing page returns that region to the top, so the reader starts the new
+   * page at the top of the page rather than wherever the previous page's rows
+   * left the viewport. On a phone the controls sit a screen or more below the
+   * header, so without this a page change looks like nothing happened.
+   */
+  scrollAnchorRef?: RefObject<HTMLElement | null>;
 }
 
 interface TableMode<T> extends BaseProps {
@@ -58,6 +67,7 @@ export function Pagination<T>({
   rowLabel = "rows",
   maxVisible = 5,
   className,
+  scrollAnchorRef,
 }: PaginationProps<T>) {
   // Normalise to a single interface regardless of mode
   const isTableMode = Boolean(table);
@@ -74,6 +84,10 @@ export function Pagination<T>({
   const goTo = (zeroIndex: number) => {
     if (isTableMode) table!.setPageIndex(zeroIndex);
     else onChange!(zeroIndex + 1);
+    // Done here rather than in an effect on the page index: this fires only for
+    // a page the reader asked for, so a background refetch or a filter that
+    // resets to page 1 doesn't yank the viewport.
+    scrollToTop(scrollAnchorRef);
   };
   const goPrev = () => goTo(pageIndex - 1);
   const goNext = () => goTo(pageIndex + 1);
@@ -92,7 +106,7 @@ export function Pagination<T>({
     // Server-paginated tables know their total only from `totalCount`; for a
     // client-paginated one the filtered row model already holds every row.
     const totalRows = isTableMode
-      ? totalCount ?? table!.getFilteredRowModel().rows.length
+      ? (totalCount ?? table!.getFilteredRowModel().rows.length)
       : totalCount;
     const size = isTableMode ? table!.getState().pagination.pageSize : pageSize;
 
@@ -102,7 +116,8 @@ export function Pagination<T>({
     // without special-casing it.
     const onPage = isTableMode
       ? table!.getRowModel().rows.length
-      : rowsOnPage ?? Math.min(size, Math.max(0, totalRows - pageIndex * size));
+      : (rowsOnPage ??
+        Math.min(size, Math.max(0, totalRows - pageIndex * size)));
 
     if (totalRows === 0 || onPage === 0) return { start: 0, end: 0, totalRows };
 
@@ -116,12 +131,7 @@ export function Pagination<T>({
   if (isEmpty) return null;
 
   return (
-    <div
-      className={cn(
-        " py-3.5 flex items-center justify-between",
-        className,
-      )}
-    >
+    <div className={cn(" py-3.5 flex items-center justify-between", className)}>
       {/* Left: row count (table mode) or page indicator (standalone) */}
       {rowSummary ? (
         <p className="text-xs text-gray-400">
@@ -184,6 +194,47 @@ export function Pagination<T>({
       </div>
     </div>
   );
+}
+
+/**
+ * Returns the scrolling region the anchor sits in to the top.
+ *
+ * Which element actually scrolls varies: `main` in the dashboard layout for
+ * most pages, a page's own inner box on Listings, a sheet body inside a dialog.
+ * Rather than each caller knowing which, this walks up from the anchor to the
+ * nearest ancestor that scrolls — falling back to the window, for a page whose
+ * content scrolls the document itself.
+ */
+function scrollToTop(ref?: RefObject<HTMLElement | null>) {
+  const anchor = ref?.current;
+  if (!anchor) return;
+
+  // Someone who asked for less motion gets the jump, not the glide.
+  const behavior: ScrollBehavior = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches
+    ? "auto"
+    : "smooth";
+
+  const container = findScrollContainer(anchor);
+  if (container) container.scrollTo({ top: 0, behavior });
+  else window.scrollTo({ top: 0, behavior });
+}
+
+/** The nearest ancestor that scrolls vertically, the anchor itself included. */
+function findScrollContainer(anchor: HTMLElement): HTMLElement | null {
+  let node: HTMLElement | null = anchor;
+
+  while (node) {
+    const { overflowY } = getComputedStyle(node);
+    const scrolls = overflowY === "auto" || overflowY === "scroll";
+    // A box can be styled to scroll and have nothing to scroll — skip it, or
+    // paging inside a short dialog would stop at it and leave the page put.
+    if (scrolls && node.scrollHeight > node.clientHeight) return node;
+    node = node.parentElement;
+  }
+
+  return null;
 }
 
 // Returns an array like [1, "...", 4, 5, 6, "...", 20]

@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { useListing } from "@/hooks/admin/use-listings";
 import { toListingRow } from "@/lib/adapters/listing";
 import type { Listing } from "@/types/listing";
+import { Amount } from "@/components/shared/amount";
 
 interface ViewListingDialogProps {
   open: boolean;
@@ -129,7 +130,7 @@ function ListingDetail({ listing }: { listing: Listing }) {
         <div className="shrink-0 space-y-1 text-right">
           <p className="text-sm text-muted-foreground">Price</p>
           <p className="text-2xl font-bold text-primary">
-            {listing.formattedPrice ?? `₦${listing.price.toLocaleString()}`}
+            <Amount amount={listing.price} />
           </p>
         </div>
       </div>

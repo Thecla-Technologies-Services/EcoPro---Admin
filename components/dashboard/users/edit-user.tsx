@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { IoPersonOutline } from "react-icons/io5";
-import { Edit2, Mail, Phone } from "lucide-react";
+import { Camera, Mail, Phone } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editUserSchema, type EditUserForm } from "@/lib/validations/profile";
@@ -65,7 +65,10 @@ export function EditProfileForm({
         userId: user.id,
         firstName: data.firstName,
         lastName: data.lastName,
-        email: data.email,
+        // The record's own address rather than the form's: the field is not
+        // editable, so this is the value either way — and taking it from the
+        // user means a tampered form still cannot change it.
+        email: user.email,
         phoneNumber: data.phone,
         // Omitted rather than sent as null when no role is selected, so the
         // API keeps whatever role the user already has.
@@ -80,19 +83,27 @@ export function EditProfileForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Avatar */}
       <div className="flex items-center justify-start gap-4 mb-4">
-        <div className="relative">
-          <Avatar className="size-16 md:size-25">
+        {/* Sized explicitly so the badge below positions against the avatar
+            box itself rather than whatever the wrapper happens to collapse to. */}
+        <div className="relative size-16 shrink-0 md:size-25">
+          <Avatar className="size-full">
             <AvatarImage src={avatar ?? undefined} alt={user.name} />
-            <AvatarFallback className="text-lg font-bold bg-muted">
-              {user.name.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
+            {/* Kept but empty: it is what paints the grey disc when there is
+                no photo, and the camera centred on top is the only mark the
+                design wants there. */}
+            <AvatarFallback className="bg-muted" />
           </Avatar>
+          {/* Centred over the avatar, as the design has it — the whole face is
+              the affordance, not a corner badge. */}
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute -bottom-1 -right-1 size-6 bg-primary rounded-full flex items-center justify-center shadow"
+            aria-label="Change profile image"
+            className="absolute top-1/2 left-1/2 z-10 flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full"
           >
-            <Edit2 className="size-3 text-white" />
+            {/* No disc behind it, so the glyph carries a drop shadow — white on
+                white is invisible on a light photo. */}
+            <Camera className="size-10 text-white drop-shadow-md" />
           </button>
           <input
             ref={fileRef}
@@ -125,12 +136,15 @@ export function EditProfileForm({
         />
       </div>
 
-      {/* Email */}
-
+      {/* Email — shown so the admin can see which account they are editing,
+          but not editable: an email is the account's login, and changing one
+          from here would lock the user out with no way back. */}
       <FloatingLabelInput
         label="Email Address"
         type="email"
         icon={<Mail className="size-4" />}
+        disabled
+        readOnly
         error={errors.email?.message}
         {...register("email")}
       />

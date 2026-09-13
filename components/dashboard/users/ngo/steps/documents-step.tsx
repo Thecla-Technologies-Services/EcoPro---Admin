@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Mailbox } from "lucide-react";
+import { MapPin, Mailbox, FileText } from "lucide-react";
 import {
   Controller,
   type Control,
@@ -28,6 +28,21 @@ export function NGODocumentsStep({
 }: DocumentsStepProps) {
   return (
     <div className="space-y-5">
+      {/* Required by the create endpoint, so the form has to ask for it */}
+      <Controller
+        control={control}
+        name="registrationNumber"
+        render={({ field }) => (
+          <FloatingLabelInput
+            label="Registration Number (CAC)"
+            placeholder="CAC/IT/12333"
+            icon={<FileText className="size-5" />}
+            error={errors.registrationNumber?.message}
+            {...field}
+          />
+        )}
+      />
+
       <Controller
         control={control}
         name="organizationAddress"

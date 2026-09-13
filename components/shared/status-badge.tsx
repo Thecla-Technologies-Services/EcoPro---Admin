@@ -50,8 +50,18 @@ const statusConfig: Record<BadgeStatus, keyof typeof badgeVariants> = {
  * Accepts any string because the API returns its own status and role names.
  * Anything not in `statusConfig` renders in the muted style rather than
  * unstyled, so an unmapped value is visible instead of invisible.
+ *
+ * `className` is for sizing only — a caller sitting the badge in a row of
+ * smaller pills overrides the padding and text size so the three match. The
+ * colour is the badge's own and is not meant to be overridden.
  */
-export function StatusBadge({ status }: { status: BadgeStatus | string }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: BadgeStatus | string;
+  className?: string;
+}) {
   const cfg = statusConfig[status as BadgeStatus] ?? "muted";
   return (
     <span
@@ -59,6 +69,7 @@ export function StatusBadge({ status }: { status: BadgeStatus | string }) {
         "px-2.5 py-1 rounded-full text-xs md:text-sm font-medium",
         badgeVariants[cfg]?.bg,
         badgeVariants[cfg]?.text,
+        className,
       )}
     >
       {status}

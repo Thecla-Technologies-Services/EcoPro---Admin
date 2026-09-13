@@ -89,7 +89,7 @@ export default function IndependentRidersTable({
                   setDialogOpen(true);
                 }}
               >
-                View Account
+                View Rider
               </RowActions.Item>
             </RowActions>
           );

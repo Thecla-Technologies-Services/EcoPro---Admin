@@ -10,6 +10,7 @@ import { RevenueChart } from "@/components/dashboard/overview/revenue-charts";
 import { DataState } from "@/components/shared/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardOverview } from "@/hooks/admin/use-dashboard";
+import { Amount } from "@/components/shared/amount";
 
 export default function DashboardPage() {
   const { data, isPending, isError, error, refetch } = useDashboardOverview();
@@ -27,7 +28,11 @@ export default function DashboardPage() {
       </div>
 
       <DataState>
-        <DataState.Error when={isError} error={error} onRetry={() => refetch()} />
+        <DataState.Error
+          when={isError}
+          error={error}
+          onRetry={() => refetch()}
+        />
         <DataState.Content className="space-y-6">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -47,11 +52,15 @@ export default function DashboardPage() {
                 </FadeIn>
                 <FadeIn delay={0.2}>
                   <StatCard
-                    // The API pre-formats the currency and weight figures;
-                    // fall back to the raw number if it omits them.
                     value={
-                      metrics?.formattedGmv ??
-                      (metrics?.grossMerchandiseValue ?? 0).toLocaleString()
+                      metrics?.grossMerchandiseValue === undefined ? (
+                        (metrics?.formattedGmv ?? "—")
+                      ) : (
+                        <Amount
+                          amount={metrics.grossMerchandiseValue}
+                          compact
+                        />
+                      )
                     }
                     label="Gross Merchandise Value"
                     icon={Banknote}
@@ -93,7 +102,10 @@ export default function DashboardPage() {
 
             {/* Right Column - Side Stats */}
             <div>
-              <SideStats counters={data?.pendingCounters} isLoading={isPending} />
+              <SideStats
+                counters={data?.pendingCounters}
+                isLoading={isPending}
+              />
             </div>
           </div>
 

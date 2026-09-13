@@ -22,6 +22,10 @@ const documentsShape = {
     z.object({ id: z.string(), name: z.string(), url: z.string() }),
   ),
   bankName: z.string().min(1, "Select a bank"),
+  // Set alongside the name when a bank is picked. Its own message would never
+  // be read, so the check is here to stop a submit that the create endpoint
+  // would reject for a missing bankCode.
+  bankCode: z.string().min(1, "Select a bank"),
   bankAccountNumber: z
     .string()
     .regex(/^[0-9]{10}$/, "Account number must be 10 digits"),
@@ -29,7 +33,7 @@ const documentsShape = {
 };
 
 const locationShape = {
-  country: z.string().min(1, "Select a country"),
+  country: z.enum(["UnitedKingdom", "Nigeria", "Ghana"]),
   state: z.string().optional(),
   lga: z.string().optional(),
   region: z.string().optional(),
@@ -102,6 +106,7 @@ const contactNGODetailsShape = {
 // verification documents — not the bank and CAC fields a delivery partner
 // needs — so it has its own shape rather than reusing `documentsShape`.
 const ngoDocumentsShape = {
+  registrationNumber: z.string().min(3, "Enter the CAC registration number"),
   organizationAddress: z.string().min(2, "Enter the organisation's address"),
   postalCode: z.string().min(3, "Enter the postal code"),
   documents: z.array(z.instanceof(File)),

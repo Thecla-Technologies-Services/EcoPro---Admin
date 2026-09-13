@@ -10,7 +10,7 @@ import { apiFetch } from "@/lib/api/fetcher";
 import {
   buildQueryString,
   paginationParams,
-  type AdminQueryFilters,
+  type ListingQueryFilters,
 } from "@/lib/api/params";
 import { adminKeys } from "@/lib/api/query-keys";
 import type {
@@ -21,12 +21,24 @@ import type {
 } from "@/types/api/admin";
 
 /** GET /api/admin/listings */
-export function useListings(tab?: string, filters?: AdminQueryFilters) {
+export function useListings(tab?: string, filters?: ListingQueryFilters) {
   return useQuery({
     queryKey: adminKeys.listings.list(tab, filters),
     queryFn: () =>
       apiFetch<AdminListingListResponseDto>(
-        `/listings${buildQueryString({ Tab: tab, ...paginationParams(filters) })}`
+        // The date range goes through the shared `FromDate` / `ToDate`, which
+        // is the created-on filter every admin list takes. This endpoint also
+        // documents `DateListedFrom` / `DateListedTo`, undocumented as to what
+        // "listed" means here — availability rather than creation, as far as
+        // anyone can tell — so they are deliberately not used.
+        //
+        // `ListingType` here, `listingType` on the per-user endpoint — the two
+        // are documented with different casing, so neither can be shared.
+        `/listings${buildQueryString({
+          Tab: tab,
+          ListingType: filters?.listingType,
+          ...paginationParams(filters),
+        })}`
       ),
     // Keep the current page visible while the next one loads.
     placeholderData: keepPreviousData,

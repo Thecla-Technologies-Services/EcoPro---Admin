@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toInitials } from "@/lib/adapters/shared";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/shared/confirm-action-dialog";
 import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
@@ -48,7 +49,7 @@ function UserAvatar({ user }: { user: User }) {
     <Avatar className="size-20 mb-5">
       <AvatarImage src={user?.avatar} alt={user.name} />
       <AvatarFallback className="text-xl font-bold bg-muted">
-        {user.name.slice(0, 2).toUpperCase()}
+        {toInitials(user.name)}
       </AvatarFallback>
     </Avatar>
   );

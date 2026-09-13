@@ -75,7 +75,9 @@ function Option({
       aria-checked={isSelected}
       onClick={() => onChange(value)}
       className={cn(
-        "w-full rounded-md border px-3 py-4 text-left text-sm font-semibold transition-all md:text-base md:font-bold",
+        // Tailwind's preflight gives a button `cursor: default`, so every
+        // clickable in this app sets the pointer itself.
+        "w-full cursor-pointer rounded-md border px-3 py-4 text-left text-sm font-semibold transition-all md:text-base md:font-bold",
         isSelected
           ? "border-2 border-primary text-foreground"
           : "border-transparent bg-input text-foreground hover:border-border",

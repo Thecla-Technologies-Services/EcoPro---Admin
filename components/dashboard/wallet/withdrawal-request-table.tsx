@@ -5,8 +5,11 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Eye, CheckCircle, XCircle } from "lucide-react";
 import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
-import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
-import { WITHDRAWAL_REQUESTS } from "@/data/withdrawal-requests";
+import { DataState } from "@/components/shared/data-state";
+import { useListPanel } from "@/hooks/shared/use-list-panel";
+import { usePendingWithdrawals } from "@/hooks/admin/use-payouts";
+import { toWithdrawalRequest } from "@/lib/adapters/wallet";
+import { Amount } from "@/components/shared/amount";
 import DateRangeFilter from "@/components/shared/date/date-range-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ViewWithdrawalDialog } from "./view-withdrawal-dialog";
@@ -17,6 +20,16 @@ import { DateRangeFilterValue } from "@/types/date";
 
 type DialogType = "view" | "approve" | "reject" | null;
 
+/**
+ * Which statuses can be acted on.
+ *
+ * The endpoint serves the pending queue, and the API's vocabulary has two
+ * spellings for that — `Pending` and `PendingReview`, the latter being a
+ * withdrawal held back by the review threshold. Both are still undecided, so
+ * both can be approved or rejected.
+ */
+const DECIDABLE = new Set(["Pending", "Pending Review"]);
+
 function ActionsCell({
   row,
   onAction,
@@ -24,8 +37,7 @@ function ActionsCell({
   row: WithdrawalRequest;
   onAction: (type: DialogType, row: WithdrawalRequest) => void;
 }) {
-  const isPending = row.status === "Pending";
-  const isRejected = row.status === "Rejected";
+  const isDecidable = DECIDABLE.has(row.status);
 
   return (
     <RowActions>
@@ -33,23 +45,22 @@ function ActionsCell({
         View Withdrawal
       </RowActions.Item>
 
-      {(isPending || isRejected) && (
-        <RowActions.Item
-          icon={CheckCircle}
-          onSelect={() => onAction("approve", row)}
-        >
-          Approve Withdrawal
-        </RowActions.Item>
-      )}
-
-      {isPending && (
-        <RowActions.Item
-          icon={XCircle}
-          destructive
-          onSelect={() => onAction("reject", row)}
-        >
-          Reject Withdrawal
-        </RowActions.Item>
+      {isDecidable && (
+        <>
+          <RowActions.Item
+            icon={CheckCircle}
+            onSelect={() => onAction("approve", row)}
+          >
+            Approve Withdrawal
+          </RowActions.Item>
+          <RowActions.Item
+            icon={XCircle}
+            destructive
+            onSelect={() => onAction("reject", row)}
+          >
+            Reject Withdrawal
+          </RowActions.Item>
+        </>
       )}
     </RowActions>
   );
@@ -60,25 +71,25 @@ function buildColumns(
 ): ColumnDef<WithdrawalRequest>[] {
   return [
     {
-      accessorKey: "requestId",
+      accessorKey: "reference",
       header: "Transaction ID",
-    },
-    {
-      accessorKey: "userId",
-      header: "User ID",
-    },
-    {
-      accessorKey: "user",
-      header: "User",
     },
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) =>
-        `₦${row.original.amount.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`,
+      cell: ({ row }) => (
+        <Amount amount={row.original.amount} currency={row.original.currency} />
+      ),
     },
     {
-      accessorKey: "fullName",
+      accessorKey: "fee",
+      header: "Fee",
+      cell: ({ row }) => (
+        <Amount amount={row.original.fee} currency={row.original.currency} />
+      ),
+    },
+    {
+      accessorKey: "accountName",
       header: "Account Name",
     },
     {
@@ -107,7 +118,7 @@ function buildColumns(
 }
 
 const ALL_TAB = "All";
-const TABS = [ALL_TAB, "Pending", "Approved", "Rejected"] as const;
+const PAGE_SIZE = 7;
 
 export function WithdrawalRequestTable() {
   const [activeRow, setActiveRow] = React.useState<WithdrawalRequest | null>(
@@ -134,55 +145,86 @@ export function WithdrawalRequestTable() {
 
   const columns = React.useMemo(() => buildColumns(handleAction), []);
 
-  const panel = useFixturePanel({
-    rows: WITHDRAWAL_REQUESTS,
-    pageSize: 7,
+  /**
+   * `GET /payout-settings/withdrawals/pending` accepts no paging, search or
+   * filters and returns the whole queue, so all three happen here.
+   */
+  const panel = useListPanel({
+    paging: "client",
+    pageSize: PAGE_SIZE,
     initialFilters: { tab: ALL_TAB },
-    matches: (row, _term, { tab }) => tab === ALL_TAB || row.status === tab,
+    useQuery: () => {
+      const query = usePendingWithdrawals();
+      return { rows: query.data ?? [], ...query };
+    },
+    toRow: toWithdrawalRequest,
+    // `DataTable` carries no search field of its own, so the only filter the
+    // panel applies here is the tab.
+    matches: (row, _term, { tab }) =>
+      !tab || tab === ALL_TAB || row.status === tab,
   });
 
   /**
-   * Counted from the rows rather than written down. The figures here used to be
-   * literals that disagreed with what the table showed.
+   * Tabs come from the statuses actually present, not a fixed list.
+   *
+   * A written-down `Approved` / `Rejected` pair would sit there permanently
+   * empty: this endpoint only serves undecided requests, and a decided one
+   * leaves the list with no endpoint that reads it back. An empty tab reads as
+   * "there are none", which would be a claim the API never made.
    */
+  const tabs = React.useMemo(() => {
+    const present = [...new Set(panel.rows.map((row) => row.status))].sort();
+    return [ALL_TAB, ...present];
+  }, [panel.rows]);
+
   const filterCounts = React.useMemo(
     () =>
-      TABS.reduce<Record<string, number>>(
+      tabs.reduce<Record<string, number>>(
         (counts, tab) => ({
           ...counts,
           [tab]:
             tab === ALL_TAB
-              ? WITHDRAWAL_REQUESTS.length
-              : WITHDRAWAL_REQUESTS.filter((row) => row.status === tab).length,
+              ? panel.rows.length
+              : panel.rows.filter((row) => row.status === tab).length,
         }),
         {},
       ),
-    [],
+    [tabs, panel.rows],
   );
 
   return (
     <>
-      <DataTable
-        columns={columns}
-        data={panel.table.data}
-        manualPagination
-        pagination={panel.table.pagination}
-        onPaginationChange={panel.table.onPaginationChange}
-        totalPages={panel.table.totalPages}
-        totalCount={panel.table.totalCount}
-        activeTab={panel.table.activeTab}
-        onTabChange={panel.table.onTabChange}
-        pageSize={7}
-        rowLabel="requests"
-        hideSortIcon={["actions"]}
-        allTabValue={ALL_TAB}
-        title="Pending Withdrawal Requests"
-        filterTabs={TABS}
-        filterCounts={filterCounts}
-        headerExtra={
-          <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
-        }
-      />
+      <DataState>
+        <DataState.Error
+          when={panel.query.isError}
+          error={panel.query.error}
+          onRetry={panel.query.refetch}
+        />
+        <DataState.Loading when={panel.query.isPending} rows={4} />
+        <DataState.Content>
+          <DataTable
+            columns={columns}
+            data={panel.table.data}
+            manualPagination
+            pagination={panel.table.pagination}
+            onPaginationChange={panel.table.onPaginationChange}
+            totalPages={panel.table.totalPages}
+            totalCount={panel.table.totalCount}
+            activeTab={panel.table.activeTab}
+            onTabChange={panel.table.onTabChange}
+            pageSize={PAGE_SIZE}
+            rowLabel="requests"
+            hideSortIcon={["actions"]}
+            allTabValue={ALL_TAB}
+            title="Pending Withdrawal Requests"
+            filterTabs={tabs}
+            filterCounts={filterCounts}
+            headerExtra={
+              <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+            }
+          />
+        </DataState.Content>
+      </DataState>
 
       {/* ── Dialogs ── */}
       <ViewWithdrawalDialog

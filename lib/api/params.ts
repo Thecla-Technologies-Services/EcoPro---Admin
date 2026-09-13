@@ -1,6 +1,9 @@
 /**
  * Almost every admin list endpoint accepts the same pagination, search, sort
  * and scope filters. This models that shared set once.
+ *
+ * A filter only two endpoints take stays out of here — the listing type is the
+ * example, and the two spell it differently, so each hook sends its own.
  */
 export interface AdminQueryFilters {
   pageNumber?: number;
@@ -14,10 +17,22 @@ export interface AdminQueryFilters {
   toDate?: string;
   country?: string;
   state?: string;
-  /**
-   * Not yet a documented parameter on any list endpoint — see the note in
-   * `paginationParams`.
-   */
+  /** A `UserType` value — `EcoWarrior`, `CharityPartner`, `LogisticsPartner`, `IndependentRider` or `Admin`. */
+  role?: string;
+  /** Drops staff accounts from a users list server-side. */
+  excludeAdmins?: boolean;
+}
+
+/**
+ * The platform listings endpoint's scope: the shared filters plus the type,
+ * which only it and the per-user listings endpoint accept — and which the two
+ * spell differently, so each hook sends its own.
+ *
+ * Named rather than inlined because the query key is built from the same shape:
+ * a key typed to the narrower set would read as though the listing type does
+ * not vary the cache, when it does.
+ */
+export interface ListingQueryFilters extends AdminQueryFilters {
   listingType?: string;
 }
 
@@ -39,6 +54,35 @@ export function buildQueryString(params: Record<string, QueryParamValue>): strin
   return query ? `?${query}` : "";
 }
 
+export type FormFieldValue = QueryParamValue | File | File[];
+
+/**
+ * Serialises fields into a multipart body for the endpoints that take one.
+ *
+ * Same rule as `buildQueryString`: an empty field is left out rather than sent
+ * as an empty string, because a multipart PUT treats a field it received as a
+ * field the admin meant to clear. An array appends one entry per file under the
+ * same name, which is how the API models `Documents` and `NewDocuments`.
+ */
+export function buildFormData(
+  fields: Record<string, FormFieldValue>
+): FormData {
+  const form = new FormData();
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === undefined || value === null || value === "") continue;
+
+    if (Array.isArray(value)) {
+      for (const file of value) form.append(key, file);
+      continue;
+    }
+
+    form.append(key, value instanceof File ? value : String(value));
+  }
+
+  return form;
+}
+
 /** Maps the shared filters onto the parameter names the API expects. */
 export function paginationParams(
   filters: AdminQueryFilters = {}
@@ -53,9 +97,7 @@ export function paginationParams(
     ToDate: filters.toDate,
     Country: filters.country,
     State: filters.state,
-    // The listings endpoint does not document a type filter, so this is sent
-    // ahead of the API supporting it; an unrecognised parameter comes back as
-    // an unfiltered list rather than an error.
-    ListingType: filters.listingType,
+    Role: filters.role,
+    ExcludeAdmins: filters.excludeAdmins,
   };
 }

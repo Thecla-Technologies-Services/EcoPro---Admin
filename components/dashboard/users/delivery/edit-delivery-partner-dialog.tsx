@@ -7,19 +7,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FormStepper } from "../stepper";
+import { DELIVERYSTEPS } from "@/constants/user";
 import { ContactDetailsStep } from "./steps/contact-details-step";
 import { DocumentsStep } from "./steps/document-step";
 import { LocationStep } from "./steps/location-step";
 import { ChangesSavedDialog } from "./rider-created-dialogs";
 import { deliveryPartnerFormSchema } from "@/lib/validations/user";
+import { toErrorMessage } from "@/lib/api/errors";
+import { useAccountValidation } from "@/hooks/use-account-validation";
 import type {
-  AccountValidationStatus,
   DeliveryPartner,
   DeliveryPartnerFormValues,
   DeliveryPartnerStep,
 } from "@/types/user";
 
-const STEP_ORDER: DeliveryPartnerStep[] = ["contact", "documents", "location"];
+// Mirrors DELIVERYSTEPS: Location precedes Documents because the bank list on
+// the Documents step is fetched for the country chosen on Location.
+const STEP_ORDER: DeliveryPartnerStep[] = ["contact", "location", "documents"];
 
 const STEP_FIELDS: Record<
   DeliveryPartnerStep,
@@ -31,7 +35,9 @@ const STEP_FIELDS: Record<
     "documents",
     "existingDocuments",
     "bankName",
+    "bankCode",
     "bankAccountNumber",
+    "verifyEmailAutomatically",
   ],
   location: [
     "country",
@@ -40,7 +46,6 @@ const STEP_FIELDS: Record<
     "region",
     "city",
     "area",
-    "verifyEmailAutomatically",
   ],
 };
 
@@ -58,6 +63,9 @@ function valuesFromPartner(
     documents: [],
     existingDocuments: partner.documents,
     bankName: partner.bank.bankName,
+    // The gateway's code is not part of the profile shape, so an edit re-picks
+    // the bank rather than carrying a code the API never gave us.
+    bankCode: "",
     bankAccountNumber: partner.bank.accountNumber,
     accountHolderName: partner.bank.accountHolderName,
     country: partner.location.country,
@@ -74,7 +82,11 @@ interface EditDeliveryPartnerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   partner: DeliveryPartner;
-  onSaved: (values: DeliveryPartnerFormValues) => void;
+  /**
+   * Persists the changes. "Changes Saved" is shown only once this resolves —
+   * a rejection keeps the form open with the reason under it.
+   */
+  onSaved: (values: DeliveryPartnerFormValues) => Promise<void>;
 }
 
 export function EditDeliveryPartnerDialog({
@@ -101,11 +113,9 @@ function EditDeliveryPartnerDialogInner({
   onSaved,
 }: EditDeliveryPartnerDialogProps) {
   const [step, setStep] = useState<DeliveryPartnerStep>("contact");
-  const [validationStatus, setValidationStatus] =
-    useState<AccountValidationStatus>(
-      partner.bank.accountHolderName ? "success" : "idle",
-    );
   const [showSaved, setShowSaved] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
@@ -123,16 +133,27 @@ function EditDeliveryPartnerDialogInner({
   const documents = watch("documents");
   const existingDocuments = watch("existingDocuments");
   const bankAccountNumber = watch("bankAccountNumber");
+  const bankCode = watch("bankCode");
+  const accountHolderName = watch("accountHolderName");
   const country = watch("country");
   const state = watch("state");
 
+  const validation = useAccountValidation({
+    accountNumber: bankAccountNumber,
+    bankCode,
+    country,
+  });
+
   const stepIndex = STEP_ORDER.indexOf(step);
+  // Derived rather than named, so reordering the steps cannot leave the form
+  // submitting from the middle of the wizard.
+  const isLastStep = stepIndex === STEP_ORDER.length - 1;
 
   async function goNext() {
     const valid = await trigger(STEP_FIELDS[step]);
     if (!valid) return;
 
-    if (step === "location") {
+    if (isLastStep) {
       handleSubmit(onSubmit)();
       return;
     }
@@ -144,8 +165,20 @@ function EditDeliveryPartnerDialogInner({
     setStep(STEP_ORDER[stepIndex - 1]);
   }
 
-  function onSubmit(values: DeliveryPartnerFormValues) {
-    onSaved(values);
+  async function onSubmit(values: DeliveryPartnerFormValues) {
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      await onSaved({
+        ...values,
+        accountHolderName: validation.accountName ?? values.accountHolderName,
+      });
+    } catch (error) {
+      setSubmitError(toErrorMessage(error));
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
     setShowSaved(true);
   }
 
@@ -177,7 +210,9 @@ function EditDeliveryPartnerDialogInner({
             </button>
           </div>
 
-          <FormStepper STEPS={[{ label: "Contact Details", key: "contact" }, { label: "Documents", key: "documents" }, { label: "Location", key: "location" }]} current={step} />
+          {/* The shared list, not a copy — the two dialogs walk the same steps
+              in the same order. */}
+          <FormStepper STEPS={DELIVERYSTEPS} current={step} />
 
           <div className="max-h-[60vh] overflow-y-auto pr-1">
             {step === "contact" && (
@@ -194,12 +229,9 @@ function EditDeliveryPartnerDialogInner({
                 setValue={setValue}
                 documents={documents}
                 existingDocuments={existingDocuments}
-                bankAccountNumber={bankAccountNumber}
-                validationStatus={validationStatus}
-                onValidationStatusChange={(status, holderName) => {
-                  setValidationStatus(status);
-                  if (holderName) setValue("accountHolderName", holderName);
-                }}
+                country={country}
+                validation={validation}
+                accountHolderName={accountHolderName}
               />
             )}
             {step === "location" && (
@@ -213,19 +245,27 @@ function EditDeliveryPartnerDialogInner({
             )}
           </div>
 
+          {submitError && (
+            <p role="alert" className="text-sm text-destructive">
+              {submitError}
+            </p>
+          )}
+
           <div className="flex gap-3">
             <Button
               variant="outline"
               className="flex-1"
               onClick={() => (stepIndex === 0 ? onOpenChange(false) : goBack())}
+              disabled={isSubmitting}
             >
               {stepIndex === 0 ? "Cancel" : "Back"}
             </Button>
             <Button
               className="flex-1 bg-emerald-600 hover:bg-emerald-700"
               onClick={goNext}
+              isLoading={isSubmitting}
             >
-              {step === "location" ? "Save Changes" : "Continue"}
+              {isLastStep ? "Save Changes" : "Continue"}
             </Button>
           </div>
         </DialogContent>

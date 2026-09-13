@@ -5,8 +5,13 @@ export type ApplicantStatus = "Pending Review" | "Approved" | "Rejected";
 /**
  * Which queue an applicant came from. The two review endpoints take different
  * ids and different paths, so a row has to remember where it belongs.
+ *
+ * `"unknown"` exists because the joined queue endpoint types `applicantType` as
+ * free text: a value neither vocabulary recognises leaves the row visible but
+ * unreviewable, which beats guessing an endpoint and sending a decision about
+ * one record to another.
  */
-export type ApplicantKind = "organization" | "rider";
+export type ApplicantKind = "organization" | "rider" | "unknown";
 
 /** One label/value fact in a detail card. */
 export interface ApplicantFact {
@@ -26,6 +31,8 @@ export interface ApplicantDocument {
 export interface Applicant {
   /** The id the review endpoint expects — organizationId or riderProfileId. */
   id: string;
+  /** The API's human-facing application reference, when it supplies one. */
+  referenceNumber?: string;
   kind: ApplicantKind;
   name: string;
   /** The account's raw id — what the user endpoints expect. */

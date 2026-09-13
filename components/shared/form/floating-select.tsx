@@ -9,9 +9,20 @@ import {
   SelectTrigger,
 } from "../../ui/select";
 
+/**
+ * An option whose stored value differs from what the admin reads — a country
+ * sent as `UnitedKingdom` and shown as "United Kingdom", a bank stored by the
+ * gateway's code. A bare string is still accepted for the lists where the two
+ * are the same.
+ */
+export interface FloatingSelectOption {
+  value: string;
+  label: string;
+}
+
 interface FloatingSelectProps {
   label: string;
-  options: string[] | readonly string[];
+  options: readonly (string | FloatingSelectOption)[];
   value?: string;
   onChange: (value: string) => void;
   error?: string;
@@ -66,11 +77,18 @@ export function FloatingSelect({
             <SelectValue placeholder="" />
           </SelectTrigger>
           <SelectContent>
-            {options.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
+            {options.map((option) => {
+              const { value: optionValue, label: optionLabel } =
+                typeof option === "string"
+                  ? { value: option, label: option }
+                  : option;
+
+              return (
+                <SelectItem key={optionValue} value={optionValue}>
+                  {optionLabel}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>

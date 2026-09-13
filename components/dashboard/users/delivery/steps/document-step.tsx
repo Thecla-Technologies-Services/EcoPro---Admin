@@ -5,18 +5,17 @@ import { Controller } from "react-hook-form";
 import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { FloatingSelect } from "@/components/shared/form/floating-select";
 import { DocumentUpload } from "@/components/shared/form/document-upload";
+import { Switch } from "@/components/ui/switch";
 
 import { AccountValidationMessage } from "../account-validation-message";
 
-import { NIGERIAN_BANKS } from "@/constants/user";
-import { useAccountValidation } from "@/hooks/use-account-validation";
+import { useBanks } from "@/hooks/admin/use-delivery-partners";
+import type { AccountValidation } from "@/hooks/use-account-validation";
 
 import type { Control, FieldErrors, UseFormSetValue } from "react-hook-form";
 
-import type {
-  AccountValidationStatus,
-  DeliveryPartnerFormValues,
-} from "@/types/user";
+import type { Country } from "@/types/api/admin";
+import type { DeliveryPartnerFormValues } from "@/types/user";
 
 interface DocumentsStepProps {
   control: Control<DeliveryPartnerFormValues>;
@@ -26,16 +25,12 @@ interface DocumentsStepProps {
   documents: File[];
   existingDocuments: DeliveryPartnerFormValues["existingDocuments"];
 
-  bankAccountNumber: string;
-
-  validationStatus: AccountValidationStatus;
-
+  /** From the location step, which the bank list needs. */
+  country: Country;
+  /** What the gateway made of the account number, from the dialog. */
+  validation: AccountValidation;
+  /** The holder name already on file, shown until the gateway answers. */
   accountHolderName?: string;
-
-  onValidationStatusChange: (
-    status: AccountValidationStatus,
-    holderName?: string,
-  ) => void;
 }
 
 export function DocumentsStep({
@@ -44,12 +39,17 @@ export function DocumentsStep({
   setValue,
   documents,
   existingDocuments,
-  bankAccountNumber,
-  validationStatus,
+  country,
+  validation,
   accountHolderName,
-  onValidationStatusChange,
 }: DocumentsStepProps) {
-  useAccountValidation(bankAccountNumber, onValidationStatusChange);
+  const banks = useBanks(country);
+
+  // Names are what the admin picks from; the gateway's code is what the create
+  // body and the account resolution both take, so both are stored.
+  const bankOptions = (banks.data ?? []).flatMap((bank) =>
+    bank.name && bank.code ? [{ value: bank.code, label: bank.name }] : [],
+  );
 
   const handleAddFiles = (files: File[]) => {
     setValue("documents", [...documents, ...files], {
@@ -103,17 +103,30 @@ export function DocumentsStep({
         error={errors.documents?.message as string | undefined}
       />
 
-      {/* Bank */}
+      {/* Bank — the gateway's list for the chosen country, not a fixed one */}
       <Controller
         control={control}
-        name="bankName"
+        name="bankCode"
         render={({ field }) => (
           <FloatingSelect
             label="Bank Name"
-            options={NIGERIAN_BANKS}
+            options={bankOptions}
             value={field.value}
-            onChange={field.onChange}
-            error={errors.bankName?.message}
+            onChange={(code) => {
+              field.onChange(code);
+              setValue(
+                "bankName",
+                bankOptions.find((option) => option.value === code)?.label ??
+                  "",
+                { shouldValidate: true },
+              );
+            }}
+            disabled={banks.isPending || bankOptions.length === 0}
+            error={
+              banks.isError
+                ? "Could not load the bank list. Try again."
+                : (errors.bankCode?.message ?? errors.bankName?.message)
+            }
           />
         )}
       />
@@ -136,8 +149,24 @@ export function DocumentsStep({
 
       {/* Validation Status */}
       <AccountValidationMessage
-        status={validationStatus}
-        accountHolderName={accountHolderName}
+        status={validation.status}
+        accountHolderName={validation.accountName ?? accountHolderName}
+        message={validation.message}
+      />
+
+      {/* Auto Verify Email */}
+      <Controller
+        control={control}
+        name="verifyEmailAutomatically"
+        render={({ field }) => (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-sm text-neutral-600">
+              Verify Email Automatically
+            </span>
+
+            <Switch checked={field.value} onCheckedChange={field.onChange} />
+          </div>
+        )}
       />
     </div>
   );

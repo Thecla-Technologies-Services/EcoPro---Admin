@@ -25,7 +25,6 @@ export function toListingRow(dto: AdminListingItemDto): Listing {
     co2Impact:
       dto.formattedCo2Impact ?? `${(dto.ecoImpactKgCo2 ?? 0).toLocaleString()}kg`,
     price: dto.price ?? 0,
-    formattedPrice: dto.formattedPrice ?? undefined,
     views: dto.viewCount ?? 0,
     createdAt: dto.timeAgo ?? "",
     images: dto.primaryImageUrl ? [dto.primaryImageUrl] : [],

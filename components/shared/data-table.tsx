@@ -83,6 +83,8 @@ export function DataTable<TData, TValue>({
   onRowSelectionChange,
   headerExtra,
 }: DataTableProps<TData, TValue>) {
+  // Anchors paging to whichever region this table is scrolling in.
+  const topRef = React.useRef<HTMLDivElement>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [internalActiveTab, setInternalActiveTab] = useState<string>(
@@ -155,7 +157,7 @@ export function DataTable<TData, TValue>({
   const allValue = allTabValue ?? filterTabs?.[0];
 
   return (
-    <div className={cn("bg-white overflow-x-hidden", className)}>
+    <div ref={topRef} className={cn("bg-white overflow-x-hidden", className)}>
       {/* ── Header ── */}
       {(title || filterTabs || headerExtra) && (
         <div className="py-4 border-b border-gray-100">
@@ -265,7 +267,12 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <Pagination table={table} totalCount={totalCount} rowLabel={rowLabel} />
+      <Pagination
+        table={table}
+        totalCount={totalCount}
+        rowLabel={rowLabel}
+        scrollAnchorRef={topRef}
+      />
     </div>
   );
 }

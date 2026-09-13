@@ -11,6 +11,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { type WithdrawalRequest} from "@/types/wallet";
+import { useRejectWithdrawal } from "@/hooks/admin/use-payouts";
+import { useAsyncAction } from "@/hooks/use-async-action";
+import { toErrorMessage } from "@/lib/api/errors";
+import { toRejectionReason } from "@/lib/adapters/verification";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -23,8 +27,6 @@ const REJECTION_REASONS = [
   "Expired Document",
   "Invalid CAC Certificate",
 ];
-
-type RejectStep = "form" | "loading" | "success";
 
 interface RejectWithdrawalDialogProps {
   open: boolean;
@@ -43,16 +45,16 @@ export function RejectWithdrawalDialog({
     null,
   );
   const [note, setNote] = React.useState("");
-  const [step, setStep] = React.useState<RejectStep>("form");
 
+  const rejectWithdrawal = useRejectWithdrawal();
+  const requestId = request?.id;
+
+  const reject = useAsyncAction(async (reason: string) => {
+    if (!requestId) throw new Error("This request has no id to reject.");
+    await rejectWithdrawal.mutateAsync({ withdrawalId: requestId, reason });
+  });
 
   if (!request) return null;
-
-  async function handleReject() {
-    setStep("loading");
-    await new Promise((r) => setTimeout(r, 1200));
-    setStep("success");
-  }
 
   const canSubmit = !!selectedReason || note.trim().length > 0;
 
@@ -61,7 +63,7 @@ export function RejectWithdrawalDialog({
       <DialogContent showCloseButton={false} className="max-w-sm gap-0">
         <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" />
 
-        {step !== "success" ? (
+        {!reject.isSuccess ? (
           <>
             <div className="flex items-center gap-2 mb-5">
               {onBack && (
@@ -110,12 +112,18 @@ export function RejectWithdrawalDialog({
               className="resize-none h-28 bg-gray-50 border-gray-200 text-sm placeholder:text-gray-400 mb-5"
             />
 
+            {reject.error && (
+              <p role="alert" className="mb-3 text-xs text-destructive">
+                {toErrorMessage(reject.error)}
+              </p>
+            )}
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 className="flex-1 rounded-full"
                 onClick={() => onOpenChange(false)}
-                disabled={step === "loading"}
+                disabled={reject.isLoading}
               >
                 Cancel
               </Button>
@@ -126,10 +134,15 @@ export function RejectWithdrawalDialog({
                     ? "bg-red-500 hover:bg-red-600"
                     : "bg-red-300 cursor-not-allowed",
                 )}
-                onClick={handleReject}
-                disabled={step === "loading" || !canSubmit}
+                onClick={() =>
+                  // The endpoint takes one `reason` string, so the picked
+                  // reason and the note are joined the same way a rejected
+                  // verification joins them.
+                  reject.run(toRejectionReason(selectedReason ?? "", note))
+                }
+                disabled={reject.isLoading || !canSubmit}
               >
-                {step === "loading" ? (
+                {reject.isLoading ? (
                   <span className="flex gap-1">
                     <span className="animate-bounce">●</span>
                     <span className="animate-bounce [animation-delay:0.15s]">
@@ -154,7 +167,10 @@ export function RejectWithdrawalDialog({
             <SuccessState
               title="Withdrawal Rejected Successfully"
               description="The withdrawal request has been rejected. The user will be notified accordingly."
-              onDone={() => onOpenChange(false)}
+              onDone={() => {
+                reject.reset();
+                onOpenChange(false);
+              }}
             />
           </>
         )}
