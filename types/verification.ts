@@ -1,4 +1,4 @@
-export type AccountType = "NGO" | "Delivery";
+export type AccountType = "Charity Partner" | "Delivery";
 
 export type ApplicantStatus = "Pending Review" | "Approved" | "Rejected";
 

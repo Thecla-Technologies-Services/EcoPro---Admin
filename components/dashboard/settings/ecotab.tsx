@@ -45,7 +45,7 @@ export default function EcoTab({ onSave }: { onSave: () => void }) {
               </span>
               <Input
                 {...register("pointsPerItem")}
-                className="w-24 rounded-lg h-10 md:h-10.5 px-3 py-2 text-sm md:text-base border-[#D4D4D4]"
+                className="w-24 rounded-lg h-10 md:h-10.5 px-3 py-2 text-sm md:text-base"
                 type="number"
               />
               <span className="text-sm md:text-base text-foreground">
@@ -70,7 +70,7 @@ export default function EcoTab({ onSave }: { onSave: () => void }) {
               </span>
               <Input
                 {...register("pointsPerKg")}
-                className="w-24 h-10 md:h-10.5 rounded-lg px-3 py-2 text-sm md:text-base border-[#D4D4D4]"
+                className="w-24 h-10 md:h-10.5 rounded-lg px-3 py-2 text-sm md:text-base"
                 type="number"
               />
               <span className="text-sm md:text-base text-foreground">
@@ -95,7 +95,7 @@ export default function EcoTab({ onSave }: { onSave: () => void }) {
               </span>
               <Input
                 {...register("redemptionThreshold")}
-                className="w-28 h-10 md:h-10.5  text-sm md:text-base px-3 py-2 rounded-lg border-[#D4D4D4]"
+                className="w-28 h-10 md:h-10.5  text-sm md:text-base px-3 py-2 rounded-lg"
                 type="number"
               />
               <span className="text-sm md:text-base text-foreground">

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { FilterPills } from "./pills";
 import { IoLeaf } from "react-icons/io5";
@@ -13,6 +13,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { DataState } from "@/components/shared/data-state";
+import { Pagination } from "@/components/shared/pagination";
+import { pageSlice } from "@/lib/paging";
 import { useUserTransactions } from "@/hooks/admin/use-users";
 import type { WalletFilter } from "@/types/user";
 import { cn } from "@/lib/utils";
@@ -55,6 +57,8 @@ const TRANSACTION_TYPE_PARAMS: Partial<Record<WalletFilter, string>> = {
   Debit: "Debit",
 };
 
+const PAGE_SIZE = 5;
+
 interface WalletHistoryTabProps {
   userId?: string;
   balance?: number;
@@ -67,16 +71,24 @@ export function WalletHistoryTab({
   ecoPoints,
 }: WalletHistoryTabProps) {
   const [filter, setFilter] = useState<WalletFilter>("All");
+  const [pageNumber, setPageNumber] = useState(1);
+  // Anchors paging to the scrolling list below, inside the sheet body.
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const { data, isPending, isError, error, refetch } = useUserTransactions(
-    userId,
-    TRANSACTION_TYPE_PARAMS[filter]
-  );
+  const { data, isPending, isFetching, isError, error, refetch } =
+    useUserTransactions(userId, TRANSACTION_TYPE_PARAMS[filter], {
+      pageNumber,
+      pageSize: PAGE_SIZE,
+    });
 
-  const displayed = data?.data ?? [];
+  const {
+    rows: displayed,
+    pageCount,
+    totalCount,
+  } = pageSlice(data, pageNumber, PAGE_SIZE);
 
   return (
-    <div className="mt-4">
+    <div ref={listRef} className="mt-4">
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-background rounded-md py-3 md:py-5 px-3 md:px-4 text-left">
           <p className="text-xs font-medium text-[#6C6C6C]">Total Balance</p>
@@ -96,7 +108,10 @@ export function WalletHistoryTab({
       <FilterPills
         options={["All", "Credit", "Debit"] as WalletFilter[]}
         active={filter}
-        onChange={setFilter}
+        onChange={(next) => {
+          setFilter(next);
+          setPageNumber(1);
+        }}
       />
 
       <DataState>
@@ -121,7 +136,10 @@ export function WalletHistoryTab({
             </p>
           </div>
         </DataState.Empty>
-        <DataState.Content className="mt-4 space-y-3 max-h-70 overflow-y-auto pr-1">
+        <DataState.Content
+          busy={isFetching}
+          className="mt-4 space-y-3"
+        >
           {displayed.map((tx) => {
             const isCredit = tx.transactionType?.toLowerCase() === "credit";
             const glyph = glyphFor(tx.iconType, isCredit);
@@ -156,6 +174,19 @@ export function WalletHistoryTab({
           })}
         </DataState.Content>
       </DataState>
+
+      {pageCount > 1 && (
+        <Pagination
+          current={pageNumber}
+          total={pageCount}
+          onChange={setPageNumber}
+          totalCount={totalCount}
+          pageSize={PAGE_SIZE}
+          rowsOnPage={displayed.length}
+          rowLabel="transactions"
+          scrollAnchorRef={listRef}
+        />
+      )}
     </div>
   );
 }

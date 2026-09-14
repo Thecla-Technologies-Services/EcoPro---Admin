@@ -1,4 +1,4 @@
-import { DeliveryPartnerStep, NgoStep } from "@/types/user";
+import { DeliveryPartnerStep, CharityPartnerStep } from "@/types/user";
 export const NIGERIAN_STATES_WITH_LGAS: Record<string, string[]> = {
   Lagos: [
     "Alimosho",
@@ -24,7 +24,7 @@ export const DELIVERYSTEPS: { key: DeliveryPartnerStep; label: string }[] = [
   { key: "documents", label: "Documents" },
 ];
 
-export const NGOSTEPS: { key: NgoStep; label: string }[] = [
+export const CHARITY_PARTNER_STEPS: { key: CharityPartnerStep; label: string }[] = [
   { key: "contact", label: "Contact Details" },
   { key: "documents", label: "Documents" },
 ];

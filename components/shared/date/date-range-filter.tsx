@@ -21,6 +21,7 @@ import {
   endOfWeek,
   computeRange,
   formatDayLabel,
+  stripTime,
 } from "@/lib/date";
 import { Label } from "@/components/ui/label";
 import type {
@@ -54,7 +55,6 @@ export function DateRangeFilter({
   const [customTo, setCustomTo] = React.useState<Date | undefined>(
     applied.type === "custom" ? applied.range.to : undefined,
   );
-  const [pickingCustomTo, setPickingCustomTo] = React.useState(false);
 
   // View cursors for each calendar mode.
   const [dayViewMonth, setDayViewMonth] = React.useState<Date>(
@@ -76,12 +76,16 @@ export function DateRangeFilter({
   function resetPendingFromApplied() {
     setPendingType(applied.type);
     setAnchor(applied.range.to);
-    setPickingCustomTo(false);
     if (applied.type === "custom") {
       setCustomFrom(applied.range.from);
       setCustomTo(applied.range.to);
-      setCustomLeftMonth(startOfMonth(applied.range.from));
-      setCustomRightMonth(startOfMonth(applied.range.to));
+      const left = startOfMonth(applied.range.from);
+      const right = startOfMonth(applied.range.to);
+      setCustomLeftMonth(left);
+      // A range inside one month would otherwise put that month in both grids.
+      setCustomRightMonth(
+        right.getTime() > left.getTime() ? right : addMonths(left, 1),
+      );
     } else {
       setCustomFrom(undefined);
       setCustomTo(undefined);
@@ -107,20 +111,34 @@ export function DateRangeFilter({
     setOpen(false);
   }
 
+  /**
+   * A day clicked in either custom-range grid.
+   *
+   * Which end it sets is read from the selection itself rather than from a
+   * separate "now picking the end" flag, which went stale once a range was
+   * complete: every further click then restarted the range, so an end date
+   * could be chosen but never corrected. Now a complete range takes a new end
+   * date on each click, and only a day before the start — a range that would
+   * run backwards — begins a new one.
+   */
   function handleCustomDayClick(d: Date) {
-    if (!pickingCustomTo || !customFrom) {
-      setCustomFrom(d);
+    const day = stripTime(d);
+
+    if (!customFrom || (customTo && day.getTime() < customFrom.getTime())) {
+      setCustomFrom(day);
       setCustomTo(undefined);
-      setPickingCustomTo(true);
       return;
     }
-    if (d.getTime() < customFrom.getTime()) {
+
+    // Picking the end first is allowed while the range is still half-made: the
+    // two swap rather than the click being ignored.
+    if (day.getTime() < customFrom.getTime()) {
       setCustomTo(customFrom);
-      setCustomFrom(d);
-    } else {
-      setCustomTo(d);
+      setCustomFrom(day);
+      return;
     }
-    setPickingCustomTo(false);
+
+    setCustomTo(day);
   }
 
   return (
@@ -138,7 +156,9 @@ export function DateRangeFilter({
         >
           <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           <span>{formatRangeLabel(applied.type, applied.range)}</span>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown
+            className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]/button:rotate-180"
+          />
         </Button>
       </PopoverTrigger>
 

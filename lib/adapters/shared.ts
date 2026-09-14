@@ -33,6 +33,28 @@ export function formatDate(
   });
 }
 
+/**
+ * A timestamp as the rows that carry a time render it: `04 Aug 2026, 16:12`.
+ *
+ * `formatDate`'s companion, for a log where two entries on the same day have to
+ * be told apart. Same tolerance: an absent or unparseable value draws the
+ * placeholder rather than "Invalid Date".
+ */
+export function formatDateTime(
+  iso: string | null | undefined,
+  placeholder: string = PLACEHOLDER
+): string {
+  if (!iso) return placeholder;
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return placeholder;
+
+  return `${formatDate(iso)}, ${date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+}
+
 /** Splits a PascalCase API token ("DriversLicense") into words for display. */
 export function humanise(value: string): string {
   return value.replace(/([a-z0-9])([A-Z])/g, "$1 $2");

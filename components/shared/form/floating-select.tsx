@@ -27,6 +27,12 @@ interface FloatingSelectProps {
   onChange: (value: string) => void;
   error?: string;
   className?: string;
+  /**
+   * The field box itself, as opposed to `className`, which is the wrapper the
+   * error message shares. For a caller that has to invert the default grey fill
+   * — a form whose fields sit on a grey panel rather than a white one.
+   */
+  fieldClassName?: string;
   disabled?: boolean;
 }
 
@@ -37,6 +43,7 @@ export function FloatingSelect({
   onChange,
   error,
   className,
+  fieldClassName,
   disabled,
 }: FloatingSelectProps) {
   const hasValue = Boolean(value);
@@ -49,6 +56,7 @@ export function FloatingSelect({
           "focus-within:border-primary focus-within:border-2",
           error && "border-destructive",
           disabled && "opacity-50 cursor-not-allowed",
+          fieldClassName,
         )}
       >
         {/* Floating label — animates up when a value is present */}

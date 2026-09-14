@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { Plus, Package, Box } from "lucide-react";
-import { SearchDropDown } from "@/components/shared/form/search-dropdown";
+import { TableSearchInput } from "@/components/shared/table-search-input";
 import { DateRangeFilter } from "@/components/shared/date/date-range-filter";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/shared/pagination";
@@ -231,12 +231,15 @@ export default function ListingsPage() {
               onChange={changeDateFilter}
               className="w-full justify-between sm:w-auto sm:min-w-40 sm:flex-1 md:flex-none md:justify-center"
             />
-            <SearchDropDown
-              placeholder="Search listings..."
-              className="w-full sm:w-auto sm:min-w-40 sm:flex-1 md:w-56 md:flex-none"
-              onSearch={(query) => {
-                panel.table.onSearchChange(query);
-              }}
+            {/* The field holds the term the list is filtered by, rather than a
+                dialog holding it out of sight: the panel debounces what is
+                typed, so the rows follow the term and emptying the box puts
+                every listing back. */}
+            <TableSearchInput
+              value={panel.table.search}
+              onChange={panel.table.onSearchChange}
+              placeholder="Search listings"
+              className="mt-0 w-full sm:w-auto sm:min-w-40 sm:flex-1 md:mt-0 md:w-56 md:flex-none"
             />
           </Toolbar.End>
         </Toolbar>

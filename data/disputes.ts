@@ -19,6 +19,13 @@ const messages: ChatMessage[] = [
   },
 ];
 
+/**
+ * Stand-in rows for a disputes endpoint the Admin API does not document.
+ *
+ * `country` in particular is invented here: no endpoint carries a dispute's
+ * country, so these values are illustrative and the table column they feed is
+ * not live data.
+ */
 export const DISPUTES: Dispute[] = [
   {
     id: "1",
@@ -28,6 +35,7 @@ export const DISPUTES: Dispute[] = [
     reason: "Item condition mismatch – Buyer claims screen is cracked",
     date: "Feb 7, 2026",
     status: "Open",
+    country: "Nigeria",
     amount: "₦180,000",
     fullDate: "Feb 7, 2026 11:12 PM",
     messages: messages,
@@ -47,6 +55,7 @@ export const DISPUTES: Dispute[] = [
     reason: "Item condition mismatch – Buyer claims screen is cracked",
     date: "Feb 7, 2026",
     status: "Open",
+    country: "Ghana",
     amount: "₦180,000",
     fullDate: "Feb 7, 2026 11:12 PM",
     messages: messages,
@@ -66,6 +75,7 @@ export const DISPUTES: Dispute[] = [
     reason: "Item condition mismatch – Buyer claims screen is cracked",
     date: "Feb 7, 2026",
     status: "Closed",
+    country: "UnitedKingdom",
     amount: "₦180,000",
     messages: messages,
     fullDate: "Feb 7, 2026 11:12 PM",
@@ -85,6 +95,7 @@ export const DISPUTES: Dispute[] = [
     reason: "Item condition mismatch – Buyer claims screen is cracked",
     date: "Feb 7, 2026",
     status: "In Progress",
+    country: "Nigeria",
     messages: messages,
     amount: "₦180,000",
     fullDate: "Feb 7, 2026 11:12 PM",
@@ -105,6 +116,7 @@ export const DISPUTES: Dispute[] = [
     reason: "Item condition mismatch – Buyer claims screen is cracked",
     date: "Feb 7, 2026",
     status: "Resolved",
+    country: "Ghana",
     amount: "₦180,000",
     messages: messages,
     fullDate: "Feb 7, 2026 11:12 PM",

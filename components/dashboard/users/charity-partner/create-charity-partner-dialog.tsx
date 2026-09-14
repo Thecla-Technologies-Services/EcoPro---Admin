@@ -13,17 +13,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FormStepper } from "../stepper";
-import { NGOContactDetailsStep } from "./steps/contact-details-step";
-import { NGODocumentsStep } from "./steps/documents-step";
-import { ngoFormSchema } from "@/lib/validations/user";
-import { NGOSTEPS } from "@/constants/user";
+import { CharityPartnerContactDetailsStep } from "./steps/contact-details-step";
+import { CharityPartnerDocumentsStep } from "./steps/documents-step";
+import { charityPartnerFormSchema } from "@/lib/validations/user";
+import { CHARITY_PARTNER_STEPS } from "@/constants/user";
 import { toErrorMessage } from "@/lib/api/errors";
 import { OrganizationCreatedDialog } from "./organization-created-dialog";
-import type { NgoFormValues, NgoStep } from "@/types/user";
+import type { CharityPartnerFormValues, CharityPartnerStep } from "@/types/user";
 
-const STEP_ORDER: NgoStep[] = ["contact", "documents"];
+const STEP_ORDER: CharityPartnerStep[] = ["contact", "documents"];
 
-const STEP_FIELDS: Record<NgoStep, (keyof NgoFormValues)[]> = {
+const STEP_FIELDS: Record<CharityPartnerStep, (keyof CharityPartnerFormValues)[]> = {
   contact: [
     "organisationName",
     "contactPersonName",
@@ -39,7 +39,7 @@ const STEP_FIELDS: Record<NgoStep, (keyof NgoFormValues)[]> = {
   ],
 };
 
-const DEFAULT_VALUES: NgoFormValues = {
+const DEFAULT_VALUES: CharityPartnerFormValues = {
   profileImage: null,
   organisationName: "",
   contactPersonName: "",
@@ -52,25 +52,25 @@ const DEFAULT_VALUES: NgoFormValues = {
   existingDocuments: [],
 };
 
-interface CreateNgoDialogProps {
+interface CreateCharityPartnerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /**
    * Persists the organisation. The success dialog is shown only once this
    * resolves — a rejection keeps the form on its last step and puts the reason
-   * under it, rather than reporting an NGO that was never created.
+   * under it, rather than reporting a Charity Partner that was never created.
    */
-  onCreated: (values: NgoFormValues) => Promise<void>;
+  onCreated: (values: CharityPartnerFormValues) => Promise<void>;
 }
 
-export function CreateNgoDialog({
+export function CreateCharityPartnerDialog({
   open,
   onOpenChange,
   onCreated,
-}: CreateNgoDialogProps) {
+}: CreateCharityPartnerDialogProps) {
   // Remounting on open resets the step and every field without a manual reset.
   return (
-    <CreateNgoDialogInner
+    <CreateCharityPartnerDialogInner
       key={String(open)}
       open={open}
       onOpenChange={onOpenChange}
@@ -79,12 +79,12 @@ export function CreateNgoDialog({
   );
 }
 
-function CreateNgoDialogInner({
+function CreateCharityPartnerDialogInner({
   open,
   onOpenChange,
   onCreated,
-}: CreateNgoDialogProps) {
-  const [step, setStep] = useState<NgoStep>("contact");
+}: CreateCharityPartnerDialogProps) {
+  const [step, setStep] = useState<CharityPartnerStep>("contact");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
@@ -96,8 +96,8 @@ function CreateNgoDialogInner({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<NgoFormValues>({
-    resolver: zodResolver(ngoFormSchema) as Resolver<NgoFormValues>,
+  } = useForm<CharityPartnerFormValues>({
+    resolver: zodResolver(charityPartnerFormSchema) as Resolver<CharityPartnerFormValues>,
     defaultValues: DEFAULT_VALUES,
     mode: "onSubmit",
   });
@@ -119,7 +119,7 @@ function CreateNgoDialogInner({
     setStep(STEP_ORDER[stepIndex + 1]);
   }
 
-  async function onSubmit(values: NgoFormValues) {
+  async function onSubmit(values: CharityPartnerFormValues) {
     setSubmitError(null);
     setIsSubmitting(true);
     try {
@@ -142,7 +142,7 @@ function CreateNgoDialogInner({
   return (
     <>
     <Dialog open={open && !created} onOpenChange={onOpenChange}>
-      {/* 580px wide, per the Create NGO frame. The `sm:` prefix is what beats
+      {/* 580px wide, per the Create Charity Partner frame. The `sm:` prefix is what beats
           DialogContent's own `sm:max-w-sm` default. */}
       <DialogContent
         showCloseButton={false}
@@ -160,7 +160,7 @@ function CreateNgoDialogInner({
             </button>
           )}
           <DialogTitle className="text-lg font-semibold">
-            Create NGO
+            Create Charity Partner
           </DialogTitle>
           <DialogClose className="text-muted-foreground hover:text-foreground" />
         </div>
@@ -168,19 +168,19 @@ function CreateNgoDialogInner({
         {/* Radix warns when a dialog has no description; the steps are on
             screen, so this is for screen readers only. */}
         <DialogDescription className="sr-only">
-          Create an NGO partner in two steps: contact details, then
+          Create a Charity Partner in two steps: contact details, then
           verification documents.
         </DialogDescription>
 
         <div className="space-y-6 px-6 py-5">
-          <FormStepper STEPS={NGOSTEPS} current={step} />
+          <FormStepper STEPS={CHARITY_PARTNER_STEPS} current={step} />
 
           <div className="max-h-[55vh] overflow-y-auto pr-1">
             {step === "contact" && (
-              <NGOContactDetailsStep control={control} errors={errors} />
+              <CharityPartnerContactDetailsStep control={control} errors={errors} />
             )}
             {step === "documents" && (
-              <NGODocumentsStep
+              <CharityPartnerDocumentsStep
                 control={control}
                 errors={errors}
                 setValue={setValue}
@@ -210,7 +210,7 @@ function CreateNgoDialogInner({
               onClick={goNext}
               isLoading={isSubmitting}
             >
-              {isLastStep ? "Create NGO" : "Continue"}
+              {isLastStep ? "Create Charity Partner" : "Continue"}
             </Button>
           </div>
         </div>

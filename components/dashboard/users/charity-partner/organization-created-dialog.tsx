@@ -22,7 +22,7 @@ export function OrganizationCreatedDialog({
   return (
     <ActionDialog open={open} onOpenChange={onOpenChange}>
       <ActionDialog.Media />
-      <ActionDialog.Title>NGO Created Successfully</ActionDialog.Title>
+      <ActionDialog.Title>Charity Partner Created Successfully</ActionDialog.Title>
       <ActionDialog.Description>
         {organizationName || "The organisation"} has been added and is now in
         the verification queue awaiting review.

@@ -11,6 +11,8 @@ import { DataState } from "@/components/shared/data-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardOverview } from "@/hooks/admin/use-dashboard";
 import { Amount } from "@/components/shared/amount";
+import { PageHeader } from "@/components/shared/page-header";
+import { CountrySelect } from "@/components/shared/country-select";
 
 export default function DashboardPage() {
   const { data, isPending, isError, error, refetch } = useDashboardOverview();
@@ -19,13 +21,19 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 ">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-[28px] font-semibold">Command Centre</h1>
-        <p className="mt-2 text-sm italic lg:mt-3 text-muted-foreground">
-          Overview of your platform performance and pending actions
-        </p>
-      </div>
+      <PageHeader>
+        <PageHeader.Heading>
+          <PageHeader.Title className="font-semibold">
+            Command Centre
+          </PageHeader.Title>
+          <PageHeader.Description className="italic">
+            Overview of your platform performance and pending actions
+          </PageHeader.Description>
+        </PageHeader.Heading>
+        <PageHeader.Actions>
+          <CountrySelect />
+        </PageHeader.Actions>
+      </PageHeader>
 
       <DataState>
         <DataState.Error

@@ -25,6 +25,7 @@
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
+  --color-field: var(--field);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
@@ -71,7 +72,15 @@
   --warning: #fef3c6;
   --warning-foreground: #bb4d00;
   --border: oklch(0.922 0 0);
-  --input: #f2f2f2;
+  /* The border a control draws around itself. Dark enough to be visible on the
+     tinted page surface (#f3f5f5) as well as on white — it used to be #f2f2f2,
+     a shade off the page, which made a field easy to miss as something you can
+     type in. */
+  --input: #d4d4d4;
+  /* The fill of a control that is a filled box rather than an outlined one — an
+     unselected option chip, a grey textarea. Split from `--input` when that
+     became a border colour, so the two can move independently. */
+  --field: #f2f2f2;
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -107,6 +116,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
+  --field: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -186,6 +196,31 @@
 }
 
 .scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Modals hide their scrollbars.
+ *
+ * Every dialog in the dashboard scrolls somewhere — a stepped form's body, a
+ * record's detail list, a tab inside the user sheet — and each was drawing a
+ * bar inside an already-bounded panel. Declared here against the primitives'
+ * own `data-slot`s rather than as a class on each scrolling div, so a dialog
+ * written later gets it without having to remember. Scrolling itself is
+ * untouched: wheel, trackpad, touch and keyboard all behave as before.
+ */
+[data-slot="dialog-content"],
+[data-slot="dialog-content"] *,
+[data-slot="sheet-content"],
+[data-slot="sheet-content"] * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+[data-slot="dialog-content"]::-webkit-scrollbar,
+[data-slot="dialog-content"] *::-webkit-scrollbar,
+[data-slot="sheet-content"]::-webkit-scrollbar,
+[data-slot="sheet-content"] *::-webkit-scrollbar {
   display: none;
 }
 

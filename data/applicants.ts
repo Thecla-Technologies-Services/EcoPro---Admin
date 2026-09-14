@@ -58,7 +58,7 @@ export const APPLICANTS: Applicant[] = NAMES.map((name, index) => {
     name,
     userId: `dummy-user-${index + 1}`,
     userCode: `USR-${4521 + index}`,
-    accountType: isOrganization ? "NGO" : "Delivery",
+    accountType: isOrganization ? "Charity Partner" : "Delivery",
     date: "25 Mar 2026",
     email: CONTACT.email,
     phone: CONTACT.phone,

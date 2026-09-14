@@ -54,7 +54,13 @@ function RowActionsRoot({
             variant="ghost"
             size="icon"
             aria-label="Open actions"
-            className={cn("h-8 w-8 rounded-md bg-background", className)}
+            className={cn(
+              "h-8 w-8 rounded-md bg-background",
+              // Nothing else here shows the menu is open: the button carries no
+              // chevron, and the row behind it does not change.
+              "data-[state=open]:bg-muted data-[state=open]:text-foreground",
+              className,
+            )}
           >
             <MoreVertical className="h-4 w-4 text-gray-400" />
           </Button>

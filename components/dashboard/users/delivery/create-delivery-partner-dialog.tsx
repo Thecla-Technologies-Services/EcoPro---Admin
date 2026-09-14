@@ -237,11 +237,14 @@ function CreateDeliveryPartnerDialogInner({
         open={open && successStage === "none"}
         onOpenChange={onOpenChange}
       >
-        {/* 580px wide, per the Create New Delivery Partner frame. The `sm:`
-            prefix is what beats DialogContent's own `sm:max-w-sm` default. */}
+        {/* 580px wide, per the Create Delivery Partner frame. The `sm:` prefix
+            is what beats DialogContent's own `sm:max-w-sm` default.
+            Column layout up to 90vh: the header and the buttons keep their
+            height and the step gets whatever is left, so a tall step shows as
+            many fields as the viewport allows instead of a fixed slice. */}
         <DialogContent
           showCloseButton={false}
-          className="gap-0 overflow-hidden p-0 sm:max-w-[580px]"
+          className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[580px]"
         >
           <div className="flex items-center gap-2 border-b border-border px-6 py-5">
             {stepIndex > 0 && (
@@ -255,7 +258,7 @@ function CreateDeliveryPartnerDialogInner({
               </button>
             )}
             <DialogTitle className="text-lg font-semibold">
-              Create New Delivery Partner
+              Create Delivery Partner
             </DialogTitle>
             <DialogClose className="text-muted-foreground hover:text-foreground" />
           </div>
@@ -267,10 +270,10 @@ function CreateDeliveryPartnerDialogInner({
             documents, then location.
           </DialogDescription>
 
-          <div className="space-y-6 px-6 py-5">
+          <div className="flex min-h-0 flex-1 flex-col space-y-6 px-6 py-5">
             <FormStepper STEPS={DELIVERYSTEPS} current={step} />
 
-            <div className="max-h-[55vh] overflow-y-auto pr-1">
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               {step === "contact" && (
                 <ContactDetailsStep control={control} errors={errors} />
               )}

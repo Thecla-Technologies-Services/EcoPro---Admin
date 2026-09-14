@@ -88,7 +88,7 @@ export const deliveryPartnerFormSchema = z
     }
   });
 
-const contactNGODetailsShape = {
+const charityPartnerContactDetailsShape = {
   profileImage: z.any().optional().nullable(),
   organisationName: z.string().min(2, "Enter the organisation name"),
   contactPersonName: z.string().min(2, "Enter the contact person's name"),
@@ -102,10 +102,10 @@ const contactNGODetailsShape = {
     .regex(/^\+?[0-9]{10,14}$/, "Enter a valid phone number"),
 };
 
-// An NGO's second step asks for the organisation's address and its
+// A charity partner's second step asks for the organisation's address and its
 // verification documents — not the bank and CAC fields a delivery partner
 // needs — so it has its own shape rather than reusing `documentsShape`.
-const ngoDocumentsShape = {
+const charityPartnerDocumentsShape = {
   registrationNumber: z.string().min(3, "Enter the CAC registration number"),
   organizationAddress: z.string().min(2, "Enter the organisation's address"),
   postalCode: z.string().min(3, "Enter the postal code"),
@@ -115,13 +115,13 @@ const ngoDocumentsShape = {
   ),
 };
 
-export const contactNGODetailsSchema = z.object(contactNGODetailsShape);
-export const ngoDocumentsSchema = z.object(ngoDocumentsShape);
+export const charityPartnerContactDetailsSchema = z.object(charityPartnerContactDetailsShape);
+export const charityPartnerDocumentsSchema = z.object(charityPartnerDocumentsShape);
 
-export const ngoFormSchema = z
+export const charityPartnerFormSchema = z
   .object({
-    ...contactNGODetailsShape,
-    ...ngoDocumentsShape,
+    ...charityPartnerContactDetailsShape,
+    ...charityPartnerDocumentsShape,
   })
   .superRefine((values, ctx) => {
     if (
@@ -136,8 +136,8 @@ export const ngoFormSchema = z
     }
   });
 
-export type ContactNGODetailsValues = z.infer<typeof contactNGODetailsSchema>;
-export type NgoFormSchema = z.infer<typeof ngoFormSchema>;
+export type CharityPartnerContactDetailsValues = z.infer<typeof charityPartnerContactDetailsSchema>;
+export type CharityPartnerFormSchema = z.infer<typeof charityPartnerFormSchema>;
 
 export type ContactDetailsValues = z.infer<typeof contactDetailsSchema>;
 export type DocumentsValues = z.infer<typeof documentsSchema>;

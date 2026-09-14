@@ -36,7 +36,7 @@ const statusConfig: Record<BadgeStatus, keyof typeof badgeVariants> = {
   No: "redSoft",
   Rejected: "redSoft",
   Suspended: "redSoft",
-  NGO: "purple",
+  "Charity Partner": "purple",
   Delivery: "blueSoft",
   Individual: "gray",
   Admin: "cyan",

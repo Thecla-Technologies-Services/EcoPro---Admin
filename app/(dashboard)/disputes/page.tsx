@@ -13,7 +13,7 @@ export default function DisputesPage() {
   return (
     <div className="space-y-6 w-full overflow-x-hidden">
       <div className="grid gap-2">
-        <h1 className="text-2xl md:text-[28px] font-bold">Dispute</h1>
+        <h1 className="text-2xl md:text-[28px] font-bold">Disputes</h1>
         <p className="text-sm text-muted-foreground">
           Review and resolve transaction disputes
         </p>

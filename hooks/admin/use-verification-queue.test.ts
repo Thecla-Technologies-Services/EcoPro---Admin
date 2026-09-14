@@ -153,7 +153,7 @@ describe("useVerificationQueue", () => {
         "organization",
         "rider",
       ]);
-      expect(result.current.rows[0].accountType).toBe("NGO");
+      expect(result.current.rows[0].accountType).toBe("Charity Partner");
       expect(result.current.rows[1].accountType).toBe("Delivery");
     });
 

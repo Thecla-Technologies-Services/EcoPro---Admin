@@ -1,4 +1,4 @@
-import { AppPlacement } from "@/types/marketing";
+import { AppPlacement, Unselected } from "@/types/marketing";
 import { cn } from "@/lib/utils";
 
 const PLACEMENT_STYLE: Record<AppPlacement, string> = {
@@ -22,15 +22,24 @@ const PLACEMENT_SCREEN_LABEL: Record<AppPlacement, string> = {
 
 // ─── Phone mockup ─────────────────────────────────────────────────────────────
 
+/**
+ * What the preview shows before a placement has been chosen. The panel is on
+ * screen from the moment the form opens, so it needs a screen to draw; it draws
+ * the first placement rather than an empty phone.
+ */
+const PREVIEW_FALLBACK: AppPlacement = "Home Dashboard Top";
+
 export function PhoneMockup({
   bannerUrl,
   placement,
 }: {
   bannerUrl: string | null;
-  placement: AppPlacement;
+  /** `""` while the placement select is untouched — see `BannerFormValues`. */
+  placement: AppPlacement | Unselected;
 }) {
-  const positionClass = PLACEMENT_STYLE[placement];
-  const screenLabel = PLACEMENT_SCREEN_LABEL[placement];
+  const shown = placement || PREVIEW_FALLBACK;
+  const positionClass = PLACEMENT_STYLE[shown];
+  const screenLabel = PLACEMENT_SCREEN_LABEL[shown];
 
   return (
     <div className="flex flex-col w-full  h-full">

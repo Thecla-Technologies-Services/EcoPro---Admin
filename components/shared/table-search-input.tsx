@@ -33,7 +33,10 @@ export function TableSearchInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
-          "h-9 rounded-md pl-9 text-sm ring-0 outline-none focus-within:border-primary focus-within:ring-0 focus-within:outline-0 focus-visible:border-primary md:rounded-lg",
+          // A pill, like the date filter and Export beside it — the rounded
+          // rectangle it used to be was the one control in those rows that
+          // wasn't.
+          "h-9 rounded-full pl-9 text-sm ring-0 outline-none focus-within:border-primary focus-within:ring-0 focus-within:outline-0 focus-visible:border-primary",
           inputClassName,
         )}
       />

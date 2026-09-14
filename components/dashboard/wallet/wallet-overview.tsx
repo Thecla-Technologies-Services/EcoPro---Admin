@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import {
   Wallet,
   Lock,
@@ -18,6 +18,9 @@ import { TRANSACTIONS } from "@/data/transactions";
 import { IconType } from "react-icons/lib";
 import { FadeIn } from "@/components/motion/fade-in";
 import { Amount } from "@/components/shared/amount";
+import { Pagination } from "@/components/shared/pagination";
+import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
+import { TableSearchInput } from "@/components/shared/table-search-input";
 
 interface StatCard {
   label: string;
@@ -62,7 +65,7 @@ const OVERVIEW_STATS: StatCard[] = [
 
 function StatCards({ stats }: { stats: StatCard[] }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       {stats.map((s) => (
         <FadeIn key={s.label} delay={s.delay}>
           <SharedStatCard
@@ -127,18 +130,47 @@ function TxIcon({ type }: { type: Transaction["type"] }) {
 
 type TxFilter = "All" | "Credit" | "Debit" | "On Hold";
 
-export function WalletOverview() {
-  const [filter, setFilter] = useState<TxFilter>("All");
+const TX_FILTERS: TxFilter[] = ["All", "Credit", "Debit", "On Hold"];
 
-  const filtered = TRANSACTIONS.filter((t) => {
-    if (filter === "All") return true;
-    if (filter === "Credit") return t.amountType === "credit";
-    if (filter === "Debit") return t.amountType === "debit";
-    if (filter === "On Hold") return t.amountType === "neutral";
-    return true;
+/** Each pill but "All" names one of the ledger directions a row carries. */
+const TX_FILTER_TYPES: Record<string, Transaction["amountType"]> = {
+  Credit: "credit",
+  Debit: "debit",
+  "On Hold": "neutral",
+};
+
+const PAGE_SIZE = 10;
+
+export function WalletOverview() {
+  // Anchors paging to whichever region the list scrolls in — the dashboard
+  // `main` here, so a page change starts at the top of the list.
+  const listRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Fixture rows, so the filter and the page position are applied in memory.
+   * Behind the same seam the live lists use: when the transactions endpoint
+   * arrives this becomes a `useListPanel`, and the markup below stays put.
+   */
+  const panel = useFixturePanel<Transaction>({
+    rows: TRANSACTIONS,
+    pageSize: PAGE_SIZE,
+    initialFilters: { tab: "All" },
+    matches: (tx, term, { tab }) => {
+      if (tab !== "All" && tx.amountType !== TX_FILTER_TYPES[tab ?? "All"]) {
+        return false;
+      }
+      if (!term) return true;
+
+      // Searched in memory with the rows: these are fixtures, so there is no
+      // endpoint to hand a term to. A row shows its description and its kind,
+      // and the amount is what an admin is likeliest to type after those.
+      return [tx.description, tx.type, String(tx.amount)].some((field) =>
+        field.toLowerCase().includes(term.toLowerCase()),
+      );
+    },
   });
 
-  const filters: TxFilter[] = ["All", "Credit", "Debit", "On Hold"];
+  const { pageIndex, pageSize } = panel.table.pagination;
 
   /** Ledger rows carry their direction in the sign, not in the figure. */
   function amountSign(tx: Transaction) {
@@ -151,37 +183,51 @@ export function WalletOverview() {
     <div>
       <StatCards stats={OVERVIEW_STATS} />
 
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div ref={listRef} className="max-w-2xl mx-auto space-y-4">
         <h3 className="text-lg md:text-xl font-medium text-gray-900">
           Recent Transactions
         </h3>
 
-        {/* Filter tabs */}
-        <div className="flex gap-2 flex-wrap">
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "text-sm px-4 py-1.5 rounded-full font-medium transition-all cursor-pointer",
-                filter === f
-                  ? "bg-[#2D7A4F] text-white"
-                  : "bg-[#F2F2F2] text-gray-500 hover:bg-gray-200",
-              )}
-            >
-              {f}
-            </button>
-          ))}
+        {/* Filter tabs, with search opposite them */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-2 flex-wrap">
+            {TX_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => panel.table.onTabChange(f)}
+                className={cn(
+                  "text-sm px-4 py-1.5 rounded-full font-medium transition-all cursor-pointer",
+                  panel.table.activeTab === f
+                    ? "bg-[#2D7A4F] text-white"
+                    : "bg-[#F2F2F2] text-gray-500 hover:bg-gray-200",
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <TableSearchInput
+            value={panel.table.search}
+            onChange={panel.table.onSearchChange}
+            placeholder="Search transactions"
+            className="mt-0 w-full md:mt-0 md:w-56"
+          />
         </div>
 
         {/* Transaction list */}
         <div className="border bg-background border-gray-100 rounded-xl overflow-hidden">
-          {filtered.map((tx, idx) => (
+          {panel.rows.length === 0 && (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+              No transactions match this search.
+            </p>
+          )}
+          {panel.rows.map((tx, idx) => (
             <div
               key={tx.id}
               className={cn(
                 "flex items-center gap-3 px-4 py-3.5",
-                idx !== filtered.length - 1 && "border-b border-[#E0E0E0]",
+                idx !== panel.rows.length - 1 && "border-b border-[#E0E0E0]",
               )}
             >
               <TxIcon type={tx.type} />
@@ -204,6 +250,20 @@ export function WalletOverview() {
             </div>
           ))}
         </div>
+
+        <Pagination
+          current={pageIndex + 1}
+          total={panel.table.totalPages ?? 1}
+          onChange={(page) =>
+            panel.table.onPaginationChange({ pageIndex: page - 1, pageSize })
+          }
+          totalCount={panel.table.totalCount}
+          pageSize={pageSize}
+          rowsOnPage={panel.rows.length}
+          rowLabel="transactions"
+          scrollAnchorRef={listRef}
+          className="px-1"
+        />
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   IoWalletOutline,
   IoFileTrayFullOutline,
   IoHelpBuoyOutline,
+  IoReceiptOutline,
 } from "react-icons/io5";
 import { BiDonateHeart } from "react-icons/bi";
 import {
@@ -46,9 +47,22 @@ const navItems = [
   { icon: MessageSquare, label: "Disputes", href: "/disputes" },
   { icon: IoAnalyticsOutline, label: "Analytics", href: "/analytics" },
   { icon: IoFileTrayFullOutline, label: "Marketing", href: "/marketing" },
+  { icon: IoReceiptOutline, label: "Audit Log", href: "/audit-log" },
   { icon: IoFileTrayFullOutline, label: "Roles & Permissions", href: "/roles-permissions" },
   { icon: IoHelpBuoyOutline, label: "Support", href: "/support" },
 ];
+
+/**
+ * Whether a nav item owns the current route.
+ *
+ * A nested route keeps its parent lit — `/disputes/DSP-3391` is still Disputes,
+ * `/marketing/create-banner` still Marketing — so the match is on the path
+ * segment rather than the whole string. The trailing slash is what stops a
+ * future `/users-archive` from lighting up `/users`.
+ */
+function isRouteActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -72,7 +86,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 md:space-y-3">
               {navItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = isRouteActive(pathname, item.href);
                 return (
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton
@@ -109,7 +123,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               tooltip="Settings"
-              className={`${pathname === "/settings" ? "bg-primary/15 text-primary hover:bg-green-100 hover:text-green-800 rounded-full" : ""}
+              className={`${isRouteActive(pathname, "/settings") ? "bg-primary/15 text-primary hover:bg-green-100 hover:text-green-800 rounded-full" : ""}
                         
                           " data-[active=true]:text-primary data-[active=true]:bg-primary/15 group-data-[active=true]:bg-primary/15 group-data-[state=open]:text-primary group-data-[state=open]:hover:bg-green-100 group-data-[state=open]:hover:text-green-800 py-2 px-4 md:px-5 h-8 [active=true]:rounded-full!" `}
             >

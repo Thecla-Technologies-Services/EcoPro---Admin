@@ -13,6 +13,7 @@ import {
 import { RowActions,
 } from "@/components/shared/row-actions";
 import TableDateFilter from "../../shared/date/table-date-filter";
+import { downloadTableCsv } from "@/lib/export";
 import { DateRangeFilterValue } from "@/types/date";
 import { Amount } from "@/components/shared/amount";
 
@@ -157,6 +158,14 @@ export default function SwapTable() {
               <TableDateFilter
                 selected={dateFilter}
                 setSelected={setDateFilter}
+                // Searching is the endpoint's own `SearchTerm`, so it spans the
+                // whole list rather than the page on screen.
+                search={panel.table.search}
+                onSearchChange={panel.table.onSearchChange}
+                searchPlaceholder="Search orders"
+                onExport={() =>
+                  downloadTableCsv(columns, panel.table.data, "swap-orders.csv")
+                }
               />
             }
             columns={columns}

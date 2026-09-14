@@ -80,7 +80,7 @@ function Option({
         "w-full cursor-pointer rounded-md border px-3 py-4 text-left text-sm font-semibold transition-all md:text-base md:font-bold",
         isSelected
           ? "border-2 border-primary text-foreground"
-          : "border-transparent bg-input text-foreground hover:border-border",
+          : "border-transparent bg-field text-foreground hover:border-border",
         className,
       )}
     >

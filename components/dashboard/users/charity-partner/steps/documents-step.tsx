@@ -7,19 +7,19 @@ import {
   type FieldErrors,
   type UseFormSetValue,
 } from "react-hook-form";
-import type { NgoFormValues } from "@/types/user";
+import type { CharityPartnerFormValues } from "@/types/user";
 import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { DocumentUpload } from "@/components/shared/form/document-upload";
 
 interface DocumentsStepProps {
-  control: Control<NgoFormValues>;
-  errors: FieldErrors<NgoFormValues>;
-  setValue: UseFormSetValue<NgoFormValues>;
+  control: Control<CharityPartnerFormValues>;
+  errors: FieldErrors<CharityPartnerFormValues>;
+  setValue: UseFormSetValue<CharityPartnerFormValues>;
   documents: File[];
-  existingDocuments: NgoFormValues["existingDocuments"];
+  existingDocuments: CharityPartnerFormValues["existingDocuments"];
 }
 
-export function NGODocumentsStep({
+export function CharityPartnerDocumentsStep({
   control,
   errors,
   setValue,

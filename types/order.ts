@@ -22,7 +22,7 @@ export type BadgeStatus =
   | "Paid"
   | "Yes"
   | "No"
-  | "NGO"
+  | "Charity Partner"
   | "Paused"
   | "Rejected"
   | UserStatus

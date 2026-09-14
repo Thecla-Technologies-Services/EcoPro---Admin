@@ -16,15 +16,19 @@ interface SideStatProps {
 
 function SideStat({ number, label, actionLabel, href }: SideStatProps) {
   return (
-    <div className="flex justify-between items-center bg-background rounded-md p-3 md:p-5">
-      <div className="grid gap-2 lg:gap-3 xl:gap-4">
-        <p className="text-4xl md:text-5xl font-bold text-foreground">
+    // Stacked below `sm`, where the figure and a two-word button cannot share
+    // a line; side by side from there.
+    <div className="flex flex-col items-start justify-between gap-3 rounded-md bg-background p-3 sm:flex-row sm:items-center md:p-5">
+      <div className="grid min-w-0 gap-2 lg:gap-3 xl:gap-4">
+        {/* A money figure lands here as well as a count — "NGN 320.4M" at
+            `5xl` was wider than the card and crowded the button off it. */}
+        <p className="truncate text-3xl font-bold text-foreground xl:text-4xl">
           {number}
         </p>
         <p className="text-sm text-muted-foreground">{label}</p>
       </div>
-      <Link href={href}>
-        <Button className="py-3 px-4 text-xs font-medium h-11">
+      <Link href={href} className="shrink-0">
+        <Button className="h-11 px-4 py-3 text-xs font-medium whitespace-nowrap">
           {actionLabel}
         </Button>
       </Link>

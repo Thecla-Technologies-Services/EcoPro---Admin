@@ -18,6 +18,7 @@ import SharedStatCard from "@/components/shared/stat-card";
 import { PermissionsTable } from "@/components/dashboard/roles-permissions/roles-table";
 import { CreateRoleDialog } from "@/components/dashboard/roles-permissions/create-role-dialog";
 import { UsersPanel } from "@/components/dashboard/users/users-panel";
+import { AddUserDialog } from "@/components/dashboard/users/add-user";
 import { useRoles } from "@/hooks/admin/use-roles";
 import { useAdminUsersPanel } from "@/hooks/admin/use-users-panel";
 import { useListPanel } from "@/hooks/shared/use-list-panel";
@@ -34,6 +35,7 @@ export default function RolesPermissionsPage() {
   const [tab, setTab] = useTabParam(TABS);
 
   const [openCreate, setOpenCreate] = useState(false);
+  const [openCreateAdmin, setOpenCreateAdmin] = useState(false);
 
   const roles = useListPanel({
     pageSize: DEFAULT_PAGE_SIZE,
@@ -122,10 +124,24 @@ export default function RolesPermissionsPage() {
         />
       </StatGrid>
 
-      <FilterTabs value={tab} onChange={(next) => setTab(next as typeof tab)}>
-        <FilterTabs.Tab value="roles">Roles &amp; Permissions</FilterTabs.Tab>
-        <FilterTabs.Tab value="admin-users">Admin Users</FilterTabs.Tab>
-      </FilterTabs>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <FilterTabs value={tab} onChange={(next) => setTab(next as typeof tab)}>
+          <FilterTabs.Tab value="roles">Roles &amp; Permissions</FilterTabs.Tab>
+          <FilterTabs.Tab value="admin-users">Admin Users</FilterTabs.Tab>
+        </FilterTabs>
+
+        {/* Sits opposite the tabs rather than in PageHeader.Actions, which the
+            roles tab's Create Role already occupies. */}
+        {tab === "admin-users" && (
+          <Button
+            onClick={() => setOpenCreateAdmin(true)}
+            className="bg-primary text-white gap-2 rounded-full px-5"
+          >
+            <Plus className="w-4 h-4" />
+            Create Admin User
+          </Button>
+        )}
+      </div>
 
       {tab === "admin-users" ? (
         <UsersPanel
@@ -149,6 +165,12 @@ export default function RolesPermissionsPage() {
       )}
 
       <CreateRoleDialog open={openCreate} onOpenChange={setOpenCreate} />
+      <AddUserDialog
+        open={openCreateAdmin}
+        onClose={() => setOpenCreateAdmin(false)}
+        title="Create Admin User"
+        lockedRole="Admin"
+      />
     </div>
   );
 }

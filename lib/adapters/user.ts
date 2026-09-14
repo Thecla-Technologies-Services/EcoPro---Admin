@@ -17,8 +17,8 @@ import { humanise, toLabel } from "@/lib/adapters/shared";
 const ROLE_LABELS: Record<string, UserRole> = {
   ecowarrior: "Individual",
   individual: "Individual",
-  charitypartner: "NGO",
-  ngo: "NGO",
+  charitypartner: "Charity Partner",
+  ngo: "Charity Partner",
   logisticspartner: "Delivery",
   independentrider: "Delivery",
   delivery: "Delivery",
@@ -107,7 +107,7 @@ export function toUserDetails(dto: AdminUserDetailsDto, row?: User): User {
 export const USER_FILTER_TABS = [
   "All Users",
   "Individual",
-  "NGO",
+  "Charity Partner",
   "Delivery",
   "Suspended",
 ] as const;
@@ -130,7 +130,8 @@ export type UserFilterTab = (typeof USER_FILTER_TABS)[number];
 export const USER_TAB_PARAMS: Record<UserFilterTab, string | undefined> = {
   "All Users": "All",
   Individual: "Individual",
-  NGO: "NGO",
+  // The label reads "Charity Partner"; the parameter keeps the API's spelling.
+  "Charity Partner": "NGO",
   Delivery: "Delivery",
   Suspended: "Suspended",
 };

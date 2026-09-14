@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { IoEyeOutline } from "react-icons/io5";
 import { FilterPills, ListingTypeBadge } from "./pills";
 import { DataState } from "@/components/shared/data-state";
+import { Pagination } from "@/components/shared/pagination";
+import { pageSlice } from "@/lib/paging";
 import { useUserListings } from "@/hooks/admin/use-users";
 import type { ListingFilter } from "@/types/user";
 import { Amount } from "@/components/shared/amount";
@@ -21,22 +23,35 @@ const LISTING_TYPE_PARAMS: Partial<Record<ListingFilter, string>> = {
   Donate: "Donate",
 };
 
+const PAGE_SIZE = 4;
+
 export function ListingTab({ userId }: { userId?: string }) {
   const [filter, setFilter] = useState<ListingFilter>("All");
+  const [pageNumber, setPageNumber] = useState(1);
+  // Anchors paging to the scrolling list below, inside the sheet body.
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const { data, isPending, isError, error, refetch } = useUserListings(
-    userId,
-    LISTING_TYPE_PARAMS[filter]
-  );
+  const { data, isPending, isFetching, isError, error, refetch } =
+    useUserListings(userId, LISTING_TYPE_PARAMS[filter], {
+      pageNumber,
+      pageSize: PAGE_SIZE,
+    });
 
-  const displayed = data?.data ?? [];
+  const {
+    rows: displayed,
+    pageCount,
+    totalCount,
+  } = pageSlice(data, pageNumber, PAGE_SIZE);
 
   return (
-    <div className="mt-4">
+    <div ref={listRef} className="mt-4">
       <FilterPills
         options={["All", "Sell", "Swap", "Donate"] as ListingFilter[]}
         active={filter}
-        onChange={setFilter}
+        onChange={(next) => {
+          setFilter(next);
+          setPageNumber(1);
+        }}
       />
 
       <DataState>
@@ -66,7 +81,10 @@ export function ListingTab({ userId }: { userId?: string }) {
             </p>
           </div>
         </DataState.Empty>
-        <DataState.Content className="mt-4 space-y-3 max-h-80 overflow-y-auto pr-1">
+        <DataState.Content
+          busy={isFetching}
+          className="mt-4 space-y-3"
+        >
           {displayed.map((item) => (
             <div
               key={item.id}
@@ -108,6 +126,19 @@ export function ListingTab({ userId }: { userId?: string }) {
           ))}
         </DataState.Content>
       </DataState>
+
+      {pageCount > 1 && (
+        <Pagination
+          current={pageNumber}
+          total={pageCount}
+          onChange={setPageNumber}
+          totalCount={totalCount}
+          pageSize={PAGE_SIZE}
+          rowsOnPage={displayed.length}
+          rowLabel="listings"
+          scrollAnchorRef={listRef}
+        />
+      )}
     </div>
   );
 }

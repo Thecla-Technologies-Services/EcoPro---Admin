@@ -105,7 +105,12 @@ message saying why. Proving that absence takes a repo-wide search, so take it
 from here rather than re-running one.
 
 Disputes is behind a seam already, through `useFixturePanel`, and going live is
-a one-word edit. The rest have not been moved.
+a one-word edit — but there is nothing to go live to: no endpoint serves a
+dispute. The nearest, `GET /api/admin/swaps/disputed`, returns disputed swap
+proposals and is already spoken for by Swap & Orders; its `SwapProposalDto`
+carries no country, party names or formatted amounts, so the disputes table's
+`country` column is invented in `data/disputes.ts` rather than mapped from
+anywhere. The rest have not been moved.
 
 Withdrawal requests and the verification queue used to sit behind the same seam
 and are now live. The queue kept its option —
@@ -126,6 +131,7 @@ around it:
 | `withdrawals/pending` serves only undecided requests, and nothing reads a decided one back | the wallet table's tabs come from the statuses present, so no tab sits permanently empty |
 | Withdrawals name the payout account but not the account holder | the table lost its User and User ID columns rather than showing dashes |
 | Feature suggestions are listed but no endpoint changes one | that table has no kebab column |
+| A ticket has no assignee: `SupportTicketDto` carries none, and its only write is `resolve`, which takes a status and a note | Assign Ticket picks a real admin, then fails with a message saying why |
 
 NB: Two request bodies are multipart and declared inline in the swagger, so the
 generated DTOs do not cover them: both organization writes, whose input types

@@ -5,7 +5,11 @@ import type { Country } from "@/types/api/admin";
  * accounts, which are listed in the roles module rather than alongside platform
  * users.
  */
-export type UserRole = "Individual" | "NGO" | "Delivery" | "Admin";
+export type UserRole =
+  | "Individual"
+  | "Charity Partner"
+  | "Delivery"
+  | "Admin";
 export type UserStatus = "Active" | "Suspended";
 
 export type ModalType =
@@ -210,15 +214,15 @@ export interface CreatedRiderCredentials {
   password: string;
 }
 
-export interface NgoDocument {
+export interface CharityPartnerDocument {
   id: string;
   name: string;
   url: string;
 }
 
-export type NgoStep = "contact" | "documents";
+export type CharityPartnerStep = "contact" | "documents";
 
-export interface NgoFormValues {
+export interface CharityPartnerFormValues {
   profileImage?: File | null;
   organisationName: string;
   contactPersonName: string;
@@ -230,7 +234,7 @@ export interface NgoFormValues {
   postalCode: string;
   organizationAddress: string;
   documents: File[];
-  existingDocuments: NgoDocument[];
+  existingDocuments: CharityPartnerDocument[];
 }
 
 export type Tab = "Profile" | "Listing (12)" | "Wallet History";

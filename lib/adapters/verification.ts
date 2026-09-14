@@ -104,7 +104,7 @@ export function toOrganizationApplicant(dto: OrganizationDto): Applicant {
     kind: "organization",
     name: dto.organizationName ?? dto.contactPersonName ?? "Unnamed organization",
     userId: dto.userId ?? PLACEHOLDER,
-    accountType: "NGO",
+    accountType: "Charity Partner",
     date: formatDate(dto.submittedOn),
     email: dto.contactEmail ?? PLACEHOLDER,
     phone: dto.contactPhoneNumber ?? PLACEHOLDER,
@@ -211,7 +211,7 @@ export function toQueueApplicant(dto: AdminVerificationItemDto): Applicant {
     // The queue keys rows by their application, not their account, so nothing
     // here can be handed to the user endpoints.
     userId: PLACEHOLDER,
-    accountType: kind === "organization" ? "NGO" : "Delivery",
+    accountType: kind === "organization" ? "Charity Partner" : "Delivery",
     date: formatDate(dto.submissionDate),
     email: dto.contactEmail ?? PLACEHOLDER,
     phone: dto.contactPhoneNumber ?? PLACEHOLDER,

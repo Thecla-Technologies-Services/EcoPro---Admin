@@ -19,7 +19,7 @@ export default function SwapsOrdersPage() {
           Track all transactions and deliveries
         </p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <FadeIn delay={0.1}>
           {/* Only the total has a source, and it counts disputed swaps rather
               than orders. The other three are shown as a dash rather than a
@@ -33,15 +33,17 @@ export default function SwapsOrdersPage() {
         </FadeIn>
 
         <FadeIn delay={0.2}>
-          <SharedStatCard label="Pending Pickup" value="—" icon={Package} />
+          <SharedStatCard label="Pending Pickup" value={0} icon={Package} />
         </FadeIn>
+
         <FadeIn delay={0.3}>
-          <SharedStatCard label="In Transit" value="—" icon={Truck} />
+          <SharedStatCard label="In Transit" value={0} icon={Truck} />
         </FadeIn>
+
         <FadeIn delay={0.4}>
           <SharedStatCard
             label="Completed"
-            value="—"
+            value={0}
             icon={HiOutlineDocumentCheck}
           />
         </FadeIn>

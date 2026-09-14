@@ -21,6 +21,8 @@ interface FloatingDatePickerProps {
   fromDate?: Date;
   toDate?: Date;
   className?: string;
+  /** The field box inside, forwarded to `FloatingLabelInput`. */
+  fieldClassName?: string;
   id?: string;
 }
 
@@ -34,6 +36,7 @@ export function FloatingDatePicker({
   error,
   disabled,
   className,
+  fieldClassName,
   id,
 }: FloatingDatePickerProps) {
   const [open, setOpen] = React.useState(false);
@@ -64,6 +67,7 @@ export function FloatingDatePicker({
         <div className={cn("cursor-pointer", className)}>
           <FloatingLabelInput
             id={id}
+            className={fieldClassName}
             label={label}
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}

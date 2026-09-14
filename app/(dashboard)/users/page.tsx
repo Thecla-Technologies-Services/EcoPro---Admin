@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
@@ -9,8 +9,7 @@ import { StatGrid } from "@/components/shared/stat-grid";
 import { RowActions } from "@/components/shared/row-actions";
 import SharedStatCard from "@/components/shared/stat-card";
 import { UsersPanel } from "@/components/dashboard/users/users-panel";
-import { AddUserDialog } from "@/components/dashboard/users/add-user";
-import { CreateNgoDialog } from "@/components/dashboard/users/ngo/create-ngo-dialog";
+import { CreateCharityPartnerDialog } from "@/components/dashboard/users/charity-partner/create-charity-partner-dialog";
 import { CreateDeliveryPartnerDialog } from "@/components/dashboard/users/delivery/create-delivery-partner-dialog";
 import { useUsersPanel } from "@/hooks/admin/use-users-panel";
 import {
@@ -24,7 +23,6 @@ import {
   IoPeopleOutline,
   IoCartOutline,
   IoPersonRemoveOutline,
-  IoPersonAddOutline,
 } from "react-icons/io5";
 
 /**
@@ -38,8 +36,7 @@ import {
 const DELIVERY_DOCUMENT_TYPE = "CacCertificate" as const;
 
 export default function UsersManagementPage() {
-  const [addOpen, setAddOpen] = useState(false);
-  const [ngoOpen, setNgoOpen] = useState(false);
+  const [charityPartnerOpen, setCharityPartnerOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
 
   // Staff accounts are managed in the roles module, so they are dropped here
@@ -89,7 +86,9 @@ export default function UsersManagementPage() {
         response,
         // Without a userId there is nothing to upload against, so every
         // document is unaccounted for rather than silently dropped.
-        failedDocuments: userId ? undefined : values.documents.map((f) => f.name),
+        failedDocuments: userId
+          ? undefined
+          : values.documents.map((f) => f.name),
       };
     }
 
@@ -117,23 +116,26 @@ export default function UsersManagementPage() {
       <PageHeader className="md:items-center">
         <PageHeader.Heading>
           <PageHeader.Title className="md:text-2xl">
-            Users Management
+            User Management
           </PageHeader.Title>
         </PageHeader.Heading>
         <PageHeader.Actions>
-          <Button
-            className="bg-primary flex-1 md:flex-none text-white gap-2 rounded-full px-5"
-            onClick={() => setAddOpen(true)}
+          {/* One menu rather than a button beside a kebab: the button opens
+              the partner items the kebab used to hold. */}
+          <RowActions
+            trigger={
+              <Button className="bg-primary flex-1 md:flex-none text-white gap-2 rounded-full px-5">
+                <Plus className="w-4 h-4" />
+                Add New User
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            }
           >
-            <Plus className="w-4 h-4" />
-            Add New User
-          </Button>
-          <RowActions>
             <RowActions.Item
-              icon={IoPersonAddOutline}
-              onSelect={() => setNgoOpen(true)}
+              icon={HiOutlineBuildingOffice2}
+              onSelect={() => setCharityPartnerOpen(true)}
             >
-              Add NGO
+              Add Charity Partner
             </RowActions.Item>
             <RowActions.Item
               icon={IoPeopleOutline}
@@ -153,7 +155,7 @@ export default function UsersManagementPage() {
           isLoading={query.isPending}
         />
         <SharedStatCard
-          label="NGO Partners"
+          label="Charity Partners"
           value={metrics?.ngoPartners ?? 0}
           icon={HiOutlineBuildingOffice2}
           isLoading={query.isPending}
@@ -175,11 +177,9 @@ export default function UsersManagementPage() {
       {/* Search + Table */}
       <UsersPanel panel={panel} />
 
-      <AddUserDialog open={addOpen} onClose={() => setAddOpen(false)} />
-
-      <CreateNgoDialog
-        open={ngoOpen}
-        onOpenChange={setNgoOpen}
+      <CreateCharityPartnerDialog
+        open={charityPartnerOpen}
+        onOpenChange={setCharityPartnerOpen}
         onCreated={async (values) => {
           await createOrganization.mutateAsync({
             organizationName: values.organisationName,
