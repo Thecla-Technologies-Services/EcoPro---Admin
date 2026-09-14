@@ -59,6 +59,12 @@ interface DataTableProps<TData, TValue> {
 
   onRowSelectionChange?: (selectedRows: TData[]) => void;
   headerExtra?: React.ReactNode;
+  /**
+   * Sits on the title's own line, hard right. For a control that scopes the
+   * whole table rather than filtering within it — a country picker, say — which
+   * reads as belonging to the heading rather than to the row of filters.
+   */
+  titleExtra?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -82,6 +88,7 @@ export function DataTable<TData, TValue>({
   onPaginationChange,
   onRowSelectionChange,
   headerExtra,
+  titleExtra,
 }: DataTableProps<TData, TValue>) {
   // Anchors paging to whichever region this table is scrolling in.
   const topRef = React.useRef<HTMLDivElement>(null);
@@ -159,12 +166,22 @@ export function DataTable<TData, TValue>({
   return (
     <div ref={topRef} className={cn("bg-white overflow-x-hidden", className)}>
       {/* ── Header ── */}
-      {(title || filterTabs || headerExtra) && (
+      {(title || filterTabs || headerExtra || titleExtra) && (
         <div className="py-4 border-b border-gray-100">
-          {title && (
-            <h2 className="text-base font-semibold text-gray-900 mb-3">
-              {title}
-            </h2>
+          {(title || titleExtra) && (
+            <div
+              className={cn(
+                "mb-3 flex flex-wrap items-center gap-3",
+                title ? "justify-between" : "justify-end",
+              )}
+            >
+              {title && (
+                <h2 className="text-base font-semibold text-gray-900">
+                  {title}
+                </h2>
+              )}
+              {titleExtra}
+            </div>
           )}
 
           {/* Tabs left, extras right — but with nothing on the left to balance

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ExternalLink, PencilLine } from "lucide-react";
+import { ExternalLink, PencilLine, Plus, UserPlus } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { DataState } from "@/components/shared/data-state";
 import { RowActions } from "@/components/shared/row-actions";
@@ -16,12 +16,16 @@ import {
   toTicketStatusParam,
 } from "@/constants/support-ticket-status";
 import { ResolveTicketDialog } from "./resolve-ticket-dialog";
+import { AssignTicketDialog } from "./assign-ticket-dialog";
+import { FileComplaintDialog } from "./file-complaint-dialog";
+import { Button } from "@/components/ui/button";
 import type { SupportTicket } from "@/types/support";
 
 const PAGE_SIZE = 10;
 
 function buildColumns(
   onUpdate: (row: SupportTicket) => void,
+  onAssign: (row: SupportTicket) => void,
 ): ColumnDef<SupportTicket>[] {
   return [
     {
@@ -57,6 +61,12 @@ function buildColumns(
           >
             Update Status
           </RowActions.Item>
+          <RowActions.Item
+            icon={UserPlus}
+            onSelect={() => onAssign(row.original)}
+          >
+            Assign Ticket
+          </RowActions.Item>
           {row.original.attachmentUrl && (
             <RowActions.Item
               icon={ExternalLink}
@@ -88,13 +98,21 @@ function buildColumns(
 export function SupportTicketTable() {
   const [activeRow, setActiveRow] = React.useState<SupportTicket | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [assignOpen, setAssignOpen] = React.useState(false);
+  const [complaintOpen, setComplaintOpen] = React.useState(false);
 
   const columns = React.useMemo(
     () =>
-      buildColumns((row) => {
-        setActiveRow(row);
-        setDialogOpen(true);
-      }),
+      buildColumns(
+        (row) => {
+          setActiveRow(row);
+          setDialogOpen(true);
+        },
+        (row) => {
+          setActiveRow(row);
+          setAssignOpen(true);
+        },
+      ),
     [],
   );
 
@@ -147,6 +165,15 @@ export function SupportTicketTable() {
             allTabValue={ALL_TICKET_STATUSES}
             title="Support Tickets"
             filterTabs={TICKET_STATUS_TABS}
+            headerExtra={
+              <Button
+                onClick={() => setComplaintOpen(true)}
+                className="h-9 gap-2 rounded-full px-5 text-white"
+              >
+                <Plus className="size-4" />
+                File Complaint
+              </Button>
+            }
           />
         </DataState.Content>
       </DataState>
@@ -156,6 +183,21 @@ export function SupportTicketTable() {
         onOpenChange={setDialogOpen}
         ticket={activeRow}
       />
+
+      {/* Mounted only while open: both dialogs fetch the user and admin lists
+          for their dropdowns, and kept mounted they did it on every visit to
+          this page — two 100-row requests nobody had asked for yet. */}
+      {assignOpen && (
+        <AssignTicketDialog
+          open
+          onOpenChange={setAssignOpen}
+          ticket={activeRow}
+        />
+      )}
+
+      {complaintOpen && (
+        <FileComplaintDialog open onOpenChange={setComplaintOpen} />
+      )}
     </>
   );
 }

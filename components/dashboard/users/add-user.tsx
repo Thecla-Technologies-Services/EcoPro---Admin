@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Mail, Lock } from "lucide-react";
 import { IoPersonOutline } from "react-icons/io5";
 import { useForm, Controller } from "react-hook-form";
@@ -39,9 +39,23 @@ type AddUserForm = z.infer<typeof addUserSchema>;
 interface AddUserDialogProps {
   open: boolean;
   onClose: () => void;
+  /** Overrides the heading for a caller creating one kind of account. */
+  title?: string;
+  /**
+   * Pins Account Role, so the dialog can only create that kind of account.
+   * Matched case-insensitively against the names /api/admin/roles serves —
+   * a role the API does not have blocks the form rather than posting a user
+   * with no role.
+   */
+  lockedRole?: string;
 }
 
-export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
+export function AddUserDialog({
+  open,
+  onClose,
+  title = "Create New User",
+  lockedRole,
+}: AddUserDialogProps) {
   const [createdUserCode, setCreatedUserCode] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -54,11 +68,20 @@ export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
   const roleNames = roles.map((role) => role.name ?? "").filter(Boolean);
   const success = createdUserCode !== null;
 
+  const lockedRoleName = lockedRole
+    ? roleNames.find(
+        (name) => name.toLowerCase() === lockedRole.toLowerCase(),
+      )
+    : undefined;
+  const lockedRoleMissing =
+    Boolean(lockedRole) && !rolesPending && lockedRoleName === undefined;
+
   const {
     register,
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<AddUserForm>({
     resolver: zodResolver(addUserSchema),
@@ -72,6 +95,12 @@ export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
       verifyEmailAutomatically: true,
     },
   });
+
+  // The roles arrive after the form mounts, and closing resets the field, so the
+  // pinned role is written back on each open rather than as a default value.
+  useEffect(() => {
+    if (open && lockedRoleName) setValue("role", lockedRoleName);
+  }, [open, lockedRoleName, setValue]);
 
   const handleClose = () => {
     reset();
@@ -108,7 +137,7 @@ export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
           <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground" />
 
           <DialogTitle className="text-lg font-semibold mb-5">
-            Create New User
+            {title}
           </DialogTitle>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -200,11 +229,15 @@ export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
               render={({ field }) => (
                 <FloatingSelect
                   label="Account Role"
-                  options={roleNames}
+                  options={lockedRoleName ? [lockedRoleName] : roleNames}
                   value={field.value}
                   onChange={field.onChange}
-                  disabled={rolesPending}
-                  error={errors.role?.message}
+                  disabled={rolesPending || Boolean(lockedRole)}
+                  error={
+                    lockedRoleMissing
+                      ? `The "${lockedRole}" role was not found`
+                      : errors.role?.message
+                  }
                 />
               )}
             />
@@ -248,6 +281,7 @@ export function AddUserDialog({ open, onClose }: AddUserDialogProps) {
                 type="submit"
                 className="flex-1 rounded-full bg-primary text-white"
                 isLoading={createUser.isPending}
+                disabled={lockedRoleMissing}
               >
                 Create User
               </Button>

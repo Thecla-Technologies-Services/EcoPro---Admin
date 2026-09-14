@@ -10,6 +10,9 @@ import { DataTable } from "@/components/shared/data-table";
 import { useFixturePanel } from "@/hooks/shared/use-fixture-panel";
 import { RowActions } from "@/components/shared/row-actions";
 import TableDateFilter from "../../shared/date/table-date-filter";
+import { downloadTableCsv } from "@/lib/export";
+import { CountrySelect } from "@/components/shared/country-select";
+import { toCountryLabel } from "@/constants/country";
 import { DateRangeFilterValue } from "@/types/date";
 import type { Dispute } from "@/types/dispute";
 import { DISPUTES } from "@/data/disputes";
@@ -52,7 +55,16 @@ export default function DisputeTable() {
     rows: DISPUTES,
     pageSize: 7,
     initialFilters: { tab: ALL_TAB },
-    matches: (row, _term, { tab }) => tab === ALL_TAB || row.status === tab,
+    matches: (row, term, { tab }) => {
+      if (tab !== ALL_TAB && row.status !== tab) return false;
+      if (!term) return true;
+
+      // Searched in memory, like the rows themselves: no endpoint serves a
+      // dispute, so there is nothing to hand a search term to.
+      return [row.transactionId, row.title, row.reason, row.buyer?.name, row.seller?.name]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(term.toLowerCase()));
+    },
   });
 
   const columns = useMemo<ColumnDef<Dispute>[]>(
@@ -112,6 +124,17 @@ export default function DisputeTable() {
         ),
       },
       {
+        // Fixture-fed, like every column here — see `DISPUTES`. Nothing in the
+        // Admin API reports a dispute's country yet.
+        accessorKey: "country",
+        header: "Country",
+        cell: ({ getValue }) => (
+          <span className="text-sm text-foreground font-medium whitespace-nowrap">
+            {toCountryLabel(getValue<string>())}
+          </span>
+        ),
+      },
+      {
         accessorKey: "status",
         header: "Status",
         cell: ({ getValue }) => (
@@ -157,8 +180,21 @@ export default function DisputeTable() {
         activeTab={panel.table.activeTab}
         onTabChange={panel.table.onTabChange}
         headerExtra={
-          <TableDateFilter selected={dateFilter} setSelected={setDateFilter} />
+          <TableDateFilter
+            selected={dateFilter}
+            setSelected={setDateFilter}
+            search={panel.table.search}
+            onSearchChange={panel.table.onSearchChange}
+            searchPlaceholder="Search disputes"
+            onExport={() =>
+              downloadTableCsv(columns, panel.table.data, "disputes.csv")
+            }
+          />
         }
+        // Opposite the heading rather than among the filters: it scopes the
+        // whole table, and it is the one control here that does not narrow the
+        // rows within it.
+        titleExtra={<CountrySelect className="rounded-full" />}
         columns={columns}
         title="Recent Disputes"
         rowLabel="disputes"

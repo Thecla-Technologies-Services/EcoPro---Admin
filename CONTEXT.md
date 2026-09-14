@@ -28,9 +28,11 @@ _Avoid_: staff user, admin account
 A User trading on their own behalf.
 _Avoid_: EcoWarrior, ecowarrior (the API's name for the same thing)
 
-**NGO**:
+**Charity Partner**:
 A User registered as a charity, able to receive Donations.
-_Avoid_: CharityPartner, charity
+_Avoid_: NGO, charity. The API's own vocabulary for the same thing is
+`CharityPartner` as a `UserType` and `NGO` as a users-list `Tab` value; both
+stay spelled that way in query parameters and nowhere else.
 
 **Delivery Partner**:
 A User who moves goods between other Users.
@@ -96,7 +98,7 @@ A disagreement over an Order, raised by the buyer or the seller, that an Admin
 User resolves.
 
 **Donation**:
-Goods or money given to an NGO through the platform. Material and monetary
+Goods or money given to a Charity Partner through the platform. Material and monetary
 donations are tracked separately.
 
 ### Review

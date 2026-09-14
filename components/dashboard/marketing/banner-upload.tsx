@@ -31,11 +31,15 @@ export function BannerUpload<T extends FieldValues>({
   }
 
   return (
-    <>
+    // The same grey panel the form's other sections use, but a tighter 8px
+    // inset: the dashed box is the white field inside it, and nearly fills it.
+    // The 16px gap to the card below is owned here rather than by the dashed
+    // box, so a validation message appearing underneath does not change it.
+    <div className="mb-4 rounded-lg bg-background p-2">
       <div
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
-        className={`relative border-2 border-dashed rounded-xl p-2 mb-1 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-white ${
+        className={`relative border-2 border-dashed rounded-xl px-4 py-10 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white ${
           error
             ? "border-red-400"
             : "border-gray-300 hover:border-[#2D7A4F]/50"
@@ -64,17 +68,20 @@ export function BannerUpload<T extends FieldValues>({
           />
         ) : (
           <>
-            <Upload className="w-7 h-7 text-gray-400" />
-            <p className="text-sm text-gray-600 font-medium text-center">
+            {/* 24px under the icon, 8px between the two lines — the gap either
+                side of the heading is not the same, so the stack sets each
+                rather than sharing one `gap`. */}
+            <Upload className="size-8.5 text-gray-400" strokeWidth={1.75} />
+            <p className="mt-6 text-base font-semibold text-foreground text-center">
               Drop your image here or click to browse
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="mt-2 text-sm text-gray-400 text-center">
               Recommended size: 1200×400px (JPG, PNG). Max 2MB.
             </p>
           </>
         )}
       </div>
-      {error && <p className="text-xs text-red-500 mb-3 px-1">{error}</p>}
-    </>
+      {error && <p className="mt-1 text-xs text-red-500 px-1">{error}</p>}
+    </div>
   );
 }

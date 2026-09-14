@@ -17,6 +17,14 @@ import {
 import { toErrorMessage } from "@/lib/api/errors";
 import { faqArticleSchema, type FaqArticleForm } from "@/lib/validations/support";
 
+/**
+ * The border now comes from `--input`, which is visible against the tinted panel
+ * these fields sit on. What is left is local: the primitive's 32px height is
+ * shorter than the rest of the app's fields, and focus turns the border primary
+ * as it does on the textarea and the floating-label inputs elsewhere.
+ */
+const FIELD_CLASS = "h-10 focus-visible:border-primary";
+
 const DEFAULT_VALUES: FaqArticleForm = {
   articleId: "",
   category: "",
@@ -110,6 +118,7 @@ export function FaqEditor() {
             render={({ field }) => (
               <Input
                 id="faq-id"
+                className={FIELD_CLASS}
                 placeholder="e.g. 3f1c…"
                 {...field}
                 value={field.value ?? ""}
@@ -127,6 +136,7 @@ export function FaqEditor() {
               render={({ field }) => (
                 <Input
                   id="faq-category"
+                  className={FIELD_CLASS}
                   placeholder="e.g. Payments"
                   {...field}
                 />
@@ -145,7 +155,13 @@ export function FaqEditor() {
               control={control}
               name="sortOrder"
               render={({ field }) => (
-                <Input id="faq-order" type="number" min={0} {...field} />
+                <Input
+                  id="faq-order"
+                  type="number"
+                  min={0}
+                  className={FIELD_CLASS}
+                  {...field}
+                />
               )}
             />
             {errors.sortOrder && (
@@ -164,6 +180,7 @@ export function FaqEditor() {
             render={({ field }) => (
               <Input
                 id="faq-question"
+                className={FIELD_CLASS}
                 placeholder="How do I withdraw my balance?"
                 {...field}
               />

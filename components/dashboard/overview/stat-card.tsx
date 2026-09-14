@@ -37,18 +37,22 @@ export function StatCard({ value, label, icon: Icon, color }: StatCardProps) {
 
   return (
     <div
-      className={` ${styles.border} h-full rounded-lg bg-background md:p-5 p-4 md:py-7 flex items-center justify-between`}
+      className={`${styles.border} flex h-full items-center justify-between gap-3 rounded-lg bg-background p-4 md:p-5 md:py-7`}
     >
-      <div className="grid gap-1 md:gap-2 ">
-        <p className="text-2xl md:text-3xl font-bold text-foreground">
+      {/* `min-w-0` so the figure governs the card's width rather than forcing
+          it: without it the flex item refuses to shrink and the icon is pushed
+          out of the card. */}
+      <div className="grid min-w-0 gap-1 md:gap-2">
+        {/* Stepped rather than fixed at `3xl`, and kept on one line: at four
+            across on a laptop, "NGN 15.8M" broke after the currency and the
+            label fell out of line with the cards beside it. */}
+        <p className="truncate text-xl font-bold whitespace-nowrap text-foreground md:text-2xl xl:text-3xl">
           {value}
         </p>
-        <p className="text-xs md:text-sm text-muted-foreground ">{label}</p>
+        <p className="text-xs text-muted-foreground md:text-sm">{label}</p>
       </div>
 
-      <Icon
-        className={`${styles.icon} size-8 shrink-0 h-8 md:h-10! md:size-10 w-8 md:w-10!`}
-      />
+      <Icon className={`${styles.icon} size-8 shrink-0 md:size-10`} />
     </div>
   );
 }

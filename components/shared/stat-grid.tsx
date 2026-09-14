@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 
 interface StatGridProps {
   children: React.ReactNode;
-  /** Columns from the `lg` breakpoint up. Below it the grid is always 2-up. */
+  /** Columns from the `lg` breakpoint up. Below it the grid is 1-up on phones
+   *  and 2-up from `sm`. */
   columns?: 2 | 3 | 4 | 5;
   /**
    * Seconds added per card for the entry stagger. Pass 0 to opt out of the
@@ -48,7 +49,9 @@ export function StatGrid({
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-3 md:gap-4",
+        // One card per line on a phone: side by side, a figure and its label
+        // are both too cramped to read at that width.
+        "grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4",
         columnClass[columns],
         className,
       )}

@@ -5,19 +5,23 @@ import { WalletOverview } from "@/components/dashboard/wallet/wallet-overview";
 import { WithdrawalRequestTable } from "@/components/dashboard/wallet/withdrawal-request-table";
 import { EscrowStatsCards } from "@/components/dashboard/wallet/escrow-statcard";
 import { EscrowManagementTable } from "@/components/dashboard/wallet/escrow-management-table";
+import { PageHeader } from "@/components/shared/page-header";
+import { CountrySelect } from "@/components/shared/country-select";
 
 export default function WalletPage() {
   return (
     <div className="w-full space-y-6">
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl md:text-[28px] font-semibold text-foreground">
-          Wallet
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Manage withdrawals, escrow, and financial operations
-        </p>
-      </div>
+      <PageHeader>
+        <PageHeader.Heading className="gap-0.5">
+          <PageHeader.Title className="font-semibold">Wallet</PageHeader.Title>
+          <PageHeader.Description>
+            Manage withdrawals, escrow, and financial operations
+          </PageHeader.Description>
+        </PageHeader.Heading>
+        <PageHeader.Actions>
+          <CountrySelect />
+        </PageHeader.Actions>
+      </PageHeader>
 
       <Tabs defaultValue="overview">
         <TabsList className="mb-6 bg-transparent gap-2 flex-wrap h-auto p-0">

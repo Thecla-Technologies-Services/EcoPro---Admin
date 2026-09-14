@@ -17,16 +17,20 @@ import { RowActions } from "@/components/shared/row-actions";
 import { DataTable } from "@/components/shared/data-table";
 import type { Campaign } from "@/types/marketing";
 import { StatusBadge } from "@/components/shared/status-badge";
-import TabButton from "@/components/shared/tab-button";
+import { DateRangeFilter } from "@/components/shared/date/date-range-filter";
+import { TableSearchInput } from "@/components/shared/table-search-input";
+import type { DateRangeFilterValue } from "@/types/date";
 
 type TabFilter = "All Campaigns" | "Active" | "Scheduled" | "Paused" | "Ended";
 
-const TABS: { label: TabFilter; count?: number }[] = [
-  { label: "All Campaigns" },
-  { label: "Active", count: 2 },
-  { label: "Scheduled", count: 1 },
-  { label: "Paused", count: 1 },
-  { label: "Ended", count: 1 },
+const ALL_TAB: TabFilter = "All Campaigns";
+
+const TABS: readonly TabFilter[] = [
+  ALL_TAB,
+  "Active",
+  "Scheduled",
+  "Paused",
+  "Ended",
 ];
 
 interface CampaignsTableProps {
@@ -95,12 +99,38 @@ export function CampaignsTable({
   onDelete,
   onPause,
 }: CampaignsTableProps) {
-  const [activeTab, setActiveTab] = React.useState<TabFilter>("All Campaigns");
+  const [activeTab, setActiveTab] = React.useState<TabFilter>(ALL_TAB);
+  const [search, setSearch] = React.useState("");
+  const [dateFilter, setDateFilter] = React.useState<
+    DateRangeFilterValue | undefined
+  >();
+
+  // Counted from the rows rather than written beside each label, so a tab's
+  // count cannot drift from what selecting it shows.
+  const counts = React.useMemo(
+    () =>
+      campaigns.reduce<Record<string, number>>(
+        (totals, campaign) => ({
+          ...totals,
+          [campaign.status]: (totals[campaign.status] ?? 0) + 1,
+        }),
+        {},
+      ),
+    [campaigns],
+  );
 
   const filtered = React.useMemo(() => {
-    if (activeTab === "All Campaigns") return campaigns;
-    return campaigns.filter((c) => c.status === activeTab);
-  }, [campaigns, activeTab]);
+    const term = search.trim().toLowerCase();
+
+    return campaigns.filter((campaign) => {
+      if (activeTab !== ALL_TAB && campaign.status !== activeTab) return false;
+      if (!term) return true;
+
+      return [campaign.campaignName, campaign.placement, campaign.status].some(
+        (field) => field.toLowerCase().includes(term),
+      );
+    });
+  }, [campaigns, activeTab, search]);
 
   const columns: ColumnDef<Campaign>[] = React.useMemo(
     () => [
@@ -196,18 +226,26 @@ export function CampaignsTable({
       pageSize={7}
       rowLabel="campaigns"
       hideSortIcon={["sn", "bannerUrl", "actions"]}
+      // The tabs are the table's own, which puts them at the left of the header
+      // and leaves `headerExtra` for the controls that belong on the right.
+      filterTabs={TABS}
+      filterCounts={counts}
+      allTabValue={ALL_TAB}
+      activeTab={activeTab}
+      onTabChange={(tab) => setActiveTab(tab as TabFilter)}
       headerExtra={
-        <div className="flex gap-2 flex-wrap pt-1">
-          {TABS.map(({ label, count }) => (
-            <TabButton
-              key={label}
-              onClick={() => setActiveTab(label)}
-              active={activeTab === label}
-            >
-              {label}
-              {count !== undefined ? ` (${count})` : ""}
-            </TabButton>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* NOTE: held but not applied. Every fixture campaign carries the same
+              start and end date, so filtering by a range would empty the table
+              rather than narrow it — campaigns reach no endpoint at all yet. */}
+          <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+
+          <TableSearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search campaigns"
+            className="mt-0 w-full md:mt-0 md:w-56"
+          />
         </div>
       }
     />

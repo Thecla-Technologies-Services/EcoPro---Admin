@@ -116,7 +116,7 @@ function RejectDialogContent({
             onChange={(e) => setNote(e.target.value.slice(0, noteLimit))}
             maxLength={noteLimit}
             rows={3}
-            className="w-full rounded-md bg-input px-3 py-4 text-sm outline-none resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 transition-all"
+            className="w-full rounded-md bg-field px-3 py-4 text-sm outline-none resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 transition-all"
           />
           {/* Only once it is close enough to matter — a counter on an empty
               field is noise. */}

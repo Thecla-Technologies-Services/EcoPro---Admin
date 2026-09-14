@@ -14,6 +14,8 @@ import { DataState } from "@/components/shared/data-state";
 import { RowActions } from "@/components/shared/row-actions";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TableSearchInput } from "@/components/shared/table-search-input";
+import { DateRangeFilter } from "@/components/shared/date/date-range-filter";
+import type { DateRangeFilterValue } from "@/types/date";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toInitials } from "@/lib/adapters/shared";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +33,9 @@ interface UserTableProps {
    */
   search: string;
   onSearchChange: (value: string) => void;
+  /** The range the list is narrowed to, and the picker's own label. */
+  dateRange?: DateRangeFilterValue;
+  onDateRangeChange?: (value: DateRangeFilterValue) => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
   pagination: PaginationState;
@@ -63,6 +68,8 @@ export function UserTable({
   onOpenModal,
   search,
   onSearchChange,
+  dateRange,
+  onDateRangeChange,
   activeTab,
   onTabChange,
   pagination,
@@ -266,11 +273,19 @@ export function UserTable({
           totalCount={totalCount}
           onPaginationChange={onPaginationChange}
           headerExtra={
-            <TableSearchInput
-              className="ml-auto"
-              value={search}
-              onChange={onSearchChange}
-            />
+            <div className="ml-auto flex flex-wrap items-center gap-3">
+              {onDateRangeChange && (
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                />
+              )}
+              <TableSearchInput
+                value={search}
+                onChange={onSearchChange}
+                className="mt-0 w-full md:mt-0 md:w-60"
+              />
+            </div>
           }
         />
       </DataState.Content>

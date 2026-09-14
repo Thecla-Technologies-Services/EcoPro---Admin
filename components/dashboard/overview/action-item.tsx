@@ -25,10 +25,12 @@ export function ActionItem({
 
   return (
     <div className="grid grid-cols-[1fr_85px] gap-3 md:grid-cols-[1fr_85px_80px] py-2  px-0 md:p-2 text-[#4F4F4F] items-center first:pt-0 last:pb-0">
-      <div className="flex items-center gap-2 md:gap-3 ">
-        <p className="text-3xl">{Icon}</p>
+      <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        <p className="shrink-0 text-3xl">{Icon}</p>
 
-        <div className="flex-1">
+        {/* `min-w-0` lets a long title wrap inside the row instead of widening
+            it past the time and Review columns. */}
+        <div className="min-w-0 flex-1">
           <p className="font-medium text-[#4F4F4F]">{title}</p>
           <p className="text-sm text-[#4F4F4F]  mt-1">{description}</p>
         </div>

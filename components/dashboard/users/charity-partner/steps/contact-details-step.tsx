@@ -5,17 +5,17 @@ import Image from "next/image";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { IoPersonOutline } from "react-icons/io5";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
-import type { NgoFormValues } from "@/types/user";
+import type { CharityPartnerFormValues } from "@/types/user";
 import { FloatingLabelInput } from "@/components/shared/form/floating-label-input";
 import { FloatingPhoneInput } from "@/components/shared/form/floating-phone-input";
 
 interface ContactDetailsStepProps {
-  control: Control<NgoFormValues>;
-  errors: FieldErrors<NgoFormValues>;
+  control: Control<CharityPartnerFormValues>;
+  errors: FieldErrors<CharityPartnerFormValues>;
   existingImageUrl?: string;
 }
 
-export function NGOContactDetailsStep({
+export function CharityPartnerContactDetailsStep({
   control,
   errors,
   existingImageUrl,

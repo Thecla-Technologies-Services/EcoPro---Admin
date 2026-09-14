@@ -74,7 +74,7 @@ describe("useIndependentRiders", () => {
 
     const { result } = renderHook(() => useIndependentRiders());
 
-    // No admin endpoint returns riders, so the NGO and the individual have to
+    // No admin endpoint returns riders, so the charity partner and the individual have to
     // be excluded here or they would be listed as riders.
     expect(result.current.rows.map((row) => row.userId)).toEqual([
       "u-rider",

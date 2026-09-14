@@ -11,9 +11,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type {
-  ValueType,
-} from "recharts/types/component/DefaultTooltipContent";
+import type { ValueType } from "recharts/types/component/DefaultTooltipContent";
+import { useState } from "react";
+import { CountrySelect } from "@/components/shared/country-select";
+import { DateRangeFilter } from "@/components/shared/date/date-range-filter";
+import type { DateRangeFilterValue } from "@/types/date";
 
 type CustomTooltipProps = {
   active?: boolean;
@@ -75,25 +77,52 @@ const transactionStatus = [
   { name: "In Transit", value: 10, color: "#4A90E2" },
 ];
 
+/**
+ * A slot rather than a `showCountry` flag, so a card that later needs a date
+ * range or an export button takes one without the component growing a prop per
+ * control.
+ *
+ * The header wraps rather than switching layout at a breakpoint, because a
+ * card's width does not track the viewport's: the grid below goes two-up at
+ * `md`, so a card is *narrower* at 768px than at 640px and any breakpoint that
+ * suits one width breaks at the other. Wrapping lets the slot drop to its own
+ * line whenever the title and controls cannot share one, at any width. The
+ * heading keeps `min-w-0` so a long title truncates rather than pushing the
+ * slot out of the card, and a `basis` so it yields the line instead of
+ * squeezing the controls to nothing first.
+ */
 function ChartCard({
   title,
   subtitle,
+  actions,
   children,
   className = "",
 }: {
   title: string;
   subtitle?: string;
+  actions?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={`bg-background rounded-lg p-3 md:p-6 ${className}`}>
-      <p className="text-sm md:text-base font-semibold text-gray-900">
-        {title}
-      </p>
-      {subtitle && (
-        <p className="text-xs text-gray-400 mt-0.5 italic">{subtitle}</p>
-      )}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1 basis-44">
+          <p className="text-sm md:text-base font-semibold text-gray-900">
+            {title}
+          </p>
+          {subtitle && (
+            <p className="text-xs text-gray-400 mt-0.5 italic">{subtitle}</p>
+          )}
+        </div>
+        {/* `max-w-full` is what keeps an over-wide row inside the card: on its
+            own the `shrink-0` that makes the slot claim a line rather than be
+            squeezed also lets it run past the card's right edge. Capped, the
+            controls inside wrap onto a second line instead. */}
+        {actions && (
+          <div className="min-w-0 max-w-full shrink-0">{actions}</div>
+        )}
+      </div>
       <div className="mt-4 md:mt-5">{children}</div>
     </div>
   );
@@ -114,12 +143,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export default function Analytics() {
+  // Held here rather than inside the control so wiring a period-aware series
+  // later is a change to this component, not a lift of state out of a filter.
+  // Left undefined so the filter opens on its own default ("This Week") rather
+  // than this component asserting a range no chart actually honours yet.
+  const [period, setPeriod] = useState<DateRangeFilterValue>();
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1  md:grid-cols-2 gap-4">
         <ChartCard
           title="Transaction Volume"
           subtitle="Monthly transaction trends over the past year"
+          actions={<CountrySelect className="h-8 min-w-32 text-xs" />}
         >
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart
@@ -158,7 +194,22 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Transaction Status Distribution">
+        <ChartCard
+          title="Sales Distribution"
+          actions={
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+              {/* A custom range reads "Sep 14, 2026 - Sep 20, 2026", wider than
+                  a two-up card at `md`. Capped and truncated here rather than
+                  in the shared filter, where every table gives it a full row. */}
+              <DateRangeFilter
+                value={period}
+                onChange={setPeriod}
+                className="h-8 min-w-0 max-w-full text-xs [&>span]:min-w-0 [&>span]:truncate"
+              />
+              <CountrySelect className="h-8 max-w-full min-w-32 text-xs" />
+            </div>
+          }
+        >
           <div className="flex flex-col items-center gap-4">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -216,6 +267,7 @@ export default function Analytics() {
         <ChartCard
           title="User Growth Trend"
           subtitle="Breakdown of user base growth across segments"
+          actions={<CountrySelect className="h-8 min-w-32 text-xs" />}
         >
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart
@@ -257,6 +309,7 @@ export default function Analytics() {
         <ChartCard
           title="Environmental Impact"
           subtitle="Cumulative CO₂ saved through platform transactions"
+          actions={<CountrySelect className="h-8 min-w-32 text-xs" />}
         >
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart

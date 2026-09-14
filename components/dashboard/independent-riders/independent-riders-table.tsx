@@ -6,9 +6,11 @@ import { Eye } from "lucide-react";
 import DetailPanel from "./detail-panel";
 import { DataTable } from "@/components/shared/data-table";
 import { DataState } from "@/components/shared/data-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { RowActions } from "@/components/shared/row-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import TableDateFilter from "../../shared/date/table-date-filter";
+import { downloadTableCsv } from "@/lib/export";
 import { DateRangeFilterValue } from "@/types/date";
 import { type Applicant } from "@/types/verification";
 
@@ -37,6 +39,26 @@ export default function IndependentRidersTable({
     DateRangeFilterValue | undefined
   >(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // The rows arrive whole from the page above, so searching them is a filter
+  // here rather than a parameter on a request.
+  const rows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return data;
+
+    return data.filter((applicant) =>
+      [
+        applicant.name,
+        applicant.email,
+        applicant.phone,
+        applicant.country,
+        applicant.status,
+      ]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(term)),
+    );
+  }, [data, search]);
 
   const columns = useMemo<ColumnDef<Applicant>[]>(
     () => [
@@ -64,6 +86,15 @@ export default function IndependentRidersTable({
         accessorKey: "documentType",
         header: "Uploaded Document",
         cell: ({ getValue }) => <Field value={getValue<string>()} />,
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        // The application's standing — Pending Review until a decision is
+        // recorded, then Approved or Rejected. An undocumented value from the
+        // API passes through as its own label rather than being forced into
+        // one of the three.
+        cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
       },
       {
         accessorKey: "utr",
@@ -116,11 +147,17 @@ export default function IndependentRidersTable({
             row doesn't collapse the table and jump the layout. */}
         <DataState.Content busy={isLoading}>
           <DataTable
-            data={data}
+            data={rows}
             headerExtra={
               <TableDateFilter
                 selected={dateFilter}
                 setSelected={setDateFilter}
+                search={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Search riders"
+                onExport={() =>
+                  downloadTableCsv(columns, rows, "independent-riders.csv")
+                }
               />
             }
             columns={columns}

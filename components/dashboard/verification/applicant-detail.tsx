@@ -268,7 +268,7 @@ export function ApplicantDetail({
   titleAs?: React.ElementType;
   descriptionAs?: React.ElementType;
   /**
-   * Sits beside the name. Defaults to the account type, which tells an NGO from
+   * Sits beside the name. Defaults to the account type, which tells a Charity Partner from
    * a rider in the mixed review queue; pass `null` where every record is the
    * same kind and the pill only repeats the page.
    */

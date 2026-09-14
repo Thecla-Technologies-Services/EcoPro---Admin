@@ -27,12 +27,12 @@ export function BannerForm() {
   } = useForm<BannerFormValues>({
     defaultValues: {
       bannerFile: null,
-      campaignName: "Easy Laundry Campaign",
-      destinationUrl: "/HomeDashboard",
-      placement: "Home Dashboard Top",
-      audience: "Buyers Only",
-      startDate: "Feb 7, 2026",
-      endDate: "Feb 7, 2026",
+      campaignName: "",
+      destinationUrl: "",
+      placement: "",
+      audience: "",
+      startDate: "",
+      endDate: "",
     },
   });
 
@@ -56,12 +56,17 @@ export function BannerForm() {
   }
 
   return (
+    // From `lg` up the form fills `main` exactly and the left column is the one
+    // thing that scrolls, so the heading, the buttons and the preview stay put.
+    // Below `lg` the columns stack, where a pane that scrolls inside a page that
+    // also scrolls is worse than letting the whole page move — so the height and
+    // the overflow rules are all `lg:`.
     <form
-      className="flex flex-col h-full space-y-6"
+      className="flex flex-col space-y-6 lg:h-full lg:min-h-0"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div className="flex shrink-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">
             Create a new Banner
@@ -74,22 +79,22 @@ export function BannerForm() {
           <Button
             type="button"
             variant="outline"
-            className="rounded-lg"
+            className="rounded-full border-transparent bg-background px-6 hover:bg-muted"
             onClick={() => router.back()}
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            className="rounded-lg bg-[#2D7A4F] hover:bg-[#235f3d] text-white"
+            className="rounded-full bg-[#2D7A4F] px-6 hover:bg-[#235f3d] text-white"
           >
             Publish Banner
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 flex-1 min-h-0">
-        <div className="pr-1">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 flex-1 min-h-0 lg:overflow-hidden">
+        <div className="scrollbar-hide pr-1 lg:min-h-0 lg:overflow-y-auto">
           <BannerUpload
             previewUrl={bannerPreviewUrl}
             onFileSelect={handleFile}
@@ -100,11 +105,16 @@ export function BannerForm() {
           <BannerFormFields control={control} errors={errors} />
         </div>
 
-        <div className="bg-gray-50 rounded-xl h-fit border border-gray-100 p-4 flex items-start justify-center">
-          <PhoneMockup
-            bannerUrl={bannerPreviewUrl}
-            placement={watchedPlacement}
-          />
+        {/* `lg:h-full` with its own overflow so a short viewport scrolls the
+            preview internally rather than clipping the phone. */}
+        <div className="scrollbar-hide bg-background rounded-xl h-fit p-4 md:p-6 lg:h-full lg:min-h-0 lg:overflow-y-auto">
+          <p className="text-sm font-medium text-gray-900">Live App Preview</p>
+          <div className="mt-4 flex items-start justify-center">
+            <PhoneMockup
+              bannerUrl={bannerPreviewUrl}
+              placement={watchedPlacement}
+            />
+          </div>
         </div>
       </div>
 

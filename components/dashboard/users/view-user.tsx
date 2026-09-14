@@ -33,7 +33,7 @@ export function ProfileView({ user }: { user: User }) {
   /**
    * Which figures are shown depends on the role, but every value now comes from
    * `GET /api/admin/users/{userId}`. The detail DTO has no donation or order
-   * counts, so NGO and Delivery reuse the listing/sold figures it does return.
+   * counts, so a Charity Partner and a Delivery Partner reuse the listing/sold figures it does return.
    */
   const stats = {
     Individual: [
@@ -43,7 +43,7 @@ export function ProfileView({ user }: { user: User }) {
       { label: "Transactions", value: transactionsValue },
       { label: "Wallet Funds", value: <Amount amount={user.balance} /> },
     ],
-    NGO: [
+    "Charity Partner": [
       { label: "Total Listings", value: String(user.totalListings ?? 0) },
       { label: "Transactions", value: transactionsValue },
       { label: "Wallet Funds", value: <Amount amount={user.balance} /> },
@@ -61,7 +61,7 @@ export function ProfileView({ user }: { user: User }) {
 
   return (
     <div className=" space-y-5 ">
-      {/* Three across for every role now that NGO has a third card — it was
+      {/* Three across for every role now that Charity Partner has a third card — it was
           the only one with two. */}
       <div className="grid grid-cols-3 gap-2">
         {roleStats.map((s) => (

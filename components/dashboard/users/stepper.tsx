@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * The progress rail above a multi-step create/edit dialog. The step key is the
- * caller's own union — delivery partners run three steps, an NGO two — so this
+ * caller's own union — delivery partners run three steps, a charity partner two — so this
  * takes whatever set it is handed rather than naming them.
  *
  * Each label is centred under its own disc rather than under the segment

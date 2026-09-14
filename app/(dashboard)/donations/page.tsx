@@ -2,13 +2,13 @@ import { ShoppingCart, Package, Truck, FileCheck } from "lucide-react";
 import { DonationsTable } from "@/components/dashboard/donations/donation-table";
 import SharedStatCard from "@/components/shared/stat-card";
 import { IconType } from "react-icons/lib";
-import { FadeIn } from "@/components/motion/fade-in";
+import { StatGrid } from "@/components/shared/stat-grid";
+import { BiSolidError } from "react-icons/bi";
 
 interface StatCard {
   label: string;
   value: string;
   icon: IconType;
-  delay: number;
 }
 
 const STATS: StatCard[] = [
@@ -16,25 +16,26 @@ const STATS: StatCard[] = [
     label: "Total Donations",
     value: "12,204",
     icon: ShoppingCart,
-    delay: 0.1,
   },
   {
     label: "Pending Pickup",
     value: "67",
     icon: Package,
-    delay: 0.2,
   },
   {
     label: "In Transit",
     value: "198",
     icon: Truck,
-    delay: 0.3,
   },
   {
     label: "Completed",
     value: "145",
     icon: FileCheck,
-    delay: 0.4,
+  },
+  {
+    label: "Cancelled",
+    value: "2",
+    icon: BiSolidError,
   },
 ];
 
@@ -50,13 +51,18 @@ export default function DonationsPage() {
           Track all the donations on the platform
         </p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Five across, so Cancelled sits on the row with the rest rather than
+          wrapping alone under a four-column grid. */}
+      <StatGrid columns={5} className="gap-3">
         {STATS.map((s) => (
-          <FadeIn key={s.label} delay={s.delay}>
-            <SharedStatCard label={s.label} value={s.value} icon={s.icon} />
-          </FadeIn>
+          <SharedStatCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+            icon={s.icon}
+          />
         ))}
-      </div>
+      </StatGrid>
 
       {/* Table */}
       <DonationsTable />

@@ -9,6 +9,13 @@ import type { BannerFormValues } from "@/types/marketing";
 
 
 
+/**
+ * White fields on the grey `SectionCard`. The transparent border keeps the box
+ * the same height as everywhere else, and leaves the focus border — which turns
+ * primary — the only one that shows.
+ */
+const FIELD_SURFACE = "bg-white border-transparent";
+
 interface BannerFormFieldsProps {
   control: Control<BannerFormValues>;
   errors: FieldErrors<BannerFormValues>;
@@ -25,6 +32,7 @@ export function BannerFormFields({ control, errors }: BannerFormFieldsProps) {
             rules={{ required: "Campaign name is required" }}
             render={({ field }) => (
               <FloatingLabelInput
+                className={FIELD_SURFACE}
                 label="Campaign Name"
                 value={field.value}
                 onChange={field.onChange}
@@ -38,6 +46,7 @@ export function BannerFormFields({ control, errors }: BannerFormFieldsProps) {
             rules={{ required: "Destination URL is required" }}
             render={({ field }) => (
               <FloatingLabelInput
+                className={FIELD_SURFACE}
                 label="Destination URL or In-App Route"
                 value={field.value}
                 onChange={field.onChange}
@@ -56,6 +65,7 @@ export function BannerFormFields({ control, errors }: BannerFormFieldsProps) {
             rules={{ required: "Placement is required" }}
             render={({ field }) => (
               <FloatingSelect
+                fieldClassName={FIELD_SURFACE}
                 label="App Placement"
                 value={field.value}
                 onChange={field.onChange}
@@ -70,6 +80,7 @@ export function BannerFormFields({ control, errors }: BannerFormFieldsProps) {
             rules={{ required: "Target audience is required" }}
             render={({ field }) => (
               <FloatingSelect
+                fieldClassName={FIELD_SURFACE}
                 label="Target Audience"
                 value={field.value}
                 onChange={field.onChange}
@@ -90,6 +101,7 @@ export function BannerFormFields({ control, errors }: BannerFormFieldsProps) {
             render={({ field }) => (
               <FloatingDatePicker
                 id="startDate"
+                fieldClassName={FIELD_SURFACE}
                 label="Start Date"
                 value={field.value ? new Date(field.value) : undefined}
                 onChange={(date) => field.onChange(date?.toISOString() ?? "")}
@@ -104,6 +116,7 @@ export function BannerFormFields({ control, errors }: BannerFormFieldsProps) {
             render={({ field }) => (
               <FloatingDatePicker
                 id="endDate"
+                fieldClassName={FIELD_SURFACE}
                 label="End Date"
                 value={field.value ? new Date(field.value) : undefined}
                 onChange={(date) => field.onChange(date?.toISOString() ?? "")}

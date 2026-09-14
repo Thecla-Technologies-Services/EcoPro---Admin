@@ -51,6 +51,10 @@ export function useUsersPanel({
           pageSize: pagination.pageSize,
           searchTerm: search || undefined,
           excludeAdmins: excludeAdmins || undefined,
+          // The endpoint's own `FromDate`/`ToDate`, so the range narrows the
+          // list and the total that pages it — not just the page on screen.
+          fromDate: filters.fromDate as string | undefined,
+          toDate: filters.toDate as string | undefined,
         },
       );
 
@@ -85,7 +89,7 @@ export function useUsersPanel({
       ...panel.table,
       filterCounts: {
         Individual: metrics?.individualCount ?? 0,
-        NGO: metrics?.ngoPartners ?? 0,
+        "Charity Partner": metrics?.ngoPartners ?? 0,
         Delivery: metrics?.deliveryPartners ?? 0,
         Suspended: metrics?.suspendedCount ?? 0,
       },
@@ -107,7 +111,7 @@ export function useAdminUsersPanel({
 }: { pageSize?: number } = {}): UsersPanelState {
   return useListPanel({
     pageSize,
-    useQuery: ({ pagination, search }) => {
+    useQuery: ({ pagination, search, filters }) => {
       // No `Tab`: the list is already pinned to one role, and the tab values
       // (All / Individual / NGO / Delivery / Suspended) have nothing to say
       // about staff accounts.
@@ -120,6 +124,8 @@ export function useAdminUsersPanel({
         pageNumber: pagination.pageIndex + 1,
         pageSize: pagination.pageSize,
         searchTerm: search || undefined,
+        fromDate: filters.fromDate as string | undefined,
+        toDate: filters.toDate as string | undefined,
       });
 
       const page = query.data?.users;
